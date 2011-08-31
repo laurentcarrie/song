@@ -1,0 +1,27 @@
+
+\song {
+
+    \song_title {"cinnamon girl"}
+
+    \section {
+    intro
+    \c \c
+    }
+
+    \section {
+    couplet
+    \d \am 2\c  2\e \f \g
+    }
+
+    \section {
+    refrain
+    \a \b \c \d \e \f \g
+    }
+
+    \structure {
+    intro couplet refrain
+    }
+
+}
+
+    

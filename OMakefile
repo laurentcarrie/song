@@ -1,0 +1,30 @@
+.PHONY: build clean
+.DEFAULT: build 
+
+
+USE_OCAMLFIND = true
+BYTE_ENABLED = false
+NATIVE_ENABLED = true
+OCAMLFLAGS += -g -warn-error A
+
+OCAMLPACKS= extlib
+
+
+build: $(OCamlProgram song,song song_lex song_bison html )
+
+LocalOCamlGeneratedFiles(song_lex.ml song_bison.ml song_bison.mli)
+
+song_lex.ml : song_lex.mll
+	ocamllex $<
+
+
+song_bison.ml song_bison.mli : song_bison.mly
+	ocamlyacc  $<
+
+build : cinnamon-girl.song
+
+clean :
+    rm *.cmx *.cmi *.o
+    rm song_lex.ml 
+    rm song_bison.ml song_bison.mli
+    rm song song.opt

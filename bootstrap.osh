@@ -1,0 +1,7 @@
+srcdir = $(absname $(dirname $(nth 0, $(argv))))
+
+echo "srcdir = $(srcdir)" > OMakeroot
+cat $(srcdir)/OMakeroot.default >> OMakeroot
+
+cat $(srcdir)/OMakefile.default > OMakefile
+

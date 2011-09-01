@@ -10,18 +10,41 @@
 
     \section {
     couplet
-    \d \am 2\c  2\e \f \g
+    \d \am 2\c  2\e \f \g \a \a \a
     }
 
     \section {
     refrain
-    \a \b \c \d \e \f \g
+    \a \b \c \d \e \f \g \e
     }
+
+    // la structure
 
     \structure {
     intro couplet refrain
     }
 
+    \lyrics {
+    couplet
+    \1 I wanna live with a cinnamon girl
+    \4 I could be happy, for the rest of my life,
+    with a cinnamon girl
+				   }
+
+    \lyrics {
+      couplet
+	\1 
+    A dreamer of picture, I've seen in the night
+    \5See us together, chasing the moonlight,
+    My cinnamon girl
+
+    Ten silver saxes, a man with a bow,
+    Drummer relaxes, and waits between shows
+    For his cinnamon girl
+
+    }
+
 }
 
+    
     

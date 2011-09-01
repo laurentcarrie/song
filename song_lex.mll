@@ -10,15 +10,16 @@
   open Data
   open Printf
   let dp a b = printf "%s -> %s\n" a b ; flush stdout 
-
 }
+
 let digit = ['0'-'9']
 let chord = ['a'-'g']
-let name =  ['a'-'z' 'A'-'Z' '0'-'9'] ['a'-'z' 'A'-'Z' '0'-'9' ' ']*
-let id =  ['a'-'z' 'A'-'Z' '0'-'9']+
+let name =  ['a'-'z' 'A'-'Z' '0'-'9'] ['a'-'z' 'A'-'Z' '0'-'9' ]*
+let comment = "//"  ['a'-'z' 'A'-'Z' '0'-'9' ' ']* '\n'
 
 
 rule token = parse
+  | comment as c { printf "comment : %S\n" c ; token lexbuf }
   | [' ' '\t']+	{ token lexbuf  }
   | '\n'	{ token lexbuf (* NEWLINE *) }
   | digit+
@@ -46,9 +47,12 @@ rule token = parse
   | "\\song"     { BEGIN_SONG } 
   | "\\song_title"     { dp "song_title" "" ; SONG_TITLE } 
   | "\\end"     { END } 
-  | "\\section"     { BEGIN_SECTION } 
+  | "\\section"     { dp "section" "" ; BEGIN_SECTION } 
+  | "\\lyrics"     { BEGIN_LYRICS } 
   | "\\structure"     { dp "structure" ""  ;  BEGIN_STRUCTURE } 
-  | '"' (name as c) '"'   {   printf "name : %S\n" c ; flush stdout ; NAME c }
-  | id as c   {   printf "id : %S\n" c ; flush stdout ; NAME c }
+  | "\\" (digit+ as num) { MARK (int_of_string num) }
+  | '"' ((name | ' ')+ as c) '"'   {   printf "name : %S\n" c ; flush stdout ; NAME c }
+  | (name as c)    {   printf "name : %S\n" c ; flush stdout ; NAME c }
   | _		{ token lexbuf }
   | eof		{ raise End_of_file }
+      

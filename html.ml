@@ -1,6 +1,9 @@
 open Data
 open Printf
 
+let length_of_section s =
+  List.fold_left ( fun acc c -> acc + c.clength ) 0 s.chords
+
 let print_css () =
   let fout = open_out_bin "song.css" in
     fprintf fout "
@@ -37,7 +40,7 @@ background-color:#EAF2D3;
 " ;
     close_out fout
     
-let render_html song filename =
+let render_html song filename = try
 
   print_css () ;
 
@@ -88,15 +91,52 @@ let render_html song filename =
       List.iter ( fun s -> print_section s ) song.structure
   in
 
+
+  let print_structure () =
+    fprintf fout "<h2>structure</h2>\n" ;
+    fprintf fout "<ol>\n" ;
+    let count = ref 1 in
+    List.iter ( fun sname ->
+      let s = PMap.find sname song.sections in
+      let l = length_of_section s in
+      let count2 = !count + l in 
+	fprintf fout "<li>%s  (%d : %d &rightarrow; %d) </li>\n" s.sname l (!count/4+1) (count2/4) ;
+	count := count2  ;
+    ) song.structure ;
+    fprintf fout "</ol>\n"
+  in
+
+  let print_lyrics () =
+    fprintf fout "<h2>lyrics</h2>\n" ;
+    fprintf fout "<ol>\n" ;
+    List.iter ( fun (sname, lyrics) ->
+      fprintf fout "<li>%s<br/>\n" sname ;
+      List.iter ( fun (mark,word) -> 
+	(match mark with 
+	  | None -> ()
+	  | Some i -> if (i mod 4  = 1) && (i<>1) then fprintf fout "</br>\n" ;
+	) ;
+	fprintf fout "%s " word
+      ) lyrics ;
+      fprintf fout "</li>" ;
+    ) song.lyrics ;
+    fprintf fout "</ol>\n" ;
+  in
+
+
+
     fprintf fout "\
 <html>\n\
 <link rel=\"stylesheet\" type=\"text/css\" href=\"song.css\" />
 <h1>%s</h1>\n" song.name ;
     print_sections () ;
+    print_structure () ;
+    print_lyrics () ;
     fprintf fout "</html>\n" ;
     close_out fout
 
 
-
+  with
+    | e -> printf "in html, %s\n" (Printexc.to_string e) ; flush stdout ; raise e
 
     

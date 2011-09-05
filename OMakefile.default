@@ -21,7 +21,8 @@ song_lex.ml : song_lex.mll
 song_bison.ml song_bison.mli : song_bison.mly
 	ocamlyacc  $<
 
-build : cinnamon-girl.song
+
+build : cinnamon-girl.song personal-jesus.song
 
 out.html : build cinnamon-girl.song
 	./song cinnamon-girl.song

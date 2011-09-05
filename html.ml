@@ -1,5 +1,6 @@
 open Data
 open Printf
+open ExtList
 
 let length_of_section s =
   List.fold_left ( fun acc c -> acc + c.clength ) 0 s.chords
@@ -103,7 +104,6 @@ let render_html song filename = try
 	    let cell = offset / 4 in 
 	      if offset mod 16 = 0 then fprintf fout "<tr>\n" ;
 	      if offset mod 4  = 0 then fprintf fout "<td>" ;
-	      (* fprintf fout "%c (%d)\n" (Char.uppercase chord.cname) chord.clength ;  *)
 	      fprintf fout "%c%s%s%s \n" 
 		(Char.uppercase chord.cname) 
 		(if chord.minor then "m" else "")
@@ -113,64 +113,63 @@ let render_html song filename = try
 	      let new_offset = offset + chord.clength in
 		(* let new_row = new_offset / 16 in *)
 		(* if new_row <> row then failwith "row" ; *)
-		let new_cell = new_offset / 4 in 
-		  if new_cell <> cell &&  new_offset mod 4 <> 0 then
-		    failwith "bad end cell" ;
-		  if new_offset mod 4  = 0 then (
-		    fprintf fout "</td>" ;
-		    if new_offset mod 16 = 0 then fprintf fout "</tr>\n" ;
-		  ) ;
-		  print_chords tl new_offset
+	      let new_cell = new_offset / 4 in 
+		if new_cell <> cell &&  new_offset mod 4 <> 0 then
+		  failwith "bad end cell" ;
+		if new_offset mod 4  = 0 then (
+		  fprintf fout "</td>" ;
+		  if new_offset mod 16 = 0 then fprintf fout "</tr>\n" ;
+		) ;
+		print_chords tl new_offset
 	  )
     in
 
 
 
-    let print_section sname =
-      let s = PMap.find sname song.sections in
-	fprintf fout "<h2>%s</h2>\n" s.sname ;
-	fprintf fout "<table id=\"chords\">\n" ;
-	print_chords s.chords 0  ;
-	fprintf fout "</table>\n" 
+    let print_section sname s =
+      fprintf fout "<h2>%s</h2>\n" s.sname ;
+      fprintf fout "<table id=\"chords\">\n" ;
+      print_chords s.chords 0  ;
+      fprintf fout "</table>\n" 
     in
-      List.iter ( fun s -> print_section s ) song.structure
+      List.iter ( fun (sname,s) -> print_section sname s ) (List.of_enum (PMap.enum song.sections))
   in
 
 
   let print_structure () =
-	  fprintf fout "<div class=\"structure\">\n" ;
+    fprintf fout "<div class=\"structure\">\n" ;
     fprintf fout "<h2>structure</h2>\n" ;
     fprintf fout "<ol>\n" ;
     let count = ref 1 in
-    List.iter ( fun sname ->
-      let s = PMap.find sname song.sections in
-      let l = length_of_section s in
-      let count2 = !count + l in 
-	fprintf fout "<li>%s  (%d : %d &rarr; %d) </li>\n" s.sname l (!count/4+1) (count2/4) ;
-	count := count2  ;
-    ) song.structure ;
-    fprintf fout "</ol>\n" ;
-fprintf fout "</div>\n"
+      List.iter ( fun sname ->
+	let s = PMap.find sname song.sections in
+	let l = length_of_section s in
+	let count2 = !count + l in 
+	  fprintf fout "<li>%s  (%d : %d &rarr; %d) </li>\n" s.sname l (!count/4+1) (count2/4) ;
+	  count := count2  ;
+      ) song.structure ;
+      fprintf fout "</ol>\n" ;
+      fprintf fout "</div>\n"
   in
 
   let print_lyrics () =
-      fprintf fout "<div class=\"lyrics\">\n" ;
+    fprintf fout "<div class=\"lyrics\">\n" ;
     fprintf fout "<h2>lyrics</h2>\n" ;
     fprintf fout "<ol>\n" ;
     List.iter ( fun (sname, lyrics) ->
       fprintf fout "<li>%s<br/>\n" sname ;
       List.iter ( fun (mark,word) -> 
-	    (match mark with 
-	      | None -> fprintf fout "%s " word
-	      | Some i -> (* if (i mod 4  = 1) && (i<>1) then fprintf fout "</br>\n" ; *) 
-			     fprintf fout "<span id=\"measure\">%d %s </span>" i word
+	(match mark with 
+	  | None -> fprintf fout "%s " word
+	  | Some i -> (* if (i mod 4  = 1) && (i<>1) then fprintf fout "</br>\n" ; *) 
+	      fprintf fout "<span id=\"measure\">%d %s </span>" i word
 	) ;
-      if word = "\n" then fprintf fout "</br>" ;
-    ) lyrics ;
-    fprintf fout "</li>" ;
+	if word = "\n" then fprintf fout "</br>" ;
+      ) lyrics ;
+      fprintf fout "</li>" ;
     ) song.lyrics ;
-  fprintf fout "</ol>\n" ;
-fprintf fout "</div>\n" ;
+    fprintf fout "</ol>\n" ;
+    fprintf fout "</div>\n" ;
   in
     
 
@@ -181,17 +180,17 @@ fprintf fout "</div>\n" ;
 <body>
 <p id=\"songname\">%s</p>\n" song.name ;
 
-			     
-  fprintf fout "<div class=\"sections\">\n" ;
-  print_sections () ;
-  fprintf fout "</div>\n" ;
-  print_structure () ;
-  print_lyrics () ;
+    
+    fprintf fout "<div class=\"sections\">\n" ;
+    print_sections () ;
+    fprintf fout "</div>\n" ;
+    print_structure () ;
+    print_lyrics () ;
     fprintf fout "</body></html>\n" ;
-  close_out fout
+    close_out fout
 
 
   with
     | e -> printf "in html, %s\n" (Printexc.to_string e) ; flush stdout ; raise e
 
-    
+	

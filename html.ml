@@ -35,7 +35,55 @@ color:#ffffff;
 {
 color:#000000;
 background-color:#EAF2D3;
-}table, th, td
+}
+
+#songname
+{
+text-align:center ;
+font-size:5em ;
+}
+
+
+#measure 
+{
+color:red
+}
+
+div.sections
+{
+width:220px;
+padding:10px;
+border:5px solid gray;
+margin:0px;
+position:absolute;
+left:100px;
+top:150px;
+}
+
+
+div.lyrics
+{
+width:400px;
+padding:10px;
+border:5px solid gray;
+margin:0px;
+position:absolute;
+left:800px;
+top:150px;
+}
+
+
+div.structure
+{
+width:400px;
+padding:10px;
+border:5px solid gray;
+margin:0px;
+position:absolute;
+left:800px;
+top:150px;
+}
+
 
 " ;
     close_out fout
@@ -52,7 +100,6 @@ let render_html song filename = try
       match c with
 	| [] -> ()
 	| chord::tl -> (
-	    (* let row = offset / 16 in *)
 	    let cell = offset / 4 in 
 	      if offset mod 16 = 0 then fprintf fout "<tr>\n" ;
 	      if offset mod 4  = 0 then fprintf fout "<td>" ;
@@ -64,7 +111,6 @@ let render_html song filename = try
 		(if chord.ma7 then "7M" else "")
 	      ;  
 	      let new_offset = offset + chord.clength in
-		printf "offset : %d -> %d\n" offset new_offset ;
 		(* let new_row = new_offset / 16 in *)
 		(* if new_row <> row then failwith "row" ; *)
 		let new_cell = new_offset / 4 in 
@@ -81,7 +127,6 @@ let render_html song filename = try
 
 
     let print_section sname =
-      printf "%s\n" sname ;
       let s = PMap.find sname song.sections in
 	fprintf fout "<h2>%s</h2>\n" s.sname ;
 	fprintf fout "<table id=\"chords\">\n" ;
@@ -93,6 +138,7 @@ let render_html song filename = try
 
 
   let print_structure () =
+	  fprintf fout "<div class=\"structure\">\n" ;
     fprintf fout "<h2>structure</h2>\n" ;
     fprintf fout "<ol>\n" ;
     let count = ref 1 in
@@ -100,40 +146,49 @@ let render_html song filename = try
       let s = PMap.find sname song.sections in
       let l = length_of_section s in
       let count2 = !count + l in 
-	fprintf fout "<li>%s  (%d : %d &rightarrow; %d) </li>\n" s.sname l (!count/4+1) (count2/4) ;
+	fprintf fout "<li>%s  (%d : %d &rarr; %d) </li>\n" s.sname l (!count/4+1) (count2/4) ;
 	count := count2  ;
     ) song.structure ;
-    fprintf fout "</ol>\n"
+    fprintf fout "</ol>\n" ;
+fprintf fout "</div>\n"
   in
 
   let print_lyrics () =
+      fprintf fout "<div class=\"lyrics\">\n" ;
     fprintf fout "<h2>lyrics</h2>\n" ;
     fprintf fout "<ol>\n" ;
     List.iter ( fun (sname, lyrics) ->
       fprintf fout "<li>%s<br/>\n" sname ;
       List.iter ( fun (mark,word) -> 
-	(match mark with 
-	  | None -> ()
-	  | Some i -> if (i mod 4  = 1) && (i<>1) then fprintf fout "</br>\n" ;
+	    (match mark with 
+	      | None -> fprintf fout "%s " word
+	      | Some i -> (* if (i mod 4  = 1) && (i<>1) then fprintf fout "</br>\n" ; *) 
+			     fprintf fout "<span id=\"measure\">%d %s </span>" i word
 	) ;
-	fprintf fout "%s " word
-      ) lyrics ;
-      fprintf fout "</li>" ;
+      if word = "\n" then fprintf fout "</br>" ;
+    ) lyrics ;
+    fprintf fout "</li>" ;
     ) song.lyrics ;
-    fprintf fout "</ol>\n" ;
+  fprintf fout "</ol>\n" ;
+fprintf fout "</div>\n" ;
   in
-
+    
 
 
     fprintf fout "\
 <html>\n\
 <link rel=\"stylesheet\" type=\"text/css\" href=\"song.css\" />
-<h1>%s</h1>\n" song.name ;
-    print_sections () ;
-    print_structure () ;
-    print_lyrics () ;
-    fprintf fout "</html>\n" ;
-    close_out fout
+<body>
+<p id=\"songname\">%s</p>\n" song.name ;
+
+			     
+  fprintf fout "<div class=\"sections\">\n" ;
+  print_sections () ;
+  fprintf fout "</div>\n" ;
+  print_structure () ;
+  print_lyrics () ;
+    fprintf fout "</body></html>\n" ;
+  close_out fout
 
 
   with

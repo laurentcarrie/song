@@ -60,24 +60,27 @@ song_data  : { { name = "" ; sections = PMap.create String.compare ; structure =
            | SONG_TITLE LBRACE NAME RBRACE song_data {
 	       { $5 with name = $3 ^ $5.name} 
 	     }
-	   | section song_data {
-	       { $2 with sections = PMap.add $1.sname $1 $2.sections }
+	   | song_data section {
+	       { $1 with sections = PMap.add $2.sname $2 $1.sections }
 	     }
-	   | structure song_data {
-	       { $2 with structure = $1 }
+	   | song_data structure {
+	       { $1 with structure = $2 }
 	     }
-	   | lyrics song_data {
-	       { $2 with lyrics = $2.lyrics @ [$1] }
+	   | song_data lyrics {
+	       { $1 with lyrics = $1.lyrics @ [$2] }
 	     }
 
 structure : BEGIN_STRUCTURE LBRACE section_name_list RBRACE {
   $3
 }
 
-work_with_mark_list : NAME { [ (None,$1) ] }
-	   | MARK NAME { [ Some $1,$2 ] }
-	   | work_with_mark_list MARK NAME { $1 @ [ Some $2,$3 ] }
-	   | work_with_mark_list NAME { $1 @ [ None,$2 ] }
+name_or_newline : NEWLINE { "\n" }
+	| NAME { $1 }
+
+work_with_mark_list : name_or_newline { [ (None,$1) ] }
+	   | MARK name_or_newline { [ Some $1,$2 ] }
+	   | work_with_mark_list MARK name_or_newline { $1 @ [ Some $2,$3 ] }
+	   | work_with_mark_list name_or_newline { $1 @ [ None,$2 ] }
 
 
 lyrics : BEGIN_LYRICS LBRACE NAME work_with_mark_list RBRACE {

@@ -1,4 +1,4 @@
-.PHONY: build clean
+.PHONY: build clean test
 .DEFAULT: build 
 
 
@@ -22,6 +22,9 @@ song_bison.ml song_bison.mli : song_bison.mly
 	ocamlyacc  $<
 
 build : cinnamon-girl.song
+
+out.html : build cinnamon-girl.song
+	./song cinnamon-girl.song
 
 clean :
     rm *.cmx *.cmi *.o

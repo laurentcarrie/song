@@ -9,7 +9,10 @@
   open Song_bison
   open Data
   open Printf
-  let dp a b = printf "%s -> %s\n" a b ; flush stdout 
+
+  let debug = false
+
+  let dp a b = if debug then (printf "%s -> %s\n" a b ; flush stdout ) else ()
 }
 
 let digit = ['0'-'9']
@@ -51,6 +54,7 @@ rule token = parse
   | "\\lyrics"     { BEGIN_LYRICS } 
   | "\\structure"     { dp "structure" ""  ;  BEGIN_STRUCTURE } 
   | "\\" (digit+ as num) { MARK (int_of_string num) }
+  | "\\n"   { NEWLINE } 
   | '"' ((name | ' ')+ as c) '"'   {   printf "name : %S\n" c ; flush stdout ; NAME c }
   | (name as c)    {   printf "name : %S\n" c ; flush stdout ; NAME c }
   | _		{ token lexbuf }

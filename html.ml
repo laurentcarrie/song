@@ -56,8 +56,8 @@ padding:10px;
 border:5px solid gray;
 margin:0px;
 position:absolute;
-left:100px;
-top:150px;
+left:2cm;
+top:4cm;
 }
 
 
@@ -68,29 +68,29 @@ padding:10px;
 border:5px solid gray;
 margin:0px;
 position:absolute;
-left:800px;
-top:150px;
+left:20cm;
+top:4cm;
 }
 
 
 div.structure
 {
-width:400px;
+width:6cm;
 padding:10px;
 border:5px solid gray;
 margin:0px;
 position:absolute;
-left:800px;
-top:150px;
+left:10cm;
+top:4cm ;
 }
 
 
 " ;
     close_out fout
-    
+      
 let render_html song filename = try
 
-  print_css () ;
+    print_css () ;
 
   let fout = open_out_bin filename in
 

@@ -45,7 +45,7 @@ rule token = parse
 	| s  -> int_of_string s
       in
       let minor = (minor = "m") in
-	CHORD { cname=c ; clength=length; minor=minor ; mi7=false ; ma7=false}
+	CHORD { Data.Chord.name=c ; length=length; minor=minor ; mi7=false ; ma7=false}
     }  
   | "\\song"     { BEGIN_SONG } 
   | "\\song_title"     { dp "song_title" "" ; SONG_TITLE } 

@@ -10,7 +10,7 @@ OCAMLFLAGS += -g -warn-error A
 OCAMLPACKS= extlib
 
 
-build: $(OCamlProgram song,song song_lex song_bison html data )
+build: $(OCamlProgram song,main song_lex song_bison html data )
 
 LocalOCamlGeneratedFiles(song_lex.ml song_bison.ml song_bison.mli)
 

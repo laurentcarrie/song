@@ -11,7 +11,7 @@ open Data
 %token LPAREN RPAREN  LBRACE RBRACE
 %token <float> NUM
 %token PLUS MINUS MULTIPLY DIVIDE CARET
-%token <Data.chord_t> CHORD
+%token <Data.Chord.t> CHORD
 %token BEGIN_SONG BEGIN_SECTION BEGIN_STRUCTURE BEGIN_LYRICS
 %token END
 %token EOF
@@ -26,15 +26,15 @@ open Data
 %right CARET	/* exponentiation */
 
 %start input
-%type <Data.song_t> input
-%type <song_t> song 
-%type <song_t> song_data
-%type <chord_t> chord
-%type <chord_t list> chord_list
+%type <Data.Song.t> input
+%type <Data.Song.t> song 
+%type <Data.Song.t> song_data
+%type <Chord.t> chord
+%type <Chord.t list> chord_list
 
 
 %%
-input : song  { printf "ok, input done, song name is %s\n" $1.name ; flush stdout ; $1 }
+input : song  { printf "ok, input done, song name is %s\n" $1.Song.name ; flush stdout ; $1 }
 | error {
     printf "PARSE ERROR 1 !\nstructure of song is \n\
 \\begin(name of the song)\n\
@@ -52,22 +52,22 @@ song : BEGIN_SONG LBRACE song_data RBRACE {
 data\n\
 \\end\n\
 " ; flush stdout ;
-    { name ="" ; sections = PMap.create String.compare ; structure = [] ; lyrics = [] }
+    { Song.name ="" ; sections = PMap.create String.compare ; structure = [] ; lyrics = [] }
   }
     
 
-song_data  : { { name = "" ; sections = PMap.create String.compare ; structure = [] ; lyrics = [] } }
+song_data  : { { Song.name = "" ; sections = PMap.create String.compare ; structure = [] ; lyrics = [] } }
            | SONG_TITLE LBRACE NAME RBRACE song_data {
-	       { $5 with name = $3 ^ $5.name} 
+	       { $5 with Song.name = $3 ^ $5.Song.name} 
 	     }
 	   | song_data section {
-	       { $1 with sections = PMap.add $2.sname $2 $1.sections }
+	       { $1 with Song.sections = PMap.add $2.Section.name $2 $1.Song.sections }
 	     }
 	   | song_data structure {
-	       { $1 with structure = $2 }
+	       { $1 with Song.structure = $2 }
 	     }
 	   | song_data lyrics {
-	       { $1 with lyrics = $1.lyrics @ [$2] }
+	       { $1 with Song.lyrics = $1.Song.lyrics @ [$2] }
 	     }
 
 structure : BEGIN_STRUCTURE LBRACE section_name_list RBRACE {
@@ -98,7 +98,7 @@ chord_list :  { [] }
 	   | chord_list chord { $1 @ [ $2 ] }
 
 section :  BEGIN_SECTION LBRACE NAME chord_list RBRACE {
-  { sname=$3 ; chords=$4 }
+  { Section.name=$3 ; chords=$4 }
 }
 
 ;

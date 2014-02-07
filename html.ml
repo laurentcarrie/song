@@ -3,7 +3,7 @@ open Printf
 open ExtList
 
 let length_of_section s =
-  List.fold_left ( fun acc c -> acc + c.clength ) 0 s.chords
+  List.fold_left ( fun acc c -> acc + c.Chord.length ) 0 s.Section.chords
 
 let print_css () =
   let fout = open_out_bin "song.css" in
@@ -101,16 +101,17 @@ let render_html song filename = try
       match c with
 	| [] -> ()
 	| chord::tl -> (
+	    let open Data.Chord in
 	    let cell = offset / 4 in 
 	      if offset mod 16 = 0 then fprintf fout "<tr>\n" ;
 	      if offset mod 4  = 0 then fprintf fout "<td>" ;
 	      fprintf fout "%c%s%s%s \n" 
-		(Char.uppercase chord.cname) 
+		(Char.uppercase chord.name) 
 		(if chord.minor then "m" else "")
 		(if chord.mi7 then "7" else "")
 		(if chord.ma7 then "7M" else "")
 	      ;  
-	      let new_offset = offset + chord.clength in
+	      let new_offset = offset + chord.length in
 		(* let new_row = new_offset / 16 in *)
 		(* if new_row <> row then failwith "row" ; *)
 	      let new_cell = new_offset / 4 in 
@@ -126,13 +127,13 @@ let render_html song filename = try
 
 
 
-    let print_section sname s =
-      fprintf fout "<h2>%s</h2>\n" s.sname ;
+    let print_section name s =
+      fprintf fout "<h2>%s</h2>\n" s.Section.name ;
       fprintf fout "<table id=\"chords\">\n" ;
-      print_chords s.chords 0  ;
+      print_chords s.Section.chords 0  ;
       fprintf fout "</table>\n" 
     in
-      List.iter ( fun (sname,s) -> print_section sname s ) (List.of_enum (PMap.enum song.sections))
+      List.iter ( fun (name,s) -> print_section name s ) (List.of_enum (PMap.enum song.Song.sections))
   in
 
 
@@ -142,12 +143,12 @@ let render_html song filename = try
     fprintf fout "<ol>\n" ;
     let count = ref 1 in
       List.iter ( fun sname ->
-	let s = PMap.find sname song.sections in
+	let s = PMap.find sname song.Song.sections in
 	let l = length_of_section s in
 	let count2 = !count + l in 
-	  fprintf fout "<li>%s  (%d : %d &rarr; %d) </li>\n" s.sname l (!count/4+1) (count2/4) ;
+	  fprintf fout "<li>%s  (%d : %d &rarr; %d) </li>\n" s.Section.name l (!count/4+1) (count2/4) ;
 	  count := count2  ;
-      ) song.structure ;
+      ) song.Song.structure ;
       fprintf fout "</ol>\n" ;
       fprintf fout "</div>\n"
   in
@@ -167,7 +168,7 @@ let render_html song filename = try
 	if word = "\n" then fprintf fout "</br>" ;
       ) lyrics ;
       fprintf fout "</li>" ;
-    ) song.lyrics ;
+    ) song.Song.lyrics ;
     fprintf fout "</ol>\n" ;
     fprintf fout "</div>\n" ;
   in
@@ -178,7 +179,7 @@ let render_html song filename = try
 <html>\n\
 <link rel=\"stylesheet\" type=\"text/css\" href=\"song.css\" />
 <body>
-<p id=\"songname\">%s</p>\n" song.name ;
+<p id=\"songname\">%s</p>\n" song.Song.name ;
 
     
     fprintf fout "<div class=\"sections\">\n" ;

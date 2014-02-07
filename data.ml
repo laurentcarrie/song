@@ -1,24 +1,32 @@
-type chord_t = {
-  cname : char ;
-  clength  : int ;
-  minor : bool ;
-  mi7 : bool ;
-  ma7 : bool ;
-}
+module Chord = struct
+  type t = {
+    name : char ;
+    length  : int ;
+    minor : bool ;
+    mi7 : bool ;
+    ma7 : bool ;
+  }
+end
+  
+module Section = struct
+  type t = {
+    name: string ;
+    chords : Chord.t list ;
+  }
+end
 
-type section_t = {
-  sname: string ;
-  chords : chord_t list ;
-}
+module Song = struct 
+  type t = {
+    name : string ;
+    sections : (string,Section.t) PMap.t ;
+    structure : string list ;
+    lyrics : (string (* nom de la section *) * ((int option*string) list)) list ;
+  }
+end
 
-type song_t = {
-  name : string ;
-  sections : (string,section_t) PMap.t ;
-  structure : string list ;
-  lyrics : (string (* nom de la section *) * ((int option*string) list)) list ;
-}
-
-type view_t = {
-  filename : string
-}
+module View = struct
+  type t = {
+    filename : string
+  }
+end
 

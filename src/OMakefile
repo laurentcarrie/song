@@ -18,7 +18,7 @@ OCAMLFLAGS += -pp 'camlp4o $(cmo)'
 OCAMLOPTFLAGS+= 
 #
 
-OCAMLPACKS= extlib
+OCAMLPACKS= extlib,str
 
 ocamlfind ocamlopt song_exn.mli -o song_exn.cmi -package extlib
 

@@ -114,18 +114,16 @@ chord_list :
 	     }
 	   | chord {  [ $1 ] }
 section_data : { 
-	       
-               { Section.name="" ; mesures_par_ligne=None ; chords=[] } 
-           }
+  { Section.name="" ; mesures_par_ligne=None ; chords=[] } 
+}
 	   | SECTION_TITLE LBRACE NAME RBRACE section_data {
-	       
 	       { $5 with Section.name=$3 }
 	     }
 	   | SECTION_MESURE_PAR_LIGNE LBRACE DIGITS RBRACE section_data {
-	       
-	       { $5 with Section.mesures_par_ligne=Some $3 }}
+	       { $5 with Section.mesures_par_ligne=__SONG__try "split string to int list" 
+		   (Some ( List.map int_of_string (Str.split (Str.regexp " ") $3))) }
+	     }
            | chord_list section_data {
-	       
                { $2 with Section.chords=$1 }
              }
 

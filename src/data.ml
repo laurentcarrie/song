@@ -14,7 +14,7 @@ end
 module Section = struct
   type t = {
     name: string ;
-    mesures_par_ligne: string option ;
+    mesures_par_ligne: int list option ;
     chords : Chord.t list ;
   }
 end

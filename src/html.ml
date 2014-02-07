@@ -21,6 +21,7 @@ font-family:\"Trebuchet MS\", Arial, Helvetica, sans-serif;
 #width:100%%;
 border-collapse:collapse;
 }
+
 #chords td, #chords th 
 {
 font-size:1em;
@@ -30,6 +31,13 @@ text-align:center;
 height:50px ;
 width:50px ;
 }
+
+td.half-chords
+{
+width:25px ;
+}
+
+
 #chords th 
 {
 font-size:1.1em;
@@ -59,7 +67,7 @@ color:red
 
 div.sections
 {
-width:220px;
+width:320px;
 padding:10px;
 border:5px solid gray;
 margin:0px;
@@ -112,43 +120,56 @@ let render_html song filename = __SONG__try "render_html" (
     let fout = open_out_bin filename in
 
     let print_sections () =
-
-      let rec print_chords c offset =
-	match c with
-	  | [] -> ()
-	  | chord::tl -> (
-	      let open Data.Chord in
-	      let cell = offset / 4 in 
-		if offset mod 16 = 0 then fprintf fout "<tr>\n" ;
-		if offset mod 4  = 0 then fprintf fout "<td>" ;
-		fprintf fout "<span class=\"note\">%c%s%s%s%s</span> \n" 
-		  (Char.uppercase chord.name) 
-		  (match chord.alteration with | Flat -> "<sup>&#x266d</sup>" | Sharp -> "<sup>&#9839</sup>" | Rien -> "")
-		  (if chord.minor then "m" else "")
-		  (if chord.mi7 then "7" else "")
-		  (if chord.ma7 then "7M" else "")
-		;  
-		let new_offset = offset + chord.length in
-		  (* let new_row = new_offset / 16 in *)
-		  (* if new_row <> row then failwith "row" ; *)
-		let new_cell = new_offset / 4 in 
-		  if new_cell <> cell &&  new_offset mod 4 <> 0 then
-		    failwith "bad end cell" ;
-		  if new_offset mod 4  = 0 then (
-		    fprintf fout "</td>" ;
-		    if new_offset mod 16 = 0 then fprintf fout "</tr>\n" ;
-		  ) ;
-		  print_chords tl new_offset
+      
+      let rec print_chords c offset tailles_lignes = 
+	match tailles_lignes with
+	  | [] -> __SONG__failwith "internal error"
+	  | 0::[] -> (
+	      fprintf fout "%s</td></tr>" ( if offset mod 4 = 0 then "" else "|") ;
+	      if c <> [] then __SONG__failwith ("no more line, but remaining chords")
+	    )
+	  | 0::tl -> fprintf fout "%s</td></tr><tr>"  ( if offset mod 4 = 0 then "" else "|") ; print_chords c 0 tl
+	  | hd_tailles_lignes::tl_tailles_lignes -> (
+	      match c with
+		| [] -> __SONG__failwith ("no more chords")
+		| chord::tl -> (
+		    let open Data.Chord in
+		    let cell = offset / 4 in 
+		      if offset mod 4  = 0 then fprintf fout "<td>" ;
+		      fprintf fout "<span class=\"note\">%c%s%s%s%s</span> \n" 
+			(Char.uppercase chord.name) 
+			(match chord.alteration with | Flat -> "<sup>&#x266d</sup>" | Sharp -> "<sup>&#9839</sup>" | Rien -> "")
+			(if chord.minor then "m" else "")
+			(if chord.mi7 then "7" else "")
+			(if chord.ma7 then "7M" else "")
+		      ;  
+		      let new_offset = offset + chord.length in
+			(* let new_row = new_offset / 16 in *)
+			(* if new_row <> row then failwith "row" ; *)
+		      let new_cell = new_offset / 4 in 
+			if new_cell <> cell &&  new_offset mod 4 <> 0 then
+			  (* failwith "bad end cell" ; *) () else () ;
+			if new_offset mod 4  = 0 then (
+			  fprintf fout "</td>" ;
+			  (* if new_offset mod 16 = 0 then fprintf fout "</tr>\n" ; *)
+			) ;
+			print_chords tl new_offset (hd_tailles_lignes-chord.length::tl_tailles_lignes)
+		  )
 	    )
       in
 
 
 
-      let print_section name s =
+      let print_section name s = __SONG__try name (
 	fprintf fout "<h2>%s</h2>\n" s.Section.name ;
 	fprintf fout "<table id=\"chords\">\n" ;
-	print_chords s.Section.chords 0  ;
+	let taille_lignes = match s.Section.mesures_par_ligne with
+	  | Some l -> printf "HHHHHHHHHHHHHhhhas taille\n"  ; l
+	  | None -> let n = (List.length s.Section.chords) / 16 + 1 in Array.to_list (Array.make n 16) 
+	in
+	print_chords s.Section.chords 0 (taille_lignes)  ;
 	fprintf fout "</table>\n" 
+      )
       in
 	List.iter ( fun (name,s) -> print_section name s ) (List.of_enum (PMap.enum song.Song.sections))
     in

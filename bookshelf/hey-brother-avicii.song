@@ -1,4 +1,3 @@
-
 \song {
 
     \song_title {"Hey, Brother"}
@@ -12,14 +11,20 @@
 
     \section {
        \section_title { "couplet" }
-       \mesures_par_ligne { 18 18 16 16 }
-       \gm \bm 2\eb 2\bb 2\f 2\gm 2\gm 2\empty
+       \mesures_par_ligne { 18 18 16 12 }
+       \gm \bm 2\eb 2\bb 2\f 2\gm 2\gm 
+       \gm \bm 2\eb 2\bb 2\f 2\gm 2\gm 
+       \f 2\bb 2\eb \f \f
+       2\bb 2\eb \gm \gm 
     }
 
     \section {
        \section_title { "refrain" }
-       \mesures_par_ligne { 18 18 16 16 }
-       \am \bm 2\eb 2\bb 2\f 2\gm 2\gm 2\empty
+       \mesures_par_ligne { 14 14 16 12 }
+       \gm 2\eb 2\bb \bb 2\bb
+       \gm 2\eb 2\bb \bb 2\bb
+       \f 2\bb 2\eb \f \f
+       2\bb 2\eb \gm \gm
     }
 
     \structure {

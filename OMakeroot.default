@@ -12,7 +12,8 @@ DefineCommandVars()
 # Include the OMakefile in this directory.
 #
 public.srcdir   = $(dir $(srcdir))
-
+CREATE_SUBDIRS=true
 vmount(-c, $(srcdir), .)
+
 
 .SUBDIRS: .

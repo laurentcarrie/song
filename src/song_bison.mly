@@ -15,9 +15,12 @@ open Data
 %token BEGIN_SONG BEGIN_SECTION BEGIN_STRUCTURE BEGIN_LYRICS
 %token END
 %token EOF
-%token <string> NAME LINE
+%token <string> NAME LINE DIGITS
 %token <int> MARK
 %token SONG_TITLE
+%token SONG_FORMAT
+%token SECTION_TITLE
+%token SECTION_MESURE_PAR_LIGNE
 
 
 %left PLUS MINUS
@@ -29,12 +32,12 @@ open Data
 %type <Data.Song.t> input
 %type <Data.Song.t> song 
 %type <Data.Song.t> song_data
-%type <Chord.t> chord
-%type <Chord.t list> chord_list
-
+%type <Data.Chord.t> chord
+%type <Data.Chord.t list> chord_list
+%type <Data.Section.t> section_data section
 
 %%
-input : song  { printf "ok, input done, song name is %s\n" $1.Song.name ; flush stdout ; $1 }
+input : song  { (* printf "ok, input done, song name is %s\n" $1.Song.name ; flush stdout ; *) $1 }
 | error {
     printf "PARSE ERROR 1 !\nstructure of song is \n\
 \\begin(name of the song)\n\
@@ -52,21 +55,30 @@ song : BEGIN_SONG LBRACE song_data RBRACE {
 data\n\
 \\end\n\
 " ; flush stdout ;
-    { Song.name ="" ; sections = PMap.create String.compare ; structure = [] ; lyrics = [] }
+    { Song.name ="" ; format = None ; sections = PMap.create String.compare ; structure = [] ; lyrics = [] }
   }
     
 
-song_data  : { { Song.name = "" ; sections = PMap.create String.compare ; structure = [] ; lyrics = [] } }
-           | SONG_TITLE LBRACE NAME RBRACE song_data {
-	       { $5 with Song.name = $3 ^ $5.Song.name} 
+song_data  : { 	       
+              { Song.name = "" ; format = None ; sections = PMap.create String.compare ; structure = [] ; lyrics = [] } }
+           | song_data SONG_TITLE LBRACE NAME RBRACE {
+	       
+               { $1 with Song.name = $4 ^ $1.Song.name} 
+	     }
+           | song_data SONG_FORMAT LBRACE NAME RBRACE {
+	       
+	       { $1 with Song.format = Some $4 }
 	     }
 	   | song_data section {
+	       
 	       { $1 with Song.sections = PMap.add $2.Section.name $2 $1.Song.sections }
 	     }
 	   | song_data structure {
+	       
 	       { $1 with Song.structure = $2 }
 	     }
 	   | song_data lyrics {
+	       
 	       { $1 with Song.lyrics = $1.Song.lyrics @ [$2] }
 	     }
 
@@ -88,17 +100,38 @@ lyrics : BEGIN_LYRICS LBRACE NAME work_with_mark_list RBRACE {
 }
 
 section_name_list : { [] }
-	   | NAME { [ $1 ] }
 	   | section_name_list NAME { $1 @ [ $2 ] }
+	   | NAME { [ $1 ] }
 
-chord : CHORD { $1 }
+chord : CHORD {
+  
+  $1
+}
 
-chord_list :  { [] }
-	   | chord { [ $1 ] }
-	   | chord_list chord { $1 @ [ $2 ] }
+chord_list :  
+	   | chord_list chord { 
+	       $1 @ [ $2 ] 
+	     }
+	   | chord {  [ $1 ] }
+section_data : { 
+	       
+               { Section.name="" ; mesures_par_ligne=None ; chords=[] } 
+           }
+	   | SECTION_TITLE LBRACE NAME RBRACE section_data {
+	       
+	       { $5 with Section.name=$3 }
+	     }
+	   | SECTION_MESURE_PAR_LIGNE LBRACE DIGITS RBRACE section_data {
+	       
+	       { $5 with Section.mesures_par_ligne=Some $3 }}
+           | chord_list section_data {
+	       
+               { $2 with Section.chords=$1 }
+             }
 
-section :  BEGIN_SECTION LBRACE NAME chord_list RBRACE {
-  { Section.name=$3 ; chords=$4 }
+section :  BEGIN_SECTION LBRACE section_data RBRACE {
+	       
+  $3
 }
 
 ;

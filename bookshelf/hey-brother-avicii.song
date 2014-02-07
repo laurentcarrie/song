@@ -1,31 +1,33 @@
 
 \song {
 
-    \song_title {"cinnamon girl"}
+    \song_title {"Hey, Brother"}
+
+    \format { "fda" }
 
     \section {
-    intro
-    \c \c
+       \section_title {  "intro" }
+       \gm \gm \gm \gm
     }
 
     \section {
-    couplet
-    \d \am 2\c  2\e \f \g \a \a \a
+       \section_title { "couplet" }
+       \mesures_par_ligne { 18 18 16 16 }
+       \gm \bm 2\eb 2\bb 2\f 2\gm 2\gm 2\empty
     }
 
     \section {
-    refrain
-    \a \b \c \d \e \f \g \e
+       \section_title { "refrain" }
+       \mesures_par_ligne { 18 18 16 16 }
+       \am \bm 2\eb 2\bb 2\f 2\gm 2\gm 2\empty
     }
-
-    // la structure
 
     \structure {
     intro couplet refrain
     }
 
     \lyrics {
-      couplet
+couplet
 I wanna live\n
 with a cinnamon girl\n
 I could be happy\n
@@ -45,7 +47,7 @@ My cinnamon girl.\n
 \lyrics {
 couplet
 Ten silver saxes,\n
-\8a bass with a bow\n
+a bass with a bow\n
 The drummer relaxes\n
 and waits between shows\n
 For his cinnamon girl.\n
@@ -75,3 +77,4 @@ Yeah...yeah...yeah.
 
     
     
+

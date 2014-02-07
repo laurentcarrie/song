@@ -1,0 +1,36 @@
+.PHONY: build clean test 
+.DEFAULT: build 
+
+.SUBDIRS: pa
+
+
+USE_OCAMLFIND = true
+BYTE_ENABLED = false
+NATIVE_ENABLED = true
+OCAMLFLAGS += -g -warn-error A
+OCAMLDEPFLAGS +=  -ppopt pa_extend.cmo -ppopt q_MLast.cmo 
+cmo = $(file pa/pa_song.cmo)
+LocalOCamlGeneratedFiles($(cmo))
+
+CAMLP4 = camlp4
+OCAMLFLAGS+= -syntax camlp4o
+OCAMLFLAGS += -pp 'camlp4o $(cmo)' 
+OCAMLOPTFLAGS+= 
+#
+
+OCAMLPACKS= extlib
+
+ocamlfind ocamlopt song_exn.mli -o song_exn.cmi -package extlib
+
+build: $(OCamlProgram song,song_exn main song_lex song_bison html data  )
+
+LocalOCamlGeneratedFiles(song_lex.ml song_bison.ml song_bison.mli)
+
+song_lex.ml : song_lex.mll
+	ocamllex $<
+
+
+song_bison.ml song_bison.mli : song_bison.mly
+	ocamlyacc  $<
+
+

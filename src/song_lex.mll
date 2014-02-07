@@ -17,12 +17,13 @@
 
 let digit = ['0'-'9']
 let chord = ['a'-'g']
-let name =  ['a'-'z' 'A'-'Z' '0'-'9'] ['a'-'z' 'A'-'Z' '0'-'9' ]*
-let comment = "//"  ['a'-'z' 'A'-'Z' '0'-'9' ' ']* '\n'
-
+let alteration = ['b' '#']
+let name =  ['a'-'z' 'A'-'Z' '0'-'9'] ['a'-'z' 'A'-'Z' '0'-'9' ',' ]*
+let comment = "//"  ['a'-'z' 'A'-'Z' '0'-'9' ' ' ',']* '\n'
+let digits = ['0'-'9'] ['0'-'9' ' ']+
 
 rule token = parse
-  | comment as c { printf "comment : %S\n" c ; token lexbuf }
+  | comment as c { dp "comment : " c ; token lexbuf }
   | [' ' '\t']+	{ token lexbuf  }
   | '\n'	{ token lexbuf (* NEWLINE *) }
   | digit+
@@ -38,25 +39,33 @@ rule token = parse
   | ')'		{ RPAREN }
   | '{'		{ LBRACE }
   | '}'		{ RBRACE }
-  | (['1'-'3']? as length) "\\" (chord as c) ('m'? as minor) { 
-      printf "lex chord %c\n" c ; flush stdout ; 
+  | (['1'-'3']? as length) "\\empty" { 
+      CHORD { Data.Chord.name='-' ; length=int_of_string length;alteration=Data.Rien;minor=false;mi7=false;ma7=false}
+    }
+  | (['1'-'3']? as length) "\\" (chord as c) (alteration? as alteration) ('m'? as minor) { 
+      dp "lex chord " (sprintf "c=%c a=%s m=%s" c alteration minor) ;
       let length = match length with 
 	| "" -> 4
 	| s  -> int_of_string s
       in
       let minor = (minor = "m") in
-	CHORD { Data.Chord.name=c ; length=length; minor=minor ; mi7=false ; ma7=false}
+      let alteration = match alteration with | "b" -> Data.Flat | "#" -> Data.Sharp | _ -> Data.Rien in
+	CHORD { Data.Chord.name=c ; length=length; alteration=alteration;minor=minor ; mi7=false ; ma7=false}
     }  
-  | "\\song"     { BEGIN_SONG } 
+  | "\\song"     { dp "BEGIN_SONG" "" ;  BEGIN_SONG } 
   | "\\song_title"     { dp "song_title" "" ; SONG_TITLE } 
+  | "\\section_title"     { dp "section_title" "" ; SECTION_TITLE } 
+  | "\\mesures_par_ligne"     { dp "mesures par ligne" "" ; SECTION_MESURE_PAR_LIGNE } 
   | "\\end"     { END } 
   | "\\section"     { dp "section" "" ; BEGIN_SECTION } 
   | "\\lyrics"     { BEGIN_LYRICS } 
   | "\\structure"     { dp "structure" ""  ;  BEGIN_STRUCTURE } 
+  | "\\format" { SONG_FORMAT  }
   | "\\" (digit+ as num) { MARK (int_of_string num) }
   | "\\n"   { NEWLINE } 
-  | '"' ((name | ' ')+ as c) '"'   {   printf "name : %S\n" c ; flush stdout ; NAME c }
-  | (name as c)    {   printf "name : %S\n" c ; flush stdout ; NAME c }
+  | '"' ((name | ' ')+ as c) '"'   {   dp "name0" c ; NAME c }
+  | (name as c)    {   dp "name" c ; NAME c }
+  | (digits as c)  { dp "digits" c ; DIGITS c }
   | _		{ token lexbuf }
   | eof		{ raise End_of_file }
       

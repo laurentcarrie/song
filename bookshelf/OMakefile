@@ -1,0 +1,15 @@
+.PHONY: build
+.DEFAULT: build
+
+songs[]=
+#	cinnamon-girl
+	hey-brother-avicii
+
+SONG=$(ROOT)/src/song
+
+foreach(f,$(songs))
+	$f.html : $(SONG) $f.song
+		$(SONG) $f.song
+	build : $f.html
+	export .RULE
+

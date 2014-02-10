@@ -1,85 +1,74 @@
 \song {
 
-    \song_title {"Hey, Brother"}
+\title { "Hey, Brother" }
 
-    \format { "fda" }
+\format { fda }
 
-    \section {
-       \section_title {  "intro" }
-       \gm \gm \gm \gm
-    }
+\section {
+\title {  intro }
+\grille {
+\gm \gm \gm \gm
+}
+}
 
-    \section {
-       \section_title { "couplet" }
-       \mesures_par_ligne { 18 18 16 12 }
-       \gm \bm 2\eb 2\bb 2\f 2\gm 2\gm 
-       \gm \bm 2\eb 2\bb 2\f 2\gm 2\gm 
-       \f 2\bb 2\eb \f \f
-       2\bb 2\eb \gm \gm 
-    }
+\section {
+\title { couplet }
+\mesures_par_ligne { 18 18 16 12 }
+\grille {
+\gm \bm 2\eb 2\bb 2\f 2\gm 2\gm 
+\gm \bm 2\eb 2\bb 2\f 2\gm 2\gm 
+\f 2\bb 2\eb \f \f
+2\bb 2\eb \gm \gm 
+}
+}
 
-    \section {
-       \section_title { "refrain" }
-       \mesures_par_ligne { 14 14 16 12 }
-       \gm 2\eb 2\bb \bb 2\bb
-       \gm 2\eb 2\bb \bb 2\bb
-       \f 2\bb 2\eb \f \f
-       2\bb 2\eb \gm \gm
-    }
+\section {
+\title { refrain }
+\mesures_par_ligne { 14 14 16 12 }
+\grille {
+\gm 2\eb 2\bb \bb 2\bb
+\gm 2\eb 2\bb \bb 2\bb
+\f 2\bb 2\eb \f \f
+2\bb 2\eb \gm \gm
+}
+}
 
-    \structure {
-    intro couplet refrain
-    }
-
-    \lyrics {
-couplet
-I wanna live\n
-with a cinnamon girl\n
-I could be happy\n
-the rest of my life\n
-With a cinnamon girl.\n
+\structure {
+intro couplet refrain
 }
 
 \lyrics {
-couplet
-A dreamer of pictures\n
-I run in the night\n
-You see us together,\n
-chasing the moonlight,\n
-My cinnamon girl.\n
-}
+\title { couplet }
+\text {
+Hey, Brother
+There's an endless road to rediscover
+Hey, Sister
+Know the water's sweeet but blood is thicker
+Oooh, when the sky comes falling down for you
+there's nothing in this world I wouldn't do.
+}		
+}	
 
 \lyrics {
-couplet
-Ten silver saxes,\n
-a bass with a bow\n
-The drummer relaxes\n
-and waits between shows\n
-For his cinnamon girl.\n
+\title { couplet }
+\text {
+Hey, Brother
+Do you still believe in one another?
+Hey, Sister
+Do you still believe in love, I wonder
+Oooh, when the sky comes falling down for you
+there's nothing in this world I wouldn't do
+}
 }
 
-\lyrics {
-couplet 
-A dreamer of pictures\n
-I run in the night\n
-You see us together,\n
-chasing the moonlight,\n
-My cinnamon girl.\n
-}
 
-\lyrics {
-couplet
-Pa sent me money now\n
-I'm gonna make it somehow\n
-I need another chance\n
-You see your baby loves to dance\n
-Yeah...yeah...yeah.
+\output {
+\title { xxxx }
+\position_lyrics { 3 1 10 10 }
+\position_grille { 3 15 20 20 }
 }
-
-    }
 
 }
 
-    
-    
+
 

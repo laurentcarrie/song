@@ -19,13 +19,39 @@ module Section = struct
   }
 end
 
+module Lyrics = struct
+  type t = {
+    name : string ;
+    text : string ;
+    index : int option ;
+  }
+end
+
+module Output = struct
+  type position = {
+    top : int ;
+    left : int ;
+    width : int ;
+    height : int
+  }
+    
+  type t = {
+    name : string ;
+    lyrics : position option ;
+    grille : position option ;
+    structure : position option ;
+  }
+end
+
 module Song = struct 
   type t = {
     name : string ;
     format : string option ;
     sections : (string,Section.t) PMap.t ;
     structure : string list ;
-    lyrics : (string (* nom de la section *) * ((int option*string) list)) list ;
+    lyrics : Lyrics.t list ;
+    outputs : Output.t list ;
+    (* lyrics : (string (* nom de la section *) * ((int option*string) list)) list ; *)
   }
 end
 
@@ -35,3 +61,7 @@ module View = struct
   }
 end
 
+let line_number = ref 1
+
+type context = | IN_TEXT | OUT_TEXT
+let context = ref OUT_TEXT

@@ -67,37 +67,28 @@ color:red
 
 div.sections
 {
-width:320px;
 padding:10px;
 border:5px solid gray;
 margin:0px;
 position:absolute;
-left:2cm;
-top:4cm;
 }
 
 
 div.lyrics
 {
-width:400px;
 padding:10px;
 border:5px solid gray;
 margin:0px;
 position:absolute;
-left:20cm;
-top:4cm;
 }
 
 
 div.structure
 {
-width:6cm;
 padding:10px;
 border:5px solid gray;
 margin:0px;
 position:absolute;
-left:10cm;
-top:4cm ;
 }
 
 span.lyrics-section{
@@ -111,10 +102,10 @@ word-spacing:1px
 " ;
     close_out fout
       
-let render_html song filename = __SONG__try "render_html" (
+let render_one_html song filename output = __SONG__try "render_html" (
 
     let () = printf "render_html\n" ; flush stdout in
-
+    let filename = ((Filename.basename filename) ^ "-" ^ output.Output.name ^ ".html") in
     let () = print_css () in
 
     let fout = open_out_bin filename in
@@ -176,7 +167,6 @@ let render_html song filename = __SONG__try "render_html" (
 
 
     let print_structure () =
-      fprintf fout "<div class=\"structure\">\n" ;
       fprintf fout "<h2>structure</h2>\n" ;
       fprintf fout "<ol>\n" ;
       let count = ref 1 in
@@ -188,27 +178,20 @@ let render_html song filename = __SONG__try "render_html" (
 	    count := count2  ;
 	) song.Song.structure ;
 	fprintf fout "</ol>\n" ;
-	fprintf fout "</div>\n"
     in
 
     let print_lyrics () =
-      fprintf fout "<div class=\"lyrics\">\n" ;
+      let open Data.Lyrics in
       fprintf fout "<h2>lyrics</h2>\n" ;
       fprintf fout "<ol>\n" ;
-      List.iter ( fun (sname, lyrics) ->
-	fprintf fout "<li><span class=\"lyrics-section\">%s</span><br/>\n" sname ;
-	List.iter ( fun (mark,word) -> 
-	  (match mark with 
-	    | None -> fprintf fout "%s " word
-	    | Some i -> (* if (i mod 4  = 1) && (i<>1) then fprintf fout "</br>\n" ; *) 
-		fprintf fout "<span id=\"measure\">%d %s </span>" i word
-	  ) ;
-	  if word = "\n" then fprintf fout "</br>" ;
-	) lyrics ;
+      List.iter ( fun lyrics ->
+	let text = lyrics.text in
+	let text = Str.global_replace (Str.regexp "\n") "<br/>" text in
+	fprintf fout "<li><span class=\"lyrics-section\">%s</span><br/>\n" lyrics.name ;
+	fprintf fout "%s" text ;
 	fprintf fout "</li>" ;
       ) song.Song.lyrics ;
       fprintf fout "</ol>\n" ;
-      fprintf fout "</div>\n" ;
     in
       
 
@@ -219,15 +202,30 @@ let render_html song filename = __SONG__try "render_html" (
 <body>
 <p id=\"songname\">%s</p>\n" song.Song.name ;
 
-      
-      fprintf fout "<div class=\"sections\">\n" ;
-      print_sections () ;
-      fprintf fout "</div>\n" ;
-      print_structure () ;
-      print_lyrics () ;
-      fprintf fout "</body></html>\n" ;
-      close_out fout
+      let print_item f name position =
+	match position with
+	  | Some position -> 
+	      let open Data.Output in
+		fprintf fout "<div class=\"%s\" style=\"width:%dcm;height:%dcm;left:%dcm;top:%dcm\">\n"
+		  name position.width position.height position.left position.top ;
+		f () ;
+		fprintf fout "</div>\n"
+	  | None -> ()
+      in
+	print_item print_sections "sections" output.Output.grille ;
+	print_item print_structure "structure" output.Output.structure ;
+	print_item print_lyrics "lyrics" output.Output.lyrics ;
 
+	fprintf fout "</body></html>\n" ;
+	close_out fout
+	  
 )
 
-	
+
+
+
+let render_html song filename = __SONG__try "render_html" (
+  List.iter ( fun output ->
+    render_one_html song filename output 
+  ) song.Song.outputs
+)

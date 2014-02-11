@@ -22,7 +22,18 @@ OCAMLPACKS= extlib,str
 
 ocamlfind ocamlopt song_exn.mli -o song_exn.cmi -package extlib
 
-build: $(OCamlProgram song,song_exn main song_lex song_bison html data  )
+src[]=
+	song_exn
+	main
+	song_lex
+	song_bison
+	html
+	data
+	grille_of_file
+	lyrics_of_file
+	structure_of_file
+
+build: $(OCamlProgram song,$(src))
 
 LocalOCamlGeneratedFiles(song_lex.ml song_bison.ml song_bison.mli)
 

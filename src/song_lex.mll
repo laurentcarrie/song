@@ -37,18 +37,14 @@ let digits = ['0'-'9'] ['0'-'9' ' ']+
 	    { NUM (let f = float_of_string num in f ) }
 	| '{'		{ match !context with OUT_TEXT -> dp0 "LBRACE" ; LBRACE | IN_TEXT -> dp0 "LBRACE ignore" ; token lexbuf }
 	| '}'		{ dp0 "RBRACE" ; context := OUT_TEXT ; RBRACE }
-	| (['1'-'3']? as length) "\\empty" { 
-	    CHORD { Data.Chord.name='-' ; length=int_of_string length;alteration=Data.Rien;minor=false;mi7=false;ma7=false}
-	  }
 	| (['1'-'3']? as length) "\\" (chord as c) (alteration? as alteration) ('m'? as minor) { 
 	    dp "lex chord " (sprintf "c=%c a=%s m=%s" c alteration minor) ;
+	    let note = { Data.Note.letter = c ; is_7 = false ; is_7M = false ; is_m = (minor = "m") ; is_flat = (alteration="b") ; is_sharp=(alteration="#") } in
 	    let length = match length with 
 	      | "" -> 4
 	      | s  -> int_of_string s
 	    in
-	    let minor = (minor = "m") in
-	    let alteration = match alteration with | "b" -> Data.Flat | "#" -> Data.Sharp | _ -> Data.Rien in
-	      CHORD { Data.Chord.name=c ; length=length; alteration=alteration;minor=minor ; mi7=false ; ma7=false}
+	      CHORD { Data.Chord.note=note ; length=length; }
 	  }  
 	| "\\song"     { dp "BEGIN_SONG" "" ;  BEGIN_SONG } 
 	| "\\title"     { dp0 "title"  ; TITLE } 

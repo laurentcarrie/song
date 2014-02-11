@@ -64,8 +64,8 @@ there's nothing in this world I wouldn't do
 
 \output {
 \title { xxxx }
-\position_lyrics { 3 1 10 10 }
-\position_grille { 3 15 20 20 }
+\position_lyrics { 3 1 0 0 }
+\position_grille { 3 15 0 0 }
 }
 
 }

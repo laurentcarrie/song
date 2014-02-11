@@ -1,21 +1,45 @@
+open Printf
+
 type alteration = | Sharp | Flat | Rien
+
+module Note = struct 
+  type t = {
+    letter : char ;
+    is_7   : bool ;
+    is_7M : bool ;
+    is_m  : bool ;
+    is_flat : bool ;
+    is_sharp : bool ;
+  }
+  let name t = sprintf "%c%s%s%s" 
+    t.letter
+    ( if t.is_m then "m" else "")
+    ( if t.is_sharp then "#" else "")
+    ( if t.is_flat then "b" else "")
+  let html_name t = sprintf "%c%s%s%s" 
+    t.letter
+    ( if t.is_m then "m" else "")
+    ( if t.is_sharp then "<sup>&#9839</sup>" else "")
+    ( if t.is_flat then "<sup>&#x266d</sup>" else "")
+end
+  
+
 
 module Chord = struct
   type t = {
-    name : char ;
-    alteration : alteration ;
+    note : Note.t ;
     length  : int ;
-    minor : bool ;
-    mi7 : bool ;
-    ma7 : bool ;
   }
 end
   
 module Section = struct
+  type c = 
+      | C of Chord.t
+      | NL
   type t = {
     name: string ;
-    mesures_par_ligne: int list option ;
-    chords : Chord.t list ;
+    chords : c list ;
+    signature : int ;
   }
 end
 
@@ -29,10 +53,10 @@ end
 
 module Output = struct
   type position = {
-    top : int ;
-    left : int ;
-    width : int ;
-    height : int
+    top : int  option ;
+    left : int option ;
+    width : int option ;
+    height : int option ;
   }
     
   type t = {
@@ -43,12 +67,19 @@ module Output = struct
   }
 end
 
+module Structure = struct
+  type t = {
+    section_name : string ;
+    comment : string ;
+  }
+end
+
 module Song = struct 
   type t = {
     name : string ;
     format : string option ;
     sections : (string,Section.t) PMap.t ;
-    structure : string list ;
+    structure : Structure.t list ;
     lyrics : Lyrics.t list ;
     outputs : Output.t list ;
     (* lyrics : (string (* nom de la section *) * ((int option*string) list)) list ; *)

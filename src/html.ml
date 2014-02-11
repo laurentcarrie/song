@@ -3,7 +3,11 @@ open Printf
 open ExtList
 
 let length_of_section s =
-  List.fold_left ( fun acc c -> acc + c.Chord.length ) 0 s.Section.chords
+  List.fold_left ( fun acc c -> acc + 
+    match c with
+      | Section.NL -> 0
+      | Section.C c -> c.Chord.length 
+  ) 0 s.Section.chords
 
 module PMap = struct 
   include PMap
@@ -70,7 +74,6 @@ div.sections
 padding:10px;
 border:5px solid gray;
 margin:0px;
-position:absolute;
 }
 
 
@@ -79,7 +82,6 @@ div.lyrics
 padding:10px;
 border:5px solid gray;
 margin:0px;
-position:absolute;
 }
 
 
@@ -88,7 +90,6 @@ div.structure
 padding:10px;
 border:5px solid gray;
 margin:0px;
-position:absolute;
 }
 
 span.lyrics-section{
@@ -101,7 +102,8 @@ word-spacing:1px
 }
 " ;
     close_out fout
-      
+
+
 let render_one_html song filename output = __SONG__try "render_html" (
 
     let () = printf "render_html\n" ; flush stdout in
@@ -112,40 +114,27 @@ let render_one_html song filename output = __SONG__try "render_html" (
 
     let print_sections () =
       
-      let rec print_chords c offset tailles_lignes = 
-	match tailles_lignes with
-	  | [] -> __SONG__failwith "internal error"
-	  | 0::[] -> (
-	      fprintf fout "%s</td></tr>" ( if offset mod 4 = 0 then "" else "|") ;
-	      if c <> [] then __SONG__failwith ("no more line, but remaining chords")
+      let rec print_chords l signature offset = 
+	match l with
+	  | [] -> ()
+	  | Section.NL::[] -> (
+	      let s = if offset mod signature <> 0 then " - " else "" in
+		fprintf fout "  <span class=\"note\">%s</span></td>\n</tr>\n" s ;
 	    )
-	  | 0::tl -> fprintf fout "%s</td></tr><tr>"  ( if offset mod 4 = 0 then "" else "|") ; print_chords c 0 tl
-	  | hd_tailles_lignes::tl_tailles_lignes -> (
-	      match c with
-		| [] -> __SONG__failwith ("no more chords")
-		| chord::tl -> (
-		    let open Data.Chord in
-		    let cell = offset / 4 in 
-		      if offset mod 4  = 0 then fprintf fout "<td>" ;
-		      fprintf fout "<span class=\"note\">%c%s%s%s%s</span> \n" 
-			(Char.uppercase chord.name) 
-			(match chord.alteration with | Flat -> "<sup>&#x266d</sup>" | Sharp -> "<sup>&#9839</sup>" | Rien -> "")
-			(if chord.minor then "m" else "")
-			(if chord.mi7 then "7" else "")
-			(if chord.ma7 then "7M" else "")
-		      ;  
-		      let new_offset = offset + chord.length in
-			(* let new_row = new_offset / 16 in *)
-			(* if new_row <> row then failwith "row" ; *)
-		      let new_cell = new_offset / 4 in 
-			if new_cell <> cell &&  new_offset mod 4 <> 0 then
-			  (* failwith "bad end cell" ; *) () else () ;
-			if new_offset mod 4  = 0 then (
-			  fprintf fout "</td>" ;
-			  (* if new_offset mod 16 = 0 then fprintf fout "</tr>\n" ; *)
-			) ;
-			print_chords tl new_offset (hd_tailles_lignes-chord.length::tl_tailles_lignes)
-		  )
+	  | (Section.C c)::[] -> (
+	      let s = if offset mod signature <> 0 then " - " else "" in
+		fprintf fout "  <span class=\"note\">%s%s</span></td>\n</tr>" (Note.html_name c.Chord.note) s
+	    )
+	  | Section.NL::tl -> 
+	      let s = if offset mod signature <> 0 then " - " else "" in
+		fprintf fout "  <span class=\"note\">%s</span></td>\n</tr>\n<tr>\n" s ;
+		print_chords tl signature 0
+	  | (Section.C c)::tl -> (
+	      if offset mod (signature) = 0 then  fprintf fout "<td>" ;
+	      (* if offset >= (signature) then __SONG__failwith "bad sequence of chord length" else () ; *)
+	      fprintf fout "  <span class=\"note\">%s</span> "  (Note.html_name c.Chord.note) ;
+	      let offset = offset + c.Chord.length in
+		print_chords tl signature offset
 	    )
       in
 
@@ -153,12 +142,8 @@ let render_one_html song filename output = __SONG__try "render_html" (
 
       let print_section name s = __SONG__try name (
 	fprintf fout "<h2>%s</h2>\n" s.Section.name ;
-	fprintf fout "<table id=\"chords\">\n" ;
-	let taille_lignes = match s.Section.mesures_par_ligne with
-	  | Some l -> printf "HHHHHHHHHHHHHhhhas taille\n"  ; l
-	  | None -> let n = (List.length s.Section.chords) / 16 + 1 in Array.to_list (Array.make n 16) 
-	in
-	print_chords s.Section.chords 0 (taille_lignes)  ;
+	fprintf fout "<table id=\"chords\">\n<tr>\n" ;
+	print_chords s.Section.chords s.Section.signature 0   ;
 	fprintf fout "</table>\n" 
       )
       in
@@ -170,7 +155,8 @@ let render_one_html song filename output = __SONG__try "render_html" (
       fprintf fout "<h2>structure</h2>\n" ;
       fprintf fout "<ol>\n" ;
       let count = ref 1 in
-	List.iter ( fun sname ->
+	List.iter ( fun s ->
+	  let sname = s.Structure.section_name in
 	  let s = PMap.find sname song.Song.sections in
 	  let l = length_of_section s in
 	  let count2 = !count + l in 
@@ -206,8 +192,13 @@ let render_one_html song filename output = __SONG__try "render_html" (
 	match position with
 	  | Some position -> 
 	      let open Data.Output in
-		fprintf fout "<div class=\"%s\" style=\"width:%dcm;height:%dcm;left:%dcm;top:%dcm\">\n"
-		  name position.width position.height position.left position.top ;
+		fprintf fout "<div class=\"%s\" style=\"%s%s%s%s\">\n"
+		  name 
+		  (match position.top with | None -> "" | Some i -> sprintf "top:%dcm;" i)
+		  (match position.left with | None -> "" | Some i -> sprintf "left:%dcm;" i)
+		  (match position.width with | None -> "" | Some i -> sprintf "width:%dcm;" i)
+		  (match position.height with | None -> "" | Some i -> sprintf "height:%dcm;" i)
+		;
 		f () ;
 		fprintf fout "</div>\n"
 	  | None -> ()

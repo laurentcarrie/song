@@ -122,10 +122,10 @@ position : DIGITS
   let position = match position with 
     | [top;left;width;height] -> (
 	{ Data.Output.
-	    top = int_of_string top ;
-	  left = int_of_string left ;
-	  width = int_of_string width ;
-	  height = int_of_string height ;
+	  top =  (match top  with | "0" -> None | s -> Some (int_of_string s)) ;
+	  left =  (match left  with | "0" -> None | s -> Some (int_of_string s)) ;
+	  width =  (match width  with | "0" -> None | s -> Some (int_of_string s)) ;
+	  height = (match height with | "0" -> None | s -> Some (int_of_string s)) ;
 		     }
       )
     | _ -> failwith ("position : top left width height") ;
@@ -167,8 +167,8 @@ lyrics :
            | BEGIN_LYRICS LBRACE lyrics_data RBRACE  { $3 }
 
 section_name_list : { [] }
-	   | section_name_list NAME { $1 @ [ $2 ] }
-	   | NAME { [ $1 ] }
+	   | section_name_list NAME { $1 @ [ { Data.Structure.section_name=$2;comment="";} ] }
+	   | NAME { [ {Data.Structure.section_name=$1;comment="";} ] }
 
 chord : CHORD {
   $1
@@ -181,16 +181,12 @@ chord_list :
 	     }
 	   | chord {  [ $1 ] }
 section_data : 
-           | {{ Section.name="" ; mesures_par_ligne=None ; chords=[] } }
+           | {{ Section.name="" ; signature=4 ; chords=[] } }
 	   | section_data TITLE LBRACE NAME RBRACE {
 	       { $1 with Section.name=$4 }
 	     }
-	   | section_data SECTION_MESURE_PAR_LIGNE LBRACE DIGITS RBRACE  {
-	       { $1 with Section.mesures_par_ligne=__SONG__try "split string to int list" 
-		   (Some ( List.map int_of_string (Str.split (Str.regexp " ") $4))) }
-	     }
            | section_data GRILLE LBRACE chord_list RBRACE   {
-               { $1 with Section.chords=$4 }
+               { $1 with Section.chords=List.map ( fun c -> Section.C c) $4 }
              }
            | section_data error  {
 	       printf "parse error in section, near line %d\n" !line_number ; flush stdout ;

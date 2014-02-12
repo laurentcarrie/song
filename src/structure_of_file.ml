@@ -4,6 +4,7 @@ open ExtString
 
 
 let read_file song filename = __SONG__try "of_file.read_file" (
+  let song = { song with Song.digest = Util.update_digest song.Song.digest filename } in
   let fin = open_in_bin filename in
   let rec read acc current linecount =
     try
@@ -20,9 +21,11 @@ let read_file song filename = __SONG__try "of_file.read_file" (
 	    | Some current -> List.rev (current::acc)
   in
   let data = read [] None 1 in
-    List.iter ( fun l ->
+    (*
+      List.iter ( fun l ->
       printf "structure ----------> %s\n" l.Structure.section_name ;
       printf "-->\n%s\n" l.Structure.comment
-    ) data ;
+      ) data ;
+    *)
     { song with Song.structure=data }
 )

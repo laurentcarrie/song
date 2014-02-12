@@ -49,6 +49,7 @@ let chord_of_string s = __SONG__try ("note_of_string '" ^ s ^ "'") (
     { Data.Chord.note = note ; length=duration }
 )
 let read_file song filename = __SONG__try "Grille_of_file.read_file" (
+  let song = { song with Song.digest = Util.update_digest song.Song.digest filename } in
   let fin = open_in_bin filename in
   let rec read acc current linecount =
     try
@@ -72,14 +73,16 @@ let read_file song filename = __SONG__try "Grille_of_file.read_file" (
 	    | Some current -> PMap.add current.Data.Section.name current acc
   in
   let data = read (PMap.create String.compare) None 1 in
-    PMap.iter ( fun _ v -> 
-      printf "section %S\n" v.Data.Section.name ;
-      List.iter ( fun n ->
-	match n with
-	  | Section.NL -> printf "\n"
-	  | Section.C n ->
-	      printf "%S, %d\n" (Data.Note.name n.Data.Chord.note) n.Data.Chord.length
-      ) v.Data.Section.chords
-    ) data ;
+    (* 
+       PMap.iter ( fun _ v -> 
+       printf "section %S\n" v.Data.Section.name ;
+       List.iter ( fun n ->
+       match n with
+       | Section.NL -> printf "\n"
+       | Section.C n ->
+       printf "%S, %d\n" (Data.Note.name n.Data.Chord.note) n.Data.Chord.length
+       ) v.Data.Section.chords
+       ) data ;
+    *)
     { song with Song.sections = data }
 )

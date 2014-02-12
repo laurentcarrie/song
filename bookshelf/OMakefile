@@ -1,15 +1,13 @@
 .PHONY: build
 .DEFAULT: build
 
+
+
 songs[]=
-#	cinnamon-girl
 	hey-brother-avicii
 
-SONG=$(ROOT)/src/song
+build : catalog.txt
 
 foreach(f,$(songs))
-	$f.html : $(SONG) $f/grille.txt $f/lyrics.txt $f/structure.txt
-		$(SONG) $f
-	build : $f.html
+	build : $f.song/grille.txt $f.song/lyrics.txt $f.song/structure.txt $f.song/main.txt
 	export .RULE
-

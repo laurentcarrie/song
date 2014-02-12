@@ -60,7 +60,7 @@ module Output = struct
   }
     
   type t = {
-    name : string ;
+    filename : string ;
     lyrics : position option ;
     grille : position option ;
     structure : position option ;
@@ -76,12 +76,14 @@ end
 
 module Song = struct 
   type t = {
-    name : string ;
+    title : string ;
+    auteur : string ;
     format : string option ;
     sections : (string,Section.t) PMap.t ;
     structure : Structure.t list ;
     lyrics : Lyrics.t list ;
     outputs : Output.t list ;
+    digest : Digest.t ;
     (* lyrics : (string (* nom de la section *) * ((int option*string) list)) list ; *)
   }
 end

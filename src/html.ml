@@ -2,6 +2,8 @@ open Data
 open Printf
 open ExtList
 
+let (//) = Filename.concat
+
 let length_of_section s =
   List.fold_left ( fun acc c -> acc + 
     match c with
@@ -16,8 +18,8 @@ module PMap = struct
       | Not_found -> failwith("key '" ^ name ^ "' not found in map")
 end
 
-let print_css () =
-  let fout = open_out_bin "song.css" in
+let print_css dirname =
+  let fout = open_out_bin (dirname //  "song.css") in
     fprintf fout "
 #chords
 {
@@ -57,7 +59,13 @@ color:#000000;
 background-color:#EAF2D3;
 }
 
-#songname
+div.title
+{
+text-align:center ;
+font-size:5em ;
+}
+
+div.auteur
 {
 text-align:center ;
 font-size:5em ;
@@ -104,11 +112,11 @@ word-spacing:1px
     close_out fout
 
 
-let render_one_html song filename output = __SONG__try "render_html" (
+let render_one_html song dirname output = __SONG__try "render_html" (
 
-    let () = printf "render_html\n" ; flush stdout in
-    let filename = ((Filename.basename filename) ^ "-" ^ output.Output.name ^ ".html") in
-    let () = print_css () in
+    let filename = dirname // ( output.Output.filename ^ ".html") in
+    let () = printf "writing %s...\n" filename in
+    let () = print_css dirname in
 
     let fout = open_out_bin filename in
 
@@ -186,13 +194,15 @@ let render_one_html song filename output = __SONG__try "render_html" (
 <html>\n\
 <link rel=\"stylesheet\" type=\"text/css\" href=\"song.css\" />
 <body>
-<p id=\"songname\">%s</p>\n" song.Song.name ;
+<div class=\"title\">%s</div>\n" song.Song.title ;
+      fprintf fout "\
+<div class=\"auteur\">%s</div>\n" song.Song.auteur ;
 
       let print_item f name position =
 	match position with
 	  | Some position -> 
 	      let open Data.Output in
-		fprintf fout "<div class=\"%s\" style=\"%s%s%s%s\">\n"
+		fprintf fout "<div class=\"%s\" style=\"position:absolute;%s%s%s%s\">\n"
 		  name 
 		  (match position.top with | None -> "" | Some i -> sprintf "top:%dcm;" i)
 		  (match position.left with | None -> "" | Some i -> sprintf "left:%dcm;" i)
@@ -215,8 +225,12 @@ let render_one_html song filename output = __SONG__try "render_html" (
 
 
 
-let render_html song filename = __SONG__try "render_html" (
-  List.iter ( fun output ->
-    render_one_html song filename output 
-  ) song.Song.outputs
+let render_html song dirname = __SONG__try "render_html" (
+  match song.Song.outputs with
+    | [] -> printf "no output defined,... you will get no html file\n"
+    | outputs -> (
+	List.iter ( fun output ->
+	  render_one_html song dirname output 
+	) outputs
+      )
 )

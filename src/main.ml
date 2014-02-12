@@ -1,51 +1,80 @@
 open Printf
 open Data
+open ExtString
 
 let (//) = Filename.concat
+  
+(* let here = Filename.dirname Sys.argv.(0) *)
+let logfile = "log.html"
+let flog = open_out_bin logfile
 
-let main2 () = __SONG__try "main" (
-  let in_filename = Sys.argv.(1) in
-  let () = if Filename.check_suffix in_filename "song" then () else failwith "input file should have '.song' extension" in
-  let out_filename = (Filename.chop_extension in_filename) ^ ".html" in
-  let fin = open_in_bin in_filename in
-    try
-      let lexbuf = __SONG__try "lexing" (Lexing.from_channel fin) in
-      let song = __SONG__try "bisoning" (Song_bison.input Song_lex.token lexbuf) in
-	(*
-	  printf "OK : name is %s\n\n" song.Song.name ; 
-	  PMap.iter ( fun _ s ->
-	  printf "section %S\n" s.Section.name ;
-	  List.iter ( fun c -> printf "%c " c.Chord.name ) s.Section.chords ;
-	  printf "\n"
-	  ) song.Song.sections ;
-	  flush stdout ;
-	*)
-	Html.render_html song out_filename  ;
-	printf "%s -> %s\n" in_filename out_filename 
-    with End_of_file -> printf "EOF\n" ; flush stdout ; close_in fin ; exit 0
-)
+let log s =
+  fprintf flog "%s\n" s ;
+  flush flog
+
+let manage_song dirname  = 
+  try
+    printf "reading song in : '%s'\n" dirname ;
+    let song = { Song.title="???" ; Song.auteur="???" ; format=None ; sections=PMap.create String.compare ; structure=[];lyrics=[];outputs=[];
+		 digest=Digest.string ""} in
+    let song = Grille_of_file.read_file song (dirname // "grille.txt") in
+    let song = Lyrics_of_file.read_file song (dirname // "lyrics.txt") in
+    let song = Structure_of_file.read_file song (dirname // "structure.txt") in
+    let song = Main_of_file.read_file song (dirname // "main.txt") in
+    let song = Sortie_of_file.read_file song (dirname // "sortie.txt") in
+      Std.output_file ~filename:(dirname//"digest.txt") ~text:(Digest.to_hex song.Song.digest) ;
+      Html.render_html song "songs"
       
+  with
+    | e -> log (Song_exn.html_string_of_stack () ) ;  let () = __SONG__print_exn_stack e in Song_exn.clear_stack() ; ()
+
+
+(*
 let main() = __SONG__try "main" (
-  let in_dir = Sys.argv.(1) in
-  let song = { Song.name="???" ; format=None ; sections=PMap.create String.compare ; structure=[];lyrics=[];outputs=[] } in
-  let song = Grille_of_file.read_file song (in_dir // "grille.txt") in
-  let song = Lyrics_of_file.read_file song (in_dir // "lyrics.txt") in
-  let song = Structure_of_file.read_file song (in_dir // "structure.txt") in
-  let outputs = [
-    { Output.name = "yyyy" ;
-      lyrics = Some { Output.top=None ; left=None ; width = None ; height = None ; } ;
-      grille = Some { Output.top=None ; left=None ; width = None ; height = None ;} ;
-      structure = Some { Output.top=None ; left=None ; width = None ; height = None ;} ;
-    }
-  ] in
-  let song = { song with Song.outputs = outputs } in
-    Html.render_html song "XXXX"
+
+  let fcatalog = __SONG__try "open catalog" (open_in_bin Sys.argv.(1)) in
+  let rec read () = 
+    try
+      let line = input_line fcatalog in
+      let line = String.strip line in
+	manage_song line ;
+	read ()
+    with
+      | End_of_file -> close_in fcatalog ; ()
+  in
+    
+    read ()
+)
+*)
+
+
+
+
+let main() = __SONG__try "main" (
+
+  let root = Sys.argv.(1) in
+  let dirs = Sys.readdir root in
+  let dirs = Array.to_list dirs in
+  let dirs = List.filter ( fun d -> Sys.is_directory (root // d)) dirs in
+  let dirs = List.filter ( fun d -> Filename.check_suffix (root//d) ".song" ) dirs in
+
+    List.iter ( fun d ->
+      manage_song (root // d)
+    ) dirs
 )
 
-let _ = try 
-    main () ;
-  exit 0
-  with  
-    | e -> let () = __SONG__print_exn_stack e in exit(1)
-    
 
+
+
+					   
+
+  let _ = try
+    let () = if Sys.file_exists logfile then Unix.unlink logfile else () in
+    let () = main () in
+    let () = Std.output_file ~filename:logfile ~text:"no problem found, files generated" in
+      exit 0
+  with  
+    | e -> 
+      let msg = Song_exn.html_string_of_stack () in
+      let () = Std.output_file ~filename:logfile ~text:msg in
+      let () = __SONG__print_exn_stack e in ()

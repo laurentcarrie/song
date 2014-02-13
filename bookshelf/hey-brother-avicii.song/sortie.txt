@@ -3,5 +3,5 @@ hhh
 
 
 zzz
-\lyrics-top 5
-\grille-top 15
+\lyrics 
+\grille 

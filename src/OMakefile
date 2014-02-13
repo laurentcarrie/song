@@ -3,6 +3,8 @@
 
 .SUBDIRS: pa
 
+INCLUDES+= $(shell ocamlc -where)
+
 
 USE_OCAMLFIND = true
 BYTE_ENABLED = false
@@ -17,15 +19,15 @@ OCAMLFLAGS+= -syntax camlp4o
 OCAMLFLAGS += -pp 'camlp4o $(cmo)' 
 OCAMLOPTFLAGS+= 
 #
+OCAMLFLAGS+= -cclib -lfcgi
 
 OCAMLPACKS= extlib,str,unix
 
 ocamlfind ocamlopt song_exn.mli -o song_exn.cmi -package extlib
 
 src[]=
-	util
 	song_exn
-	main
+	util
 #	song_lex
 #	song_bison
 	html
@@ -35,9 +37,21 @@ src[]=
 	structure_of_file
 	main_of_file
 	sortie_of_file
+	fcgi
+	lighttpd
+	url_encode
 
-build: $(OCamlProgram song,$(src))
+OCAML_CLIBS+= song_stub
 
+build: $(OCamlProgram song,$(src) main)
+
+stub =   $(StaticCXXLibrary song_stub,fcgi_interface)
+stub_d = $(DynamicCXXLibrary song_stub,fcgi_interface)
+
+build : $(stub) $(stub_d)
+
+
+build: $(OCamlProgram song-web,$(src) web )
 
 
 #LocalOCamlGeneratedFiles(song_lex.ml song_bison.ml song_bison.mli)

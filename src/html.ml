@@ -1,6 +1,7 @@
 open Data
 open Printf
 open ExtList
+open Util
 
 let (//) = Filename.concat
 
@@ -18,7 +19,7 @@ module PMap = struct
       | Not_found -> failwith("key '" ^ name ^ "' not found in map")
 end
 
-let print_css dirname =
+let print_css dirname = __SONG__try ("print_css " ^ dirname) (
   let fout = open_out_bin (dirname //  "song.css") in
     fprintf fout "
 #chords
@@ -110,17 +111,17 @@ word-spacing:1px
 }
 " ;
     close_out fout
-
+)
 
 let render_one_html song dirname output = __SONG__try "render_html" (
 
     let filename = dirname // ( output.Output.filename ^ ".html") in
-    let () = printf "writing %s...\n" filename in
+    let () = log "writing %s...\n" filename in
     let () = print_css dirname in
 
     let fout = open_out_bin filename in
 
-    let print_sections () =
+    let print_sections () = __SONG__try "print_sections" (
       
       let rec print_chords l signature offset = 
 	match l with
@@ -156,10 +157,11 @@ let render_one_html song dirname output = __SONG__try "render_html" (
       )
       in
 	List.iter ( fun (name,s) -> print_section name s ) (List.of_enum (PMap.enum song.Song.sections))
+    )
     in
 
 
-    let print_structure () =
+    let print_structure () = __SONG__try "print_structure" (
       fprintf fout "<h2>structure</h2>\n" ;
       fprintf fout "<ol>\n" ;
       let count = ref 1 in
@@ -172,9 +174,10 @@ let render_one_html song dirname output = __SONG__try "render_html" (
 	    count := count2  ;
 	) song.Song.structure ;
 	fprintf fout "</ol>\n" ;
+    )
     in
 
-    let print_lyrics () =
+    let print_lyrics () = __SONG__try "print_lyrics" (
       let open Data.Lyrics in
       fprintf fout "<h2>lyrics</h2>\n" ;
       fprintf fout "<ol>\n" ;
@@ -186,6 +189,7 @@ let render_one_html song dirname output = __SONG__try "render_html" (
 	fprintf fout "</li>" ;
       ) song.Song.lyrics ;
       fprintf fout "</ol>\n" ;
+    )
     in
       
 
@@ -218,6 +222,7 @@ let render_one_html song dirname output = __SONG__try "render_html" (
 	print_item print_lyrics "lyrics" output.Output.lyrics ;
 
 	fprintf fout "</body></html>\n" ;
+	log "close %s" filename ;
 	close_out fout
 	  
 )
@@ -225,9 +230,9 @@ let render_one_html song dirname output = __SONG__try "render_html" (
 
 
 
-let render_html song dirname = __SONG__try "render_html" (
+let render_html song dirname = __SONG__try ("render_html " ^ dirname) (
   match song.Song.outputs with
-    | [] -> printf "no output defined,... you will get no html file\n"
+    | [] -> log "%s" "no output defined,... you will get no html file\n"
     | outputs -> (
 	List.iter ( fun output ->
 	  render_one_html song dirname output 

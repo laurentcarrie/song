@@ -26,16 +26,19 @@ let parse_text s current = __SONG__try "parse text" (
     let current = match key with
       | "\\filename"  -> { current with Output.filename=data }
 
+      | "\\lyrics"  -> { current with Output.lyrics=Some (pos_or_none current.Output.lyrics) }
       | "\\lyrics-top"  -> { current with Output.lyrics=make_top current.Output.lyrics data }
       | "\\lyrics-left"  -> { current with Output.lyrics=make_left current.Output.lyrics data }
       | "\\lyrics-width"  -> { current with Output.lyrics=make_width current.Output.lyrics data }
       | "\\lyrics-height"  -> { current with Output.lyrics=make_height current.Output.lyrics data }
 
+      | "\\grille"  -> { current with Output.grille=Some(pos_or_none current.Output.grille) }
       | "\\grille-top"  -> { current with Output.grille=make_top current.Output.grille data }
       | "\\grille-left"  -> { current with Output.grille=make_left current.Output.grille data }
       | "\\grille-width"  -> { current with Output.grille=make_width current.Output.grille data }
       | "\\grille-height"  -> { current with Output.grille=make_height current.Output.grille data }
 
+      | "\\structure"  -> { current with Output.structure=Some(pos_or_none current.Output.structure) }
       | "\\structure-top"  -> { current with Output.structure=make_top current.Output.structure data }
       | "\\structure-left"  -> { current with Output.structure=make_left current.Output.structure data }
       | "\\structure-width"  -> { current with Output.structure=make_width current.Output.structure data }

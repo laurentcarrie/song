@@ -70,8 +70,11 @@ let manage_song dirname  = __SONG__try ("manage song : " ^ dirname) (
     let song = Main_of_file.read_file song      (dirname // "main.txt") in
     let song = Sortie_of_file.read_file song (dirname // "sortie.txt") in
       Std.output_file ~filename:(dirname//"digest.txt") ~text:(Digest.to_hex song.Song.digest) ;
+      pf1 "<!-- root_path = %s -->\n" root_path ;
+      pf1 "<!-- relative_output_dir = %s -->\n" relative_output_dir ;
       Html.render_html song output_dir ;
       List.iter ( fun output ->
+	pf1 "<!-- output.Output.filename = %s -->\n" output.Output.filename ;
 	pf4 "wrote <a href=\"%s%s/%s.html\">%s.html</a><br/>\n" root_path relative_output_dir output.Output.filename output.Output.filename
       ) song.Song.outputs
 	

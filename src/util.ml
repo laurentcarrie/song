@@ -28,9 +28,9 @@ let mkdir dir = __SONG__try ("mkdir " ^ dir) (
 	      try
 		Unix.mkdir dir 0o770
 	      with
-		| e -> (* Printf.printf "mkdir (1) \"%s\" ; %s ; %s" dir s1 s2 ; *) raise e
+		| e -> raise e
 	    )
-	  | _ -> __SONG__failwith(sprintf "mkdir (2) \"%s\" ; %s ; %s" dir s1 s2)
+	  | _ -> __SONG__failwith((Unix.error_message e) ^ " ; " ^ s1 ^ " ; " ^ s2)
 	      
       )
 )

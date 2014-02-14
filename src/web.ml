@@ -50,7 +50,7 @@ let (output_dir,doc_root,relative_output_dir,root_path) =
 	    )
     in
 
-    let root_path = (*Sys.argv.(4) in*) "" in
+    let root_path = Sys.argv.(4) in
       
       output_dir,doc_root,relative_output_dir,root_path
   with

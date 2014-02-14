@@ -15,7 +15,7 @@ let update_digest d s = __SONG__try "update_digest" (
   )
 )
 
-let mkdir dir = 
+let mkdir dir = __SONG__try ("mkdir " ^ dir) (
   try 
     let s = Unix.stat dir in 
       match s.Unix.st_kind with
@@ -30,9 +30,10 @@ let mkdir dir =
 	      with
 		| e -> (* Printf.printf "mkdir (1) \"%s\" ; %s ; %s" dir s1 s2 ; *) raise e
 	    )
-	  | _ -> failwith(Printf.sprintf "mkdir (2) \"%s\" ; %s ; %s" dir s1 s2)
+	  | _ -> __SONG__failwith(sprintf "mkdir (2) \"%s\" ; %s ; %s" dir s1 s2)
 	      
       )
+)
 
 let open_in_bin filename =
   if not (Sys.file_exists filename) then

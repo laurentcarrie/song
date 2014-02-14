@@ -30,7 +30,7 @@ let log fs s =
   Fcgi.fcgi_log (sprintf fs s)
 
 let output_dir = __SONG__try "output_dir" (Sys.argv.(2) // "songs")
-let () = mkdir output_dir
+let () = __SONG__try ("mkdir " ^ output_dir) (mkdir output_dir)
 
 let doc_root = __SONG__try "doc_root" (Sys.argv.(3))
 

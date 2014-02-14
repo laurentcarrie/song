@@ -105,15 +105,24 @@ let rec manage_all_songs root = __SONG__try "manage_all_songs" (
 )
   
 let main_loop root = __SONG__try "main loop" (
-  __SONG__HERE__ ;
   Fcgi.c_init () ;
-  __SONG__HERE__ ;
   Util.print := Some (Fcgi.fcgi_log) ;
   Fcgi.fcgi_log "test fcgi_log" ;
   log "root is %s" root ;
   Array.iter ( fun a ->
     log "arg : %s" a
   ) Sys.argv ;
+
+  (
+    Array.iter ( fun s ->
+      log "env :%s\n" s
+    ) (Unix.environment())
+  ) ;
+
+  log "output_dir = %s" output_dir ; 
+  log "doc_root = %s" doc_root ;
+  log "relative_output_dir = %s" relative_output_dir ; 
+  log "root_path = %s" root_path ;
 
   (*
     let print_404 script_name =
@@ -128,11 +137,6 @@ let main_loop root = __SONG__try "main loop" (
   
   let process_request () =
     Fcgi.fcgi_log ("script : " ^ Unix.getenv "SCRIPT_NAME") ;
-  (
-    Array.iter ( fun s ->
-      Fcgi.fcgi_log (sprintf "%s\n" s) ;
-    ) (Unix.environment())
-  ) ;
     let script_name = try 
 	Str.global_replace (Str.regexp ".songx") "" (Unix.getenv "SCRIPT_NAME")
       with
@@ -156,11 +160,6 @@ let main_loop root = __SONG__try "main loop" (
   
 let _ = try
     __SONG__HERE__ ;
-  (
-    Array.iter ( fun s ->
-      printf "%s\n" s
-    ) (Unix.environment())
-  ) ;
       
   main_loop Sys.argv.(1) ;
   __SONG__HERE__ ;

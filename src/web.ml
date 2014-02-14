@@ -72,7 +72,7 @@ let manage_song dirname  = __SONG__try ("manage song : " ^ dirname) (
       Std.output_file ~filename:(dirname//"digest.txt") ~text:(Digest.to_hex song.Song.digest) ;
       Html.render_html song output_dir ;
       List.iter ( fun output ->
-	pf4 "wrote <a href=\"%s/%s/%s.html\">%s.html</a><br/>\n" root_path relative_output_dir output.Output.filename output.Output.filename
+	pf4 "wrote <a href=\"%s%s/%s.html\">%s.html</a><br/>\n" root_path relative_output_dir output.Output.filename output.Output.filename
       ) song.Song.outputs
 	
   with

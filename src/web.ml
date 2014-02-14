@@ -25,12 +25,14 @@ let pf fs =  !page ^ sprintf fs
 let pf0 s =  page := !page ^ s
 let pf1 fs s = let s = sprintf fs s in page := !page ^ s
 let pf2 fs s1 s2 = let s = sprintf fs s1 s2 in page := !page ^ s
+let pf3 fs s1 s2 s3 = let s = sprintf fs s1 s2 s3 in page := !page ^ s
+let pf4 fs s1 s2 s3 s4 = let s = sprintf fs s1 s2 s3 s4 in page := !page ^ s
 
 let log fs s =
   Fcgi.fcgi_log (sprintf fs s)
 
 
-let (output_dir,doc_root,relative_output_dir) = 
+let (output_dir,doc_root,relative_output_dir,root_path) = 
   try
     let output_dir = __SONG__try "output_dir" (Sys.argv.(2) // "songs") in
 (* let () = __SONG__try ("mkdir " ^ output_dir) (Util.mkdir output_dir) in *)
@@ -47,7 +49,10 @@ let (output_dir,doc_root,relative_output_dir) =
 	      in __SONG__failwith ("could not forge relative_output_dir " ^ s)
 	    )
     in
-      output_dir,doc_root,relative_output_dir
+
+    let root_path = Sys.argv.(4) in
+      
+      output_dir,doc_root,relative_output_dir,root_path
   with
     | e ->
 	let () = __SONG__print_exn_stack e in
@@ -67,7 +72,7 @@ let manage_song dirname  = __SONG__try ("manage song : " ^ dirname) (
       Std.output_file ~filename:(dirname//"digest.txt") ~text:(Digest.to_hex song.Song.digest) ;
       Html.render_html song output_dir ;
       List.iter ( fun output ->
-	pf2 "wrote <a href=\"%s.html\">%s.html</a><br/>\n" (relative_output_dir // output.Output.filename) output.Output.filename
+	pf4 "wrote <a href=\"%s/%s/%s.html\">%s.html</a><br/>\n" root_path relative_output_dir output.Output.filename output.Output.filename
       ) song.Song.outputs
 	
   with

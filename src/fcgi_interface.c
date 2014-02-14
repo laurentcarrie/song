@@ -21,7 +21,6 @@ int pid = 0;
 
 #define fcgi_log0(format) \
   fprintf(flog,format) ;\
-  fprintf(flog,format) ;\
   fprintf(flog,"\n") ;\
   fflush(flog) ;
 
@@ -61,8 +60,8 @@ value fcgi_init() {
   CAMLparam0() ;
   char path[10000] ;
   pid = getpid() ;
-  snprintf(path,9999,"%s/tmp/CIF_fcgi.log",getenv("PWD"))  ;
-  // snprintf(path,9999,"/var/log/lighttpd/SONG_fcgi.log")  ;
+  // snprintf(path,9999,"%s/tmp/CIF_fcgi.log",getenv("PWD"))  ;
+  snprintf(path,9999,"/var/log/lighttpd/SONG_fcgi.log")  ;
   flog = fopen(path,"a") ;
   assert(flog) ;
   fcgi_log0("init") ;

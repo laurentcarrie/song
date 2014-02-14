@@ -19,7 +19,9 @@ OCAMLFLAGS+= -syntax camlp4o
 OCAMLFLAGS += -pp 'camlp4o $(cmo)' 
 OCAMLOPTFLAGS+= 
 #
-OCAMLFLAGS+= -cclib -lfcgi
+
+
+#OCAMLFLAGS+= -cclib -lfcgi
 
 OCAMLPACKS= extlib,str,unix
 
@@ -42,6 +44,7 @@ src[]=
 	url_encode
 
 OCAML_CLIBS+= song_stub
+OCAML_CLIBS+= /usr/local/lib/libfcgi
 
 build: $(OCamlProgram song,$(src) main)
 

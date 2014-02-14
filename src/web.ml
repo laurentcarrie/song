@@ -29,20 +29,28 @@ let pf2 fs s1 s2 = let s = sprintf fs s1 s2 in page := !page ^ s
 let log fs s =
   Fcgi.fcgi_log (sprintf fs s)
 
-let output_dir = __SONG__try "output_dir" (Sys.argv.(2) // "songs")
-let () = __SONG__try ("mkdir " ^ output_dir) (mkdir output_dir)
-
-let doc_root = __SONG__try "doc_root" (Sys.argv.(3))
-
-let relative_output_dir = 
-  let a = Str.split (Str.regexp (Str.quote doc_root)) output_dir in
-    match a with
-      | [a] -> a
-      | l -> (
-	  let s = sprintf "output_dir = %s\ndoc_root = %s\n" output_dir doc_root in
-	  let s = List.fold_left ( fun acc s -> sprintf "%s--> %s\n" acc s) s l 
-	  in __SONG__failwith ("could not forge relative_output_dir " ^ s)
-	)
+let (output_dir,doc_root,relative_output_dir) = 
+  try
+    let output_dir = __SONG__try "output_dir" (Sys.argv.(2) // "songs") in
+    let () = __SONG__try ("mkdir " ^ output_dir) (mkdir output_dir) in
+  
+    let doc_root = __SONG__try "doc_root" (Sys.argv.(3)) in
+  
+    let relative_output_dir = 
+      let a = Str.split (Str.regexp (Str.quote doc_root)) output_dir in
+	match a with
+	  | [a] -> a
+	  | l -> (
+	      let s = sprintf "output_dir = %s\ndoc_root = %s\n" output_dir doc_root in
+	      let s = List.fold_left ( fun acc s -> sprintf "%s--> %s\n" acc s) s l 
+	      in __SONG__failwith ("could not forge relative_output_dir " ^ s)
+	    )
+    in
+      output_dir,doc_root,relative_output_dir
+  with
+    | e ->
+	let () = __SONG__print_exn_stack e in
+	  exit 1
 
 let manage_song dirname  = __SONG__try ("manage song : " ^ dirname) (
   try

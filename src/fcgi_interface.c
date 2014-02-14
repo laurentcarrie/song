@@ -20,19 +20,20 @@ FILE * flog = 0 ;
 int pid = 0;
 
 #define fcgi_log0(format) \
-  FCGI_fprintf(flog,format) ;\
-  FCGI_fprintf(flog,"\n") ;\
-  FCGI_fflush(flog) ;
+  fprintf(flog,format) ;\
+  fprintf(flog,format) ;\
+  fprintf(flog,"\n") ;\
+  fflush(flog) ;
 
 #define fcgi_log1(format,a1) \
-  FCGI_fprintf(flog,format,a1) ;\
-  FCGI_fprintf(flog,"\n") ;\
-  FCGI_fflush(flog) ;
+  fprintf(flog,format,a1) ;\
+  fprintf(flog,"\n") ;\
+  fflush(flog) ;
 
 #define fcgi_log2(format,a1,a2) \
-  FCGI_fprintf(flog,format,a1,a2) ;\
-  FCGI_fprintf(flog,"\n") ;\
-  FCGI_fflush(flog) ;
+  fprintf(flog,format,a1,a2) ;\
+  fprintf(flog,"\n") ;\
+  fflush(flog) ;
 
 CAMLprim
 value fcgi_log_string(value os) {
@@ -40,8 +41,8 @@ value fcgi_log_string(value os) {
   const char* s = String_val(os) ;
   time_t t = time(0) ;
   struct tm * t2 = localtime(&t) ;
-  FCGI_fprintf(flog,"%d - %02d:%02d:%02d - %s\n",pid,t2->tm_hour,t2->tm_min,t2->tm_sec,s) ;
-  FCGI_fflush(flog) ;
+  fprintf(flog,"%d - %02d:%02d:%02d - %s\n",pid,t2->tm_hour,t2->tm_min,t2->tm_sec,s) ;
+  fflush(flog) ;
   CAMLreturn(Val_unit) ;
 }
 
@@ -60,9 +61,9 @@ value fcgi_init() {
   CAMLparam0() ;
   char path[10000] ;
   pid = getpid() ;
-  // snprintf(path,9999,"%s/tmp/CIF_fcgi.log",getenv("PWD"))  ;
-  snprintf(path,9999,"/var/log/lighttpd/SONG_fcgi.log")  ;
-  flog = FCGI_fopen(path,"a") ;
+  snprintf(path,9999,"%s/tmp/CIF_fcgi.log",getenv("PWD"))  ;
+  // snprintf(path,9999,"/var/log/lighttpd/SONG_fcgi.log")  ;
+  flog = fopen(path,"a") ;
   assert(flog) ;
   fcgi_log0("init") ;
   CAMLreturn(Val_unit) ;

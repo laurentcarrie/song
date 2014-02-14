@@ -59,10 +59,10 @@ let manage_song dirname  = __SONG__try ("manage song : " ^ dirname) (
     log "reading song in : '%s'" dirname ;
     let song = { Song.title="???" ; Song.auteur="???" ; format=None ; sections=PMap.create String.compare ; structure=[];lyrics=[];outputs=[];
 		 digest=Digest.string ""} in
-    let song = Grille_of_file.read_file song (dirname // "grille.txt") in
-    let song = Lyrics_of_file.read_file song (dirname // "lyrics.txt") in
+    let song = Grille_of_file.read_file song    (dirname // "grille.txt") in
+    let song = Lyrics_of_file.read_file song    (dirname // "lyrics.txt") in
     let song = Structure_of_file.read_file song (dirname // "structure.txt") in
-    let song = Main_of_file.read_file song (dirname // "main.txt") in
+    let song = Main_of_file.read_file song      (dirname // "main.txt") in
     let song = Sortie_of_file.read_file song (dirname // "sortie.txt") in
       Std.output_file ~filename:(dirname//"digest.txt") ~text:(Digest.to_hex song.Song.digest) ;
       Html.render_html song output_dir ;
@@ -123,6 +123,11 @@ let main_loop root = __SONG__try "main loop" (
   
   let process_request () =
     Fcgi.fcgi_log ("script : " ^ Unix.getenv "SCRIPT_NAME") ;
+  (
+    Array.iter ( fun s ->
+      Fcgi.fcgi_log (sprintf "%s\n" s) ;
+    ) (Unix.environment())
+  ) ;
     let script_name = try 
 	Str.global_replace (Str.regexp ".songx") "" (Unix.getenv "SCRIPT_NAME")
       with
@@ -146,6 +151,12 @@ let main_loop root = __SONG__try "main loop" (
   
 let _ = try
     __SONG__HERE__ ;
+  (
+    Array.iter ( fun s ->
+      printf "%s\n" s
+    ) (Unix.environment())
+  ) ;
+      
   main_loop Sys.argv.(1) ;
   __SONG__HERE__ ;
   exit 3 

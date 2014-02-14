@@ -60,8 +60,8 @@ value fcgi_init() {
   CAMLparam0() ;
   char path[10000] ;
   pid = getpid() ;
-  // snprintf(path,9999,"%s/tmp/CIF_fcgi_%d.log",getenv("PWD"),getpid()) ;
-  snprintf(path,9999,"%s/tmp/CIF_fcgi.log",getenv("PWD")) ;
+  // snprintf(path,9999,"%s/tmp/CIF_fcgi.log",getenv("PWD"))  ;
+  snprintf(path,9999,"/var/log/lighttpd/SONG_fcgi.log")  ;
   flog = fopen(path,"a") ;
   fcgi_log0("init") ;
   CAMLreturn(Val_unit) ;

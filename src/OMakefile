@@ -40,7 +40,7 @@ src[]=
 	main_of_file
 	sortie_of_file
 	fcgi
-	lighttpd
+#	lighttpd
 	url_encode
 
 OCAML_CLIBS+= song_stub

@@ -29,6 +29,7 @@ let pf2 fs s1 s2 = let s = sprintf fs s1 s2 in page := !page ^ s
 let log fs s =
   Fcgi.fcgi_log (sprintf fs s)
 
+
 let (output_dir,doc_root,relative_output_dir) = 
   try
     let output_dir = __SONG__try "output_dir" (Sys.argv.(2) // "songs") in
@@ -99,7 +100,9 @@ let rec manage_all_songs root = __SONG__try "manage_all_songs" (
 )
   
 let main_loop root = __SONG__try "main loop" (
+  __SONG__HERE__ ;
   Fcgi.c_init () ;
+  __SONG__HERE__ ;
   Util.print := Some (Fcgi.fcgi_log) ;
   Fcgi.fcgi_log "test fcgi_log" ;
   log "root is %s" root ;
@@ -145,5 +148,6 @@ let _ = try
     __SONG__HERE__ ;
   main_loop Sys.argv.(1) ;
   __SONG__HERE__ ;
+  exit 3 
   with
     | e -> let () = __SONG__print_exn_stack e in exit 1

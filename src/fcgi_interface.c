@@ -63,6 +63,7 @@ value fcgi_init() {
   // snprintf(path,9999,"%s/tmp/CIF_fcgi.log",getenv("PWD"))  ;
   snprintf(path,9999,"/var/log/lighttpd/SONG_fcgi.log")  ;
   flog = fopen(path,"a") ;
+  assert(flog) ;
   fcgi_log0("init") ;
   CAMLreturn(Val_unit) ;
 }

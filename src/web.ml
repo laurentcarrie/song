@@ -34,7 +34,7 @@ let log fs s =
 
 let (output_dir,doc_root,relative_output_dir,root_path) = 
   try
-    let output_dir = __SONG__try "output_dir" (Sys.argv.(2) // "songs") in
+    let output_dir = __SONG__try "output_dir" (Sys.argv.(2)) in
 (* let () = __SONG__try ("mkdir " ^ output_dir) (Util.mkdir output_dir) in *)
   
     let doc_root = __SONG__try "doc_root" (Sys.argv.(3)) in

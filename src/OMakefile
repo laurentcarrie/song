@@ -21,7 +21,6 @@ OCAMLOPTFLAGS+=
 #
 
 
-#OCAMLFLAGS+= -cclib -lfcgi
 
 OCAMLPACKS= extlib,str,unix
 
@@ -45,6 +44,7 @@ src[]=
 	check
 
 OCAML_CLIBS+= song_stub
+#OCAMLFLAGS+= -cclib -lfcgi
 OCAML_CLIBS+= /usr/local/lib/libfcgi
 
 build: $(OCamlProgram song,$(src) main)

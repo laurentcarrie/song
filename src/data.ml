@@ -53,9 +53,9 @@ end
 
 module Output = struct
   type w =
-    | L
-    | G
-    | S
+    | L (* lyrics *)
+    | G (* grille *)
+    | S (* structure *)
   type t = {
     filename : string ;
     col_1 : w list ;

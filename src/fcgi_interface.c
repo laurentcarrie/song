@@ -40,7 +40,12 @@ value fcgi_log_string(value os) {
   const char* s = String_val(os) ;
   time_t t = time(0) ;
   struct tm * t2 = localtime(&t) ;
-  fprintf(flog,"%d - %02d:%02d:%02d - %s\n",pid,t2->tm_hour,t2->tm_min,t2->tm_sec,s) ;
+  fprintf(flog,"%d - %02d:%02d:%02d %02d/%02d/%02d - %s\n",
+	  pid,
+	  t2->tm_hour,t2->tm_min,t2->tm_sec,
+	  t2->tm_mday,(t2->tm_mon+1),(t2->tm_year-100),
+	  s
+	  ) ;
   fflush(flog) ;
   CAMLreturn(Val_unit) ;
 }
@@ -57,12 +62,16 @@ value fcgi_print(value os) {
 
 CAMLprim
 value fcgi_init() {
+  //  assert(0) ;
   CAMLparam0() ;
   char path[10000] ;
   pid = getpid() ;
   // snprintf(path,9999,"%s/tmp/CIF_fcgi.log",getenv("PWD"))  ;
-  snprintf(path,9999,"/var/log/lighttpd/SONG_fcgi.log")  ;
-  flog = fopen(path,"a") ;
+  // snprintf(path,9999,"/var/log/lighttpd/SONG_fcgi.log")  ;
+  // flog = fopen("/usr/p119208/u1/work/work-song/build/tmp/SONG_fcgi.log","w") ;
+  flog = fopen("/var/log/lighttpd/SONG_fcgi.log","w") ;
+  //  flog = fopen(path,"a") ;
+  // assert(0) ;
   assert(flog) ;
   fcgi_log0("init") ;
   CAMLreturn(Val_unit) ;

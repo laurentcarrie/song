@@ -42,6 +42,7 @@ src[]=
 	fcgi
 #	lighttpd
 	url_encode
+	check
 
 OCAML_CLIBS+= song_stub
 OCAML_CLIBS+= /usr/local/lib/libfcgi

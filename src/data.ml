@@ -52,18 +52,15 @@ module Lyrics = struct
 end
 
 module Output = struct
-  type position = {
-    top : int  option ;
-    left : int option ;
-    width : int option ;
-    height : int option ;
-  }
-    
+  type w =
+    | L
+    | G
+    | S
   type t = {
     filename : string ;
-    lyrics : position option ;
-    grille : position option ;
-    structure : position option ;
+    col_1 : w list ;
+    col_2 : w list ;
+    width : int ;
   }
 end
 

@@ -3,7 +3,7 @@ open Printf
 open ExtString
 
 
-let read_file song filename = __SONG__try "Grille_of_file.read_file" (
+let read_file song filename = __SONG__try "read_file" (
   let song = { song with Song.digest = Util.update_digest song.Song.digest filename } in
   let fin = open_in_bin filename in
   let rec read acc current linecount =

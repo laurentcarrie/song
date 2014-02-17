@@ -16,11 +16,11 @@ module PMap = struct
   include PMap
   let find name m =
     try PMap.find name m with
-      | Not_found -> failwith("key '" ^ name ^ "' not found in map")
+      | Not_found -> __SONG__failwith("key '" ^ name ^ "' not found in map")
 end
 
-let print_css dirname = __SONG__try ("print_css " ^ dirname) (
-  let fout = open_out_bin (dirname //  "song.css") in
+let print_css fout dirname width = __SONG__try ("print_css " ^ dirname) (
+(*  let fout = open_out_bin (dirname //  "song.css") in *)
     fprintf fout "
 #chords
 {
@@ -30,7 +30,7 @@ border-collapse:collapse;
 }
 
 #chords td, #chords th 
-{
+{ 
 font-size:1em;
 border:1px solid #98bf21;
 padding:2px 2px 2px 2px;
@@ -63,13 +63,13 @@ background-color:#EAF2D3;
 div.title
 {
 text-align:center ;
-font-size:5em ;
+font-size:1.1em ;
 }
 
 div.auteur
 {
 text-align:center ;
-font-size:5em ;
+font-size:1.1em ;
 }
 
 
@@ -81,8 +81,36 @@ color:red
 div.sections
 {
 padding:10px;
-border:5px solid gray;
+#border:5px solid gray;
 margin:0px;
+}
+
+div#main-0 
+{
+width:%dcm ;
+}
+
+div#frame-title
+{
+background-color:#EEFFEE ;
+}
+
+div#main
+{
+#border:5px solid pink ;
+}
+
+div#col_1
+{
+float:left ;
+#border:5px solid gray ;
+}
+
+div#col_2
+{
+float:right ;
+#top:2cm ;
+#border:5px solid gray ;
 }
 
 
@@ -109,17 +137,15 @@ span.note {
 background-color:red
 word-spacing:1px
 }
-" ;
-    close_out fout
+" width 
 )
 
 let render_one_html song dirname output = __SONG__try "render_html" (
 
     let filename = dirname // ( output.Output.filename ^ ".html") in
     let () = log "writing %s...\n" filename in
-    let () = print_css dirname in
 
-    let fout = open_out_bin filename in
+    let fout =  open_out_bin filename in
 
     let print_sections () = __SONG__try "print_sections" (
       
@@ -178,13 +204,12 @@ let render_one_html song dirname output = __SONG__try "render_html" (
     in
 
     let print_lyrics () = __SONG__try "print_lyrics" (
-      let open Data.Lyrics in
       fprintf fout "<h2>lyrics</h2>\n" ;
       fprintf fout "<ol>\n" ;
       List.iter ( fun lyrics ->
-	let text = lyrics.text in
+	let text = lyrics.Lyrics.text in
 	let text = Str.global_replace (Str.regexp "\n") "<br/>" text in
-	fprintf fout "<li><span class=\"lyrics-section\">%s</span><br/>\n" lyrics.name ;
+	fprintf fout "<li><span class=\"lyrics-section\">%s</span><br/>\n" lyrics.Lyrics.name ;
 	fprintf fout "%s" text ;
 	fprintf fout "</li>" ;
       ) song.Song.lyrics ;
@@ -193,35 +218,52 @@ let render_one_html song dirname output = __SONG__try "render_html" (
     in
       
 
-
       fprintf fout "\
-<html>\n\
-<link rel=\"stylesheet\" type=\"text/css\" href=\"song.css\" />
+<html>
+<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />
+<style>
+" ;
+	print_css fout dirname output.Output.width ;
+fprintf fout "
+</style>
 <body>
+
+<div id=\"main-0\">
+
+<div id=\"frame-title\">
+
 <div class=\"title\">%s</div>\n" song.Song.title ;
       fprintf fout "\
 <div class=\"auteur\">%s</div>\n" song.Song.auteur ;
 
-      let print_item f name position =
-	match position with
-	  | Some position -> 
-	      let open Data.Output in
-		fprintf fout "<div class=\"%s\" style=\"position:absolute;%s%s%s%s\">\n"
-		  name 
-		  (match position.top with | None -> "" | Some i -> sprintf "top:%dcm;" i)
-		  (match position.left with | None -> "" | Some i -> sprintf "left:%dcm;" i)
-		  (match position.width with | None -> "" | Some i -> sprintf "width:%dcm;" i)
-		  (match position.height with | None -> "" | Some i -> sprintf "height:%dcm;" i)
-		;
-		f () ;
-		fprintf fout "</div>\n"
-	  | None -> ()
-      in
-	print_item print_sections "sections" output.Output.grille ;
-	print_item print_structure "structure" output.Output.structure ;
-	print_item print_lyrics "lyrics" output.Output.lyrics ;
+fprintf fout "
+<!-- frame-title -->
+</div> 
+" ;
+    let pp =
+      List.iter ( fun s ->
+		    match s with
+		      | Data.Output.L -> print_lyrics() ;
+		      | Data.Output.G -> print_sections () ;
+		      | Data.Output.S -> print_structure () ;
+		) 
+    in
 
-	fprintf fout "</body></html>\n" ;
+      fprintf fout "
+<div id=\"main\">
+<div id=\"col_1\">
+" ;
+      pp output.Output.col_1 ;
+fprintf fout "
+</div>
+<div id=\"col_2\">
+" ;
+pp output.Output.col_2 ;
+fprintf fout "
+</div>
+</div>
+" ;
+		      fprintf fout "</body></html>\n" ;
 	log "close %s" filename ;
 	close_out fout
 	  

@@ -51,30 +51,31 @@ let main() = __SONG__try "main" (
 
 
 let main() = __SONG__try "main" (
-
+  
   let root = Sys.argv.(1) in
   let dirs = Sys.readdir root in
   let dirs = Array.to_list dirs in
   let dirs = List.filter ( fun d -> Sys.is_directory (root // d)) dirs in
   let dirs = List.filter ( fun d -> Filename.check_suffix (root//d) ".song" ) dirs in
-
+    
     List.iter ( fun d ->
-      manage_song (root // d)
-    ) dirs
+		  let () = log (sprintf "reading %s<br>\n" (root//d)) in
+		    manage_song (root // d)
+	      ) dirs
 )
-
+  
 
 
 
 					   
 
-  let _ = try
-    let () = if Sys.file_exists logfile then Unix.unlink logfile else () in
-    let () = main () in
-    let () = Std.output_file ~filename:logfile ~text:"no problem found, files generated" in
-      exit 0
-  with  
-    | e -> 
+let _ = try
+  let () = if Sys.file_exists logfile then Unix.unlink logfile else () in
+  let () = main () in
+  let () = Std.output_file ~filename:logfile ~text:"no problem found, files generated" in
+    exit 0
+with  
+  | e -> 
       let msg = Song_exn.html_string_of_stack () in
       let () = Std.output_file ~filename:logfile ~text:msg in
       let () = __SONG__print_exn_stack e in ()

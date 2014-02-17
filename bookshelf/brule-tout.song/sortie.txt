@@ -1,9 +1,6 @@
-hhh
-\width 18
+brule-tout
 \lyrics-col-1 x
 \grille-col-2 x
 \structure-col-2 x
 
 
-zzz
-\grille-col-2 x

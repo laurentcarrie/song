@@ -3,12 +3,12 @@ open Printf
 open ExtString
 
 
-let read_file song filename = __SONG__try "of_file.read_file" (
+let read_file song filename = __SONG__try "read_file" (
   let song = { song with Song.digest = Util.update_digest song.Song.digest filename } in
   let fin = open_in_bin filename in
   let rec read acc current linecount =
     try
-      let line  = input_line fin in
+      let line  = String.strip (input_line fin) in
 	match current,line with
 	  | None,"" -> read acc None (linecount+1)
 	  | None,line -> let current = Some { Structure.section_name=line ; comment="";} in read acc current (linecount+1)

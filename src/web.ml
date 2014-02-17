@@ -27,6 +27,8 @@ let pf1 fs s = let s = sprintf fs s in page := !page ^ s
 let pf2 fs s1 s2 = let s = sprintf fs s1 s2 in page := !page ^ s
 let pf3 fs s1 s2 s3 = let s = sprintf fs s1 s2 s3 in page := !page ^ s
 let pf4 fs s1 s2 s3 s4 = let s = sprintf fs s1 s2 s3 s4 in page := !page ^ s
+let pf5 fs s1 s2 s3 s4 s5 = let s = sprintf fs s1 s2 s3 s4 s5 in page := !page ^ s
+let pf6 fs s1 s2 s3 s4 s5 s6 = let s = sprintf fs s1 s2 s3 s4 s5 s6 in page := !page ^ s
 
 let log fs s =
   Fcgi.fcgi_log (sprintf fs s)
@@ -60,8 +62,8 @@ let (output_dir,doc_root,relative_output_dir,root_path) =
 
 let manage_song dirname  = __SONG__try ("manage song : " ^ dirname) (
   try
-    pf1 "reading directory %s<br/>" dirname ; 
-    log "reading song in : '%s'" dirname ;
+    pf1 "lecture du repertoire %s<br/>" dirname ; 
+    log "lecture du repertoire : '%s'" dirname ;
     let song = { Song.title="???" ; Song.auteur="???" ; format=None ; sections=PMap.create String.compare ; structure=[];lyrics=[];outputs=[];
 		 digest=Digest.string ""} in
     let song = Grille_of_file.read_file song    (dirname // "grille.txt") in
@@ -69,9 +71,16 @@ let manage_song dirname  = __SONG__try ("manage song : " ^ dirname) (
     let song = Structure_of_file.read_file song (dirname // "structure.txt") in
     let song = Main_of_file.read_file song      (dirname // "main.txt") in
     let song = Sortie_of_file.read_file song (dirname // "sortie.txt") in
-      Std.output_file ~filename:(dirname//"digest.txt") ~text:(Digest.to_hex song.Song.digest) ;
+    let song = Check.check song in
+      (* Std.output_file ~filename:(dirname//"digest.txt") ~text:(Digest.to_hex song.Song.digest) ; *)
       pf1 "<!-- root_path = %s -->\n" root_path ;
       pf1 "<!-- relative_output_dir = %s -->\n" relative_output_dir ;
+      (
+	let tm = Unix.localtime(Unix.time ()) in
+	  pf6 "at %02d/%02d/%04d %02d:%02d:%02d</br>" 
+	    tm.Unix.tm_mday (tm.Unix.tm_mon+1) (tm.Unix.tm_year+1900)
+	    tm.Unix.tm_hour tm.Unix.tm_min tm.Unix.tm_sec
+      ) ;
       Html.render_html song output_dir ;
       List.iter ( fun output ->
 	pf1 "<!-- output.Output.filename = %s -->\n" output.Output.filename ;

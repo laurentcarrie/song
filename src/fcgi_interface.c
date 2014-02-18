@@ -40,6 +40,7 @@ value fcgi_log_string(value os) {
   const char* s = String_val(os) ;
   time_t t = time(0) ;
   struct tm * t2 = localtime(&t) ;
+  assert(flog) ;
   fprintf(flog,"%d - %02d:%02d:%02d %02d/%02d/%02d - %s\n",
 	  pid,
 	  t2->tm_hour,t2->tm_min,t2->tm_sec,

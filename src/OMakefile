@@ -57,6 +57,8 @@ build : $(stub) $(stub_d)
 
 build: $(OCamlProgram song-web,$(src) web )
 
+build: $(OCamlProgram do_nothing,song_exn util url_encode fcgi do_nothing )
+
 
 #LocalOCamlGeneratedFiles(song_lex.ml song_bison.ml song_bison.mli)
 

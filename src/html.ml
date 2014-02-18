@@ -121,6 +121,11 @@ border:5px solid gray;
 margin:0px;
 }
 
+.lyrics-beat {
+/* color:#ff0000 ; */
+text-decoration:underline ;
+font-weight:bold ;
+}
 
 div.structure
 {
@@ -208,6 +213,7 @@ let render_one_html song dirname output = __SONG__try "render_html" (
       fprintf fout "<ol>\n" ;
       List.iter ( fun lyrics ->
 	let text = lyrics.Lyrics.text in
+	let text = Str.global_replace (Str.regexp "\\[\\(.*\\)\\]") (sprintf "<span class=\"lyrics-beat\">\\1</span>") text in 
 	let text = Str.global_replace (Str.regexp "\n") "<br/>" text in
 	fprintf fout "<li><span class=\"lyrics-section\">%s</span><br/>\n" lyrics.Lyrics.name ;
 	fprintf fout "%s" text ;

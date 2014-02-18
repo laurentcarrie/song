@@ -58,7 +58,7 @@ let manage_song   ~root ~output_dir ~doc_root ~relative_output_dir   ~root_path 
       Html.render_html song output_dir ;
       List.iter ( fun output ->
 	pf1 "<!-- output.Output.filename = %s -->\n" output.Output.filename ;
-	pf4 "wrote <a href=\"%s%s/%s.html\">%s.html</a><br/>\n" doc_root relative_output_dir output.Output.filename output.Output.filename
+	pf4 "wrote <a href=\"%s%s/%s.html\">%s.html</a><br/>\n" root_path relative_output_dir output.Output.filename output.Output.filename
       ) song.Song.outputs
 	
   with
@@ -160,6 +160,18 @@ let main_loop  ~root ~output_dir ~doc_root ~relative_output_dir ~root_path = __S
   
 let _ = try
     eprintf "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n" ;
+  (*
+    argv(1) : la ou sont les sources des chansons
+    argv(2) : la ou seront generees les pages html
+    argv(3) : le doc_root du server web
+    argv(4) : root_path : le path url vers le docroot (en general vide)
+  *)
+  (*
+    output_dir : la ou seront generees les pages html
+    doc_root : le doc_root du server web
+    relative_output_dir : la ou seront generes les pages html, en url
+    root_path : le path du doc_root
+  *)
     let (output_dir,doc_root,relative_output_dir,root_path) = (
       let output_dir = __SONG__try "output_dir" (Sys.argv.(2)) in
 	(* let () = __SONG__try ("mkdir " ^ output_dir) (Util.mkdir output_dir) in *)
@@ -177,7 +189,7 @@ let _ = try
 	      )
       in
 	
-      let root_path = Sys.argv.(4) in
+      let root_path = if Array.length Sys.argv > 4 then Sys.argv.(4) else "" in
 	
 	output_dir,doc_root,relative_output_dir,root_path
     )
@@ -190,4 +202,7 @@ let _ = try
       main_loop ~output_dir ~root ~doc_root ~relative_output_dir ~root_path ;
       exit 33
   with
-    | e -> let () = __SONG__print_exn_stack e in exit 1
+    | e -> let () = 
+	eprintf "%s\n" (Song_exn.string_of_stack ()) ;
+	     __SONG__print_exn_stack e in exit 1
+					 

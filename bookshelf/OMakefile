@@ -1,0 +1,12 @@
+.PHONY: build
+.DEFAULT: build
+
+
+
+songs[]=
+	hey-brother-avicii
+
+
+foreach(f,$(songs))
+	build : $f.song/grille.txt $f.song/lyrics.txt $f.song/structure.txt $f.song/main.txt
+	export .RULE

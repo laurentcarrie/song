@@ -1,0 +1,13 @@
+.PHONY: build clean test
+.DEFAULT: build 
+
+
+USE_OCAMLFIND = true
+BYTE_ENABLED = false
+NATIVE_ENABLED = true
+OCAMLFLAGS += -g -warn-error A
+
+OCAMLPACKS= extlib
+
+.SUBDIRS: src bookshelf
+

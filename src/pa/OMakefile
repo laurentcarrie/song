@@ -1,0 +1,50 @@
+.PHONY: build 
+.DEFAULT : build
+
+
+USE_OCAMLFIND = true
+#OCAMLFINDFLAGS += -verbose
+OCAMLFLAGS += -g -dtypes -warn-error A 
+
+CAMLP4 = camlp4
+
+OCAMLFLAGS += 
+	if $(equal $(OSTYPE),Unix)
+		value -thread	
+
+# au contraire du reste du build pour lequel on ne retient que les compilations natives,
+# ici on veut du byte code pour le preprocesseur, pas du code qui sera linke au binaires livres
+BYTE_ENABLED= true
+NATIVE_ENABLED=false
+OCAMLPACKS= extlib,camlp4
+
+src[]=
+	pa_song.ml
+
+src=$(file $(src))
+
+
+LocalOCamlGeneratedFiles(song_exn.ml song_exn.mli)
+
+song_exn.ml : ../song_exn.ml
+	cat $@ > $@
+
+song_exn.mli : ../song_exn.mli
+	cat $@ > $@
+
+OCAMLDEPFLAGS +=  -syntax camlp4o -ppopt pa_extend.cmo -ppopt q_MLast.cmo -ppopt -loc -ppopt loc
+OCAMLFLAGS +=  -syntax camlp4o -ppopt pa_extend.cmo -ppopt q_MLast.cmo -ppopt -loc -ppopt loc
+OCAMLPACKS += camlp4
+
+src[]=
+	pa_song.ml
+
+src= $(file $(src))
+
+
+
+
+build : pa_song.cmo pa_song.cmi
+
+
+

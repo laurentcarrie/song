@@ -1,0 +1,5 @@
+brule-tout
+\col-1 \lyrics \grille
+\col-2 \structure
+\width 15
+

@@ -1,0 +1,7 @@
+hhh
+\width 18
+\col-1 \lyrics
+\col-2 \grille \structure
+
+zzz
+\col-2 \grille

@@ -1,0 +1,74 @@
+.PHONY: build clean test 
+.DEFAULT: build 
+
+.SUBDIRS: pa
+
+INCLUDES+= $(shell ocamlc -where)
+
+
+USE_OCAMLFIND = true
+BYTE_ENABLED = false
+NATIVE_ENABLED = true
+OCAMLFLAGS += -g -warn-error A
+OCAMLDEPFLAGS +=  -ppopt pa_extend.cmo -ppopt q_MLast.cmo 
+cmo = $(file pa/pa_song.cmo)
+LocalOCamlGeneratedFiles($(cmo))
+
+CAMLP4 = camlp4
+OCAMLFLAGS+= -syntax camlp4o
+OCAMLFLAGS += -pp 'camlp4o $(cmo)' 
+OCAMLOPTFLAGS+= 
+#
+
+
+
+OCAMLPACKS= extlib,str,unix
+
+ocamlfind ocamlopt song_exn.mli -o song_exn.cmi -package extlib
+
+src[]=
+	song_exn
+	util
+#	song_lex
+#	song_bison
+	html
+	data
+	grille_of_file
+	lyrics_of_file
+	structure_of_file
+	main_of_file
+	sortie_of_file
+	fcgi
+#	lighttpd
+	url_encode
+	check
+	index
+
+OCAML_CLIBS+= song_stub
+#OCAMLFLAGS+= -cclib -lfcgi
+OCAML_CLIBS+= /usr/local/lib/libfcgi
+
+build: $(OCamlProgram song,$(src) main)
+
+stub =   $(StaticCXXLibrary song_stub,fcgi_interface)
+stub_d = $(DynamicCXXLibrary song_stub,fcgi_interface)
+
+build : $(stub) $(stub_d)
+
+
+build: $(OCamlProgram song-web,$(src) web )
+
+build: $(OCamlProgram do_nothing,song_exn util url_encode fcgi do_nothing )
+
+
+#LocalOCamlGeneratedFiles(song_lex.ml song_bison.ml song_bison.mli)
+
+#song_lex.ml : song_lex.mll
+#	ocamllex $<
+
+
+#song_bison.ml song_bison.mli : song_bison.mly
+#	ocamlyacc  $<
+
+
+

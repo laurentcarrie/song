@@ -6,13 +6,15 @@ let (//) = Filename.concat
 
 type args = ( string * string ) list
 
+let log = Fcgi.log
+
 let page = ref ""
 
 let start_page () =
   page := ""
 
 let end_page () = 
-  Fcgi.fcgi_log (!page) ;
+  Fcgi.log "%s" (!page) ;
   Fcgi.c_fcgi_print (sprintf "Status: 200\r\n") ;
   Fcgi.c_fcgi_print (sprintf "Content-type: text/html \r\n" ) ;
   Fcgi.c_fcgi_print (sprintf "Content-length: %d \r\n\r\n" (String.length !page)) ;
@@ -20,26 +22,17 @@ let end_page () =
   page := "" ;
   ()
 
-let pf fs =  !page ^ sprintf fs
+let pf fs =  ksprintf ( fun s -> page := !page ^ s ^ "\n" ) fs
 
-let pf0 s =  page := !page ^ s
-let pf1 fs s = let s = sprintf fs s in page := !page ^ s
-let pf2 fs s1 s2 = let s = sprintf fs s1 s2 in page := !page ^ s
-let pf3 fs s1 s2 s3 = let s = sprintf fs s1 s2 s3 in page := !page ^ s
-let pf4 fs s1 s2 s3 s4 = let s = sprintf fs s1 s2 s3 s4 in page := !page ^ s
-let pf5 fs s1 s2 s3 s4 s5 = let s = sprintf fs s1 s2 s3 s4 s5 in page := !page ^ s
-let pf6 fs s1 s2 s3 s4 s5 s6 = let s = sprintf fs s1 s2 s3 s4 s5 s6 in page := !page ^ s
 
-let log fs s =
-  Fcgi.fcgi_log (sprintf fs s)
-
+let log = Fcgi.log
 
 let manage_song   ~root ~output_dir ~doc_root ~relative_output_dir   ~root_path  dirname  = __SONG__try ("manage song : " ^ dirname) (
-  try
-    pf1 "lecture du repertoire %s<br/>" dirname ; 
-    log "lecture du repertoire : '%s'" dirname ;
-    let song = { Song.title="???" ; Song.auteur="???" ; format=None ; sections=PMap.create String.compare ; structure=[];lyrics=[];outputs=[];
-		 digest=Digest.string ""} in
+  let song = { Song.title="???" ; Song.auteur="???" ; format=None ; sections=PMap.create String.compare ; structure=[];lyrics=[];outputs=[];
+	       digest=Digest.string ""} in
+    try
+      pf "lecture du repertoire %s<br/>" dirname ; 
+      log "lecture du repertoire : '%s'" dirname ;
     let song = Grille_of_file.read_file song    (dirname // "grille.txt") in
     let song = Lyrics_of_file.read_file song    (dirname // "lyrics.txt") in
     let song = Structure_of_file.read_file song (dirname // "structure.txt") in
@@ -47,55 +40,56 @@ let manage_song   ~root ~output_dir ~doc_root ~relative_output_dir   ~root_path 
     let song = Sortie_of_file.read_file song (dirname // "sortie.txt") in
     let song = Check.check song in
       (* Std.output_file ~filename:(dirname//"digest.txt") ~text:(Digest.to_hex song.Song.digest) ; *)
-      pf1 "<!-- root_path = %s -->\n"  root_path ;
-      pf1 "<!-- relative_output_dir = %s -->\n" relative_output_dir ;
+      pf "<!-- root_path = %s -->\n"  root_path ;
+      pf "<!-- relative_output_dir = %s -->\n" relative_output_dir ;
       (
 	let tm = Unix.localtime(Unix.time ()) in
-	  pf6 "at %02d/%02d/%04d %02d:%02d:%02d</br>" 
+	  pf "at %02d/%02d/%04d %02d:%02d:%02d</br>" 
 	    tm.Unix.tm_mday (tm.Unix.tm_mon+1) (tm.Unix.tm_year+1900)
 	    tm.Unix.tm_hour tm.Unix.tm_min tm.Unix.tm_sec
       ) ;
       Html.render_html song output_dir ;
       List.iter ( fun output ->
-	pf1 "<!-- output.Output.filename = %s -->\n" output.Output.filename ;
-	pf4 "wrote <a href=\"%s%s/%s.html\">%s.html</a><br/>\n" root_path relative_output_dir output.Output.filename output.Output.filename
-      ) song.Song.outputs
+	pf "<!-- output.Output.filename = %s -->\n" output.Output.filename ;
+	pf "écriture de <a href=\"%s%s/%s.html\">%s.html</a><br/>\n" root_path relative_output_dir output.Output.filename output.Output.filename
+      ) song.Song.outputs ;
+      song
 	
   with
     | e -> (
 	let msg = Song_exn.html_string_of_stack () in
 	let () = Song_exn.clear_stack () in
-	  pf0  "<h3>Ooops... une erreur a &eacute;t&eacute detect&eacute;e a l'execution</h3><br>\n" ;
-	  pf0  "<hr>\n" ;
-	  pf0  msg ;
+	  pf  "<h3>Ooops... une erreur a &eacute;t&eacute detect&eacute;e a l'execution</h3><br>\n" ;
+	  pf  "<hr>\n" ;
+	  pf  "%s" msg ;
+	  song
       )
 )
 
 
-let rec manage_all_songs   ~root ~output_dir ~doc_root ~relative_output_dir   ~root_path  root = __SONG__try "manage_all_songs" (
+let rec manage_all_songs   ~root ~output_dir ~doc_root ~relative_output_dir   ~root_path  songs root = __SONG__try "manage_all_songs" (
   (* pf "manage_all_songs, root = %s<br/>\n" root ;*)
   let dirs = Sys.readdir root in
   let dirs = Array.to_list dirs in
     
-    List.iter ( fun d ->
-      let d = root//d in
-      let () = log "Reading directory %s" d in
-      if  Sys.is_directory d then (
-	if Filename.check_suffix d ".song" then 
-	  manage_song   ~root ~output_dir ~doc_root ~relative_output_dir   ~root_path  d 
-	else 
-	  manage_all_songs ~root ~output_dir ~doc_root ~relative_output_dir  ~root_path  d
-      ) else (
-	()
-      )
-    ) dirs ;
-
-
+    List.fold_left ( fun songs d ->
+		       let d = root//d in
+		       let () = log "Reading directory %s" d in
+			 if  Sys.is_directory d then (
+			   if Filename.check_suffix d ".song" then (
+			     let s = manage_song   ~root ~output_dir ~doc_root ~relative_output_dir ~root_path  d in
+			       s::songs
+			   )
+			   else 
+			     manage_all_songs ~root ~output_dir ~doc_root ~relative_output_dir  ~root_path  songs d
+			 ) else (
+			   songs
+			 )
+		   ) songs dirs 
 )
   
 let main_loop  ~root ~output_dir ~doc_root ~relative_output_dir ~root_path = __SONG__try "main loop" (
-  Util.print := Some (Fcgi.fcgi_log) ;
-  Fcgi.fcgi_log "test fcgi_log" ;
+  log "test fcgi_log" ;
   log "root is %s" root ;
   Array.iter ( fun a ->
     log "arg : %s" a
@@ -127,22 +121,24 @@ let main_loop  ~root ~output_dir ~doc_root ~relative_output_dir ~root_path = __S
     try
       let script_name = try 
 	  let script_name = __SONG__try "script name" (Unix.getenv "SCRIPT_NAME") in
-	    Fcgi.fcgi_log ("script : " ^ script_name) ;
+	    log "script : %s" script_name ;
 	    Str.global_replace (Str.regexp ".songx") "" script_name
 	with
 	  | Not_found -> "noscript"
       in
-	Fcgi.fcgi_log ("script : " ^ script_name) ;
+	log "script : %s"  script_name ;
 	start_page () ;
-	manage_all_songs   ~root ~output_dir ~doc_root ~relative_output_dir  ~root_path  root ;
-	end_page() ;
+	pf "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />" ;
+	let songs = manage_all_songs   ~root ~output_dir ~doc_root ~relative_output_dir  ~root_path  [] root in
+	  Index.write_index ~songs ~output_dir ~relative_output_dir ;
+	  end_page() ;
     with
       | e -> (
 	  let msg = Song_exn.html_string_of_stack () in
 	  let () = Song_exn.clear_stack () in
 	  let () = start_page () in
-	    pf0 "<h3> erreur : <br/></h3> " ;
-	    pf0 msg ;
+	    pf "<h3> erreur : <br/></h3> " ;
+	    pf "%s" msg ;
 	end_page ()
 	)
 	    
@@ -196,7 +192,7 @@ let _ = try
     in
     let root = Sys.argv.(1) in
     let () = if true then (
-      printf "-- %s\n-- %s\n-- %s\n-- %s\n" doc_root relative_output_dir root_path root
+      eprintf "-- %s\n-- %s\n-- %s\n-- %s\n" doc_root relative_output_dir root_path root
     ) else () in
       Fcgi.c_init () ;
       main_loop ~output_dir ~root ~doc_root ~relative_output_dir ~root_path ;

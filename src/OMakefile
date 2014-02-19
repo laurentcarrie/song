@@ -42,6 +42,7 @@ src[]=
 #	lighttpd
 	url_encode
 	check
+	index
 
 OCAML_CLIBS+= song_stub
 #OCAMLFLAGS+= -cclib -lfcgi

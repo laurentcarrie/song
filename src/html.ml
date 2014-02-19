@@ -36,12 +36,12 @@ border:1px solid #98bf21;
 padding:2px 2px 2px 2px;
 text-align:center;
 height:50px ;
-width:50px ;
+width:2cm ;
 }
 
 td.half-chords
 {
-width:25px ;
+width:1cm ;
 }
 
 
@@ -62,12 +62,14 @@ background-color:#EAF2D3;
 
 div.title
 {
+padding:10px;
 text-align:center ;
-font-size:1.1em ;
+font-size:2em ;
 }
 
 div.auteur
 {
+padding:10px;
 text-align:center ;
 font-size:1.1em ;
 }
@@ -87,37 +89,49 @@ margin:0px;
 
 div#main-0 
 {
+padding:10px;
 width:%dcm ;
+/* border:1px solid #98bf21; */
 }
 
 div#frame-title
 {
-background-color:#EEFFEE ;
+padding:10px;
+ background-color:#EEFFEE ; 
+border:1px solid #98bf21;
 }
 
 div#main
 {
-#border:5px solid pink ;
+/* border:5px solid pink ;*/
 }
 
 div#col_1
 {
+padding:10px;
 float:left ;
-#border:5px solid gray ;
+/* border:5px solid #98bf21; */
+/*background-color:#FFEEEE ; */
 }
 
 div#col_2
 {
+padding:10px;
 float:right ;
-#top:2cm ;
-#border:5px solid gray ;
+/* top:2cm ; */
+/* border:5px solid gray ;*/
+/* background-color:#EEFFEE ; */
+
 }
 
+.lyrics-list {
+padding : 10px ;
+}
 
 div.lyrics
 {
 padding:10px;
-border:5px solid gray;
+/* border:5px solid gray; */
 margin:0px;
 }
 
@@ -142,8 +156,11 @@ span.note {
 background-color:red
 word-spacing:1px
 }
+
 " width 
 )
+
+let log = Fcgi.log
 
 let render_one_html song dirname output = __SONG__try "render_html" (
 
@@ -151,6 +168,8 @@ let render_one_html song dirname output = __SONG__try "render_html" (
     let () = log "writing %s...\n" filename in
 
     let fout =  open_out_bin filename in
+
+    let pf fs = ksprintf (fun s -> fprintf fout "%s\n" s) fs in
 
     let print_sections () = __SONG__try "print_sections" (
       
@@ -194,14 +213,14 @@ let render_one_html song dirname output = __SONG__try "render_html" (
 
     let print_structure () = __SONG__try "print_structure" (
       fprintf fout "<h2>structure</h2>\n" ;
-      fprintf fout "<ol>\n" ;
+      fprintf fout "<ol class=\"structure-list\">\n" ;
       let count = ref 1 in
 	List.iter ( fun s ->
 	  let sname = s.Structure.section_name in
 	  let s = PMap.find sname song.Song.sections in
 	  let l = length_of_section s in
 	  let count2 = !count + l in 
-	    fprintf fout "<li>%s  (%d : %d &rarr; %d) </li>\n" s.Section.name l (!count/4+1) (count2/4) ;
+	    fprintf fout "<li class=\"structure-list\">%s  (%d : %d &rarr; %d) </li>\n" s.Section.name l (!count/4+1) (count2/4) ;
 	    count := count2  ;
 	) song.Song.structure ;
 	fprintf fout "</ol>\n" ;
@@ -210,12 +229,12 @@ let render_one_html song dirname output = __SONG__try "render_html" (
 
     let print_lyrics () = __SONG__try "print_lyrics" (
       fprintf fout "<h2>lyrics</h2>\n" ;
-      fprintf fout "<ol>\n" ;
+      fprintf fout "<ol class=\"lyrics-list\">\n" ;
       List.iter ( fun lyrics ->
 	let text = lyrics.Lyrics.text in
 	let text = Str.global_replace (Str.regexp "\\[\\(.*\\)\\]") (sprintf "<span class=\"lyrics-beat\">\\1</span>") text in 
 	let text = Str.global_replace (Str.regexp "\n") "<br/>" text in
-	fprintf fout "<li><span class=\"lyrics-section\">%s</span><br/>\n" lyrics.Lyrics.name ;
+	fprintf fout "<li class=\"lyrics-list\"><span class=\"lyrics-section\">%s</span><br/>\n" lyrics.Lyrics.name ;
 	fprintf fout "%s" text ;
 	fprintf fout "</li>" ;
       ) song.Song.lyrics ;
@@ -224,25 +243,27 @@ let render_one_html song dirname output = __SONG__try "render_html" (
     in
       
 
-      fprintf fout "\
+      pf "\
 <html>
 <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />
 <style>
 " ;
 	print_css fout dirname output.Output.width ;
-fprintf fout "
+	pf "
 </style>
-<body>
+<body> " ;
+	
+	pf "<a href=\"index.html\">index</a>" ;
 
-<div id=\"main-0\">
+	pf " <div id=\"main-0\">
 
 <div id=\"frame-title\">
 
 <div class=\"title\">%s</div>\n" song.Song.title ;
-      fprintf fout "\
+      pf "\
 <div class=\"auteur\">%s</div>\n" song.Song.auteur ;
 
-fprintf fout "
+pf "
 <!-- frame-title -->
 </div> 
 " ;
@@ -255,21 +276,21 @@ fprintf fout "
 		) 
     in
 
-      fprintf fout "
+      pf "
 <div id=\"main\">
 <div id=\"col_1\">
 " ;
       pp output.Output.col_1 ;
-fprintf fout "
+pf "
 </div>
 <div id=\"col_2\">
 " ;
 pp output.Output.col_2 ;
-fprintf fout "
+pf "
 </div>
 </div>
 " ;
-		      fprintf fout "</body></html>\n" ;
+pf "</body></html>\n" ;
 	log "close %s" filename ;
 	close_out fout
 	  

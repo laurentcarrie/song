@@ -109,20 +109,25 @@ padding:0.1cm ;
       pf "<li>%c</li>\n" letter ;
       pf "<ul  class=\"index-auteur\">" ;
       List.iter ( fun (auteur,songs) ->
-	pf "<li>%s</li>\n" auteur ;
+	pf "<li>%s</li>\n" (String.capitalize  auteur) ;
 	pf "<p  class=\"index-chanson\">" ; 
 	let songs = List.sort ~cmp:compare songs in
 	  List.iter ( fun s ->
 	    if auteur <> s.Song.auteur then __SONG__failwith "internal error" else () ;
 	    pf "%s</br>" s.Song.title ;
-	    List.iter ( fun o ->
-	      (* pf "<li class=\"index-title\"><a href=\"%s/%s.html\"><span class=\"index-title\">%s</span></a></li>\n" *)
-	      pf "<a href=\"%s%s/%s.html\"><span class=\"index-title\">(%s)</span></a>\n" 
-		root_path relative_output_dir o.Output.filename  o.Output.filename
-	    ) s.Song.outputs ;
-	  ) songs ;
+	    let base_filename =  sprintf "%s-%s-" (Str.global_replace (Str.regexp " ") "_" s.Song.auteur) (Str.global_replace (Str.regexp " ") "_" s.Song.title) in
+	      log "base_filename = '%s'" base_filename ;
+	      List.iter ( fun o ->
+			    (* pf "<li class=\"index-title\"><a href=\"%s/%s.html\"><span class=\"index-title\">%s</span></a></li>\n" *)
+			    let clean_filename =  Str.global_replace (Str.regexp (Str.quote base_filename)) "" o.Output.filename in
+			      log "clean_filename = '%s'" clean_filename ;
+			      pf "<a href=\"%s%s/%s.html\"><span class=\"index-title\">(%s)</span></a>\n" 
+				root_path relative_output_dir o.Output.filename  
+				clean_filename
+			) s.Song.outputs ;
+		    ) songs ;
 	  pf "</p>"; 
-      ) l ;
+		) l ;
       pf "</ul>" ;
     ) songs_alphabet ;
     pf "</ul>"  ;

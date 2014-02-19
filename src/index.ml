@@ -117,8 +117,8 @@ padding:0.1cm ;
 	    pf "%s</br>" s.Song.title ;
 	    List.iter ( fun o ->
 	      (* pf "<li class=\"index-title\"><a href=\"%s/%s.html\"><span class=\"index-title\">%s</span></a></li>\n" *)
-	      pf "<a href=\"%s/%s.html\"><span class=\"index-title\">(%s)</span></a>\n" 
-		relative_output_dir o.Output.filename  o.Output.filename
+	      pf "<a href=\"%s%s/%s.html\"><span class=\"index-title\">(%s)</span></a>\n" 
+		root_path relative_output_dir o.Output.filename  o.Output.filename
 	    ) s.Song.outputs ;
 	  ) songs ;
 	  pf "</p>"; 

@@ -1,1 +1,13 @@
-A B C
+intro
+C C
+
+couplet
+D Am C\2 E\2
+F G A A  
+
+refrain
+A B C D
+
+
+    
+    

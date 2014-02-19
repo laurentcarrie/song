@@ -11,7 +11,7 @@ let start_page () =
   page := ""
 
 let end_page () = 
-  Fcgi.fcgi_log (!page) ;
+  Fcgi.log "%s" (!page) ;
   Fcgi.c_fcgi_print (sprintf "Status: 200\r\n") ;
   Fcgi.c_fcgi_print (sprintf "Content-type: text/html \r\n" ) ;
   Fcgi.c_fcgi_print (sprintf "Content-length: %d \r\n\r\n" (String.length !page)) ;
@@ -29,13 +29,12 @@ let pf4 fs s1 s2 s3 s4 = let s = sprintf fs s1 s2 s3 s4 in page := !page ^ s
 let pf5 fs s1 s2 s3 s4 s5 = let s = sprintf fs s1 s2 s3 s4 s5 in page := !page ^ s
 let pf6 fs s1 s2 s3 s4 s5 s6 = let s = sprintf fs s1 s2 s3 s4 s5 s6 in page := !page ^ s
 
-let log fs s =
-  Fcgi.fcgi_log (sprintf fs s)
+let log =   Fcgi.log
 
 
   
 let main_loop  ()  = __SONG__try "main loop" (
-  Fcgi.fcgi_log "test fcgi_log" ;
+  Fcgi.log "test fcgi_log" ;
   
   let process_request () = 
     try

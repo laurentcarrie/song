@@ -7,6 +7,7 @@ external c_fcgi_log_string : string -> unit = "fcgi_log_string"
 external fcgi_input : int -> string  = "fcgi_input"  
 external fcgi_set_exit_status : int -> unit = "fcgi_set_exit_status"
 
+open Printf
 
 exception Http_404
 
@@ -37,6 +38,8 @@ let get_post_params () = __SONG__try "get_post_params" (
     ) header
 )
 
-let fcgi_log s = 
-  c_fcgi_log_string s 
+let pf fs = ksprintf c_fcgi_log_string  fs
+
+let log fs = 
+  pf fs
 

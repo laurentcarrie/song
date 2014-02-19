@@ -57,7 +57,7 @@ value fcgi_print(value os) {
   CAMLparam1(os) ;
   const char* s = String_val(os) ;
   printf(s) ;
-  // fcgi_log0(s) ;
+  fcgi_log0(s) ;
   CAMLreturn(Val_unit) ;
 }
 

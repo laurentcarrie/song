@@ -160,12 +160,16 @@ word-spacing:1px
 " width 
 )
 
+let log = Fcgi.log
+
 let render_one_html song dirname output = __SONG__try "render_html" (
 
     let filename = dirname // ( output.Output.filename ^ ".html") in
     let () = log "writing %s...\n" filename in
 
     let fout =  open_out_bin filename in
+
+    let pf fs = ksprintf (fun s -> fprintf fout "%s\n" s) fs in
 
     let print_sections () = __SONG__try "print_sections" (
       
@@ -239,25 +243,27 @@ let render_one_html song dirname output = __SONG__try "render_html" (
     in
       
 
-      fprintf fout "\
+      pf "\
 <html>
 <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />
 <style>
 " ;
 	print_css fout dirname output.Output.width ;
-fprintf fout "
+	pf "
 </style>
-<body>
+<body> " ;
+	
+	pf "<a href=\"index.html\">index</a>" ;
 
-<div id=\"main-0\">
+	pf " <div id=\"main-0\">
 
 <div id=\"frame-title\">
 
 <div class=\"title\">%s</div>\n" song.Song.title ;
-      fprintf fout "\
+      pf "\
 <div class=\"auteur\">%s</div>\n" song.Song.auteur ;
 
-fprintf fout "
+pf "
 <!-- frame-title -->
 </div> 
 " ;
@@ -270,21 +276,21 @@ fprintf fout "
 		) 
     in
 
-      fprintf fout "
+      pf "
 <div id=\"main\">
 <div id=\"col_1\">
 " ;
       pp output.Output.col_1 ;
-fprintf fout "
+pf "
 </div>
 <div id=\"col_2\">
 " ;
 pp output.Output.col_2 ;
-fprintf fout "
+pf "
 </div>
 </div>
 " ;
-		      fprintf fout "</body></html>\n" ;
+pf "</body></html>\n" ;
 	log "close %s" filename ;
 	close_out fout
 	  

@@ -45,11 +45,3 @@ let open_out_bin filename = __SONG__try ("open_out_bin " ^ filename) (
   open_out_bin filename 
 )
 
-let print = ref None
-
-let log fs (s:string) =
-  let s = sprintf fs s in
-    match !print with
-      | None -> print_endline s
-      | Some f -> f s
-

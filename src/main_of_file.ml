@@ -23,8 +23,8 @@ let read_file song filename = __SONG__try "read_file" (
 	  ) in
 
 	  let song = match key with
-	    | "\\titre" | "\\title"   -> { song with Song.title=data }
-	    | "\\auteur" | "\\author" -> { song with Song.auteur=data }
+	    | "\\titre" | "\\title"   -> { song with Song.title=String.strip data }
+	    | "\\auteur" | "\\author" -> { song with Song.auteur=String.strip data }
 	    | s -> __SONG__failwith ("unknown keyword : '" ^ s ^ "'")
 	  in
 	    read song (linecount+1)

@@ -21,7 +21,7 @@ let compare song1 song2 =
     | 0 -> String.compare song1.Song.title song2.Song.title
       | i -> i
 
-let write_index ~songs ~output_dir ~relative_output_dir = __SONG__try "index" (
+let write_index ~songs ~root_path ~output_dir ~relative_output_dir = __SONG__try "index" (
   let b = Buffer.create 1024 in
   let pf fs = ksprintf (fun s -> Buffer.add_string b s ; Buffer.add_string b "\n" ) fs in 
   let songs_assoc = List.fold_left ( fun acc s ->

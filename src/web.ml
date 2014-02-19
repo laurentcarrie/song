@@ -130,7 +130,7 @@ let main_loop  ~root ~output_dir ~doc_root ~relative_output_dir ~root_path = __S
 	start_page () ;
 	pf "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />" ;
 	let songs = manage_all_songs   ~root ~output_dir ~doc_root ~relative_output_dir  ~root_path  [] root in
-	  Index.write_index ~songs ~output_dir ~relative_output_dir ;
+	  Index.write_index ~songs ~root_path ~output_dir ~relative_output_dir ;
 	  end_page() ;
     with
       | e -> (

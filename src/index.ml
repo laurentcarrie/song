@@ -19,39 +19,39 @@ let alphabet =
 let compare song1 song2 =
   match String.compare song1.Song.auteur song2.Song.auteur with
     | 0 -> String.compare song1.Song.title song2.Song.title
-      | i -> i
+    | i -> i
 
 let write_index ~songs ~root_path ~output_dir ~relative_output_dir = __SONG__try "index" (
   let b = Buffer.create 1024 in
   let pf fs = ksprintf (fun s -> Buffer.add_string b s ; Buffer.add_string b "\n" ) fs in 
   let songs_assoc = List.fold_left ( fun acc s ->
-    let auteur = s.Song.auteur in
-      try
-	let l = List.assoc auteur acc in
-	  (auteur,(s::l)) :: (List.remove_assoc auteur acc)
-      with
-	| Not_found -> (s.Song.auteur,[s]) :: acc
-  ) [] songs
+				       let auteur = s.Song.auteur in
+					 try
+					   let l = List.assoc auteur acc in
+					     (auteur,(s::l)) :: (List.remove_assoc auteur acc)
+					 with
+					   | Not_found -> (s.Song.auteur,[s]) :: acc
+				   ) [] songs
   in
   let songs_alphabet = List.map ( fun letter ->
-    log "index, examen lettre %c" letter ;
-    let acc = List.fold_left ( fun acc (auteur,songs) ->
-      log "... auteur = '%s'" auteur ;
-      let () = if auteur = "" then __SONG__failwith ("auteur non defini") else () in
-      let l2 = Char.uppercase (String.get auteur 0) in
-	if letter = l2 then (
-	  log "... match\n" ;
-	  (auteur,songs)::acc
-	)
-	else (
-	  log "don't match '%c' '%c'" letter l2 ;
-	  acc
-	)
-    ) [] songs_assoc
-    in
-      letter,List.rev acc
-  ) alphabet in
-	
+				    log "index, examen lettre %c" letter ;
+				    let acc = List.fold_left ( fun acc (auteur,songs) ->
+								 log "... auteur = '%s'" auteur ;
+								 let () = if auteur = "" then __SONG__failwith ("auteur non defini") else () in
+								 let l2 = Char.uppercase (String.get auteur 0) in
+								   if letter = l2 then (
+								     log "... match\n" ;
+								     (auteur,songs)::acc
+								   )
+								   else (
+								     log "don't match '%c' '%c'" letter l2 ;
+								     acc
+								   )
+							     ) [] songs_assoc
+				    in
+				      letter,List.rev acc
+				) alphabet in
+    
     
     
     pf "<html>" ;
@@ -106,35 +106,37 @@ padding:0.1cm ;
     pf "<div id=\"list5\" class=\"index-alphabet\">" ;
     pf "<ul class=\"index-alphabet\">"; 
     List.iter ( fun (letter,l) ->
-      pf "<li>%c</li>\n" letter ;
-      pf "<ul  class=\"index-auteur\">" ;
-      List.iter ( fun (auteur,songs) ->
-	pf "<li>%s</li>\n" (String.capitalize  auteur) ;
-	pf "<p  class=\"index-chanson\">" ; 
-	let songs = List.sort ~cmp:compare songs in
-	  List.iter ( fun s ->
-	    if auteur <> s.Song.auteur then __SONG__failwith "internal error" else () ;
-	    pf "%s</br>" s.Song.title ;
-	    let base_filename =  sprintf "%s-%s-" (Str.global_replace (Str.regexp " ") "_" s.Song.auteur) (Str.global_replace (Str.regexp " ") "_" s.Song.title) in
-	      log "base_filename = '%s'" base_filename ;
-	      List.iter ( fun o ->
-			    (* pf "<li class=\"index-title\"><a href=\"%s/%s.html\"><span class=\"index-title\">%s</span></a></li>\n" *)
-			    let clean_filename =  Str.global_replace (Str.regexp (Str.quote base_filename)) "" o.Output.filename in
-			      log "clean_filename = '%s'" clean_filename ;
-			      pf "<a href=\"%s%s/%s.html\"><span class=\"index-title\">(%s)</span></a>\n" 
-				root_path relative_output_dir o.Output.filename  
-				clean_filename
-			) s.Song.outputs ;
-		    ) songs ;
-	  pf "</p>"; 
-		) l ;
-      pf "</ul>" ;
-    ) songs_alphabet ;
+		  pf "<li>%c</li>\n" letter ;
+		  pf "<ul  class=\"index-auteur\">" ;
+		  List.iter ( fun (auteur,songs) ->
+				pf "<li>%s</li>\n" (String.capitalize  auteur) ;
+				pf "<p  class=\"index-chanson\">" ; 
+				let songs = List.sort ~cmp:compare songs in
+				  List.iter ( fun s ->
+						if auteur <> s.Song.auteur then __SONG__failwith "internal error" else () ;
+						pf "%s</br>" s.Song.title ;
+						let base_filename =  sprintf "%s-%s" (Str.global_replace (Str.regexp " ") "_" s.Song.auteur) (Str.global_replace (Str.regexp " ") "_" s.Song.title) in
+						  log "base_filename = '%s'" base_filename ;
+						  List.iter ( fun o ->
+								(* pf "<li class=\"index-title\"><a href=\"%s/%s.html\"><span class=\"index-title\">%s</span></a></li>\n" *)
+								let clean_filename =  Str.global_replace (Str.regexp (Str.quote (base_filename^"-"))) "" o.Output.filename in
+								  log "clean_filename = '%s'" clean_filename ;
+								  pf "<a href=\"%s%s/%s.html\"><span class=\"index-title\">(%s)</span></a>\n" 
+								    root_path relative_output_dir o.Output.filename  
+								    clean_filename
+							    ) s.Song.outputs ;
+						  pf "<a href=\"%s.midi\"><span class=\"index-title\">(midi)</span></a>" base_filename ;
+					    ) songs ;
+				  
+				  pf "</p>"; 
+			    ) l ;
+		  pf "</ul>" ;
+	      ) songs_alphabet ;
     pf "</ul>"  ;
     pf "</body>\n" ;
     pf "</html>\n" ;
     Std.output_file ~filename:(output_dir // "index.html") ~text:(Buffer.contents b) ;
     ()
-	
+      
 
 )

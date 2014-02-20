@@ -43,6 +43,7 @@ src[]=
 	url_encode
 	check
 	index
+	lilypond
 
 OCAML_CLIBS+= song_stub
 #OCAMLFLAGS+= -cclib -lfcgi

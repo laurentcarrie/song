@@ -49,6 +49,7 @@ let manage_song   ~root ~output_dir ~doc_root ~relative_output_dir   ~root_path 
 	    tm.Unix.tm_hour tm.Unix.tm_min tm.Unix.tm_sec
       ) ;
       Html.render_html song output_dir ;
+      Lilypond.render song output_dir ;
       List.iter ( fun output ->
 	pf "<!-- output.Output.filename = %s -->\n" output.Output.filename ;
 	pf "écriture de <a href=\"%s%s/%s.html\">%s.html</a><br/>\n" root_path relative_output_dir output.Output.filename output.Output.filename

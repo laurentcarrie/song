@@ -21,6 +21,12 @@ module Note = struct
     ( if t.is_m then "m" else "")
     ( if t.is_sharp then "<sup>&#9839</sup>" else "")
     ( if t.is_flat then "<sup>&#x266d</sup>" else "")
+  let lilypond_name t duree = sprintf "%c%s%s%d%s" 
+    (Char.lowercase t.letter)
+    ( if t.is_sharp then "is" else "")
+    ( if t.is_flat then "es" else "")
+    duree 
+    ( if t.is_m then ":m" else "")
 end
   
 
@@ -81,6 +87,7 @@ module Song = struct
     lyrics : Lyrics.t list ;
     outputs : Output.t list ;
     digest : Digest.t ;
+    tempo : int ;
     (* lyrics : (string (* nom de la section *) * ((int option*string) list)) list ; *)
   }
 end

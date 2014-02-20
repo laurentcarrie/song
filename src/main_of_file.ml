@@ -3,6 +3,11 @@ open Printf
 open ExtString
 
 
+let int_of_string s =
+  try
+    int_of_string s
+  with
+    | e -> __SONG__failwith("cannot convert to int : '" ^ s ^"'")
 
 
 let read_file song filename = __SONG__try "read_file" (
@@ -25,6 +30,7 @@ let read_file song filename = __SONG__try "read_file" (
 	  let song = match key with
 	    | "\\titre" | "\\title"   -> { song with Song.title=String.strip data }
 	    | "\\auteur" | "\\author" -> { song with Song.auteur=String.strip data }
+	    | "\\tempo"  -> { song with Song.tempo=int_of_string (String.strip data) }
 	    | s -> __SONG__failwith ("unknown keyword : '" ^ s ^ "'")
 	  in
 	    read song (linecount+1)

@@ -1,2 +1,3 @@
 \titre Hey, Brother
 \auteur avicii
+\tempo 90

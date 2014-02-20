@@ -29,7 +29,7 @@ let log = Fcgi.log
 
 let manage_song   ~root ~output_dir ~doc_root ~relative_output_dir   ~root_path  dirname  = __SONG__try ("manage song : " ^ dirname) (
   let song = { Song.title="???" ; Song.auteur="???" ; format=None ; sections=PMap.create String.compare ; structure=[];lyrics=[];outputs=[];
-	       digest=Digest.string ""} in
+	       digest=Digest.string ""; tempo=80 ;} in
     try
       pf "lecture du repertoire %s<br/>" dirname ; 
       log "lecture du repertoire : '%s'" dirname ;
@@ -98,7 +98,7 @@ let main_loop  ~root ~output_dir ~doc_root ~relative_output_dir ~root_path = __S
 
   (
     Array.iter ( fun s ->
-      log "env :%s\n" s
+      log "env :%s" s
     ) (Unix.environment())
   ) ;
 

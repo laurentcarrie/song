@@ -15,41 +15,123 @@ let render song  output_dir = __SONG__try "write lilypond" (
   let fout =  open_out_bin filename in
     
   let pf fs = ksprintf (fun s -> fprintf fout "%s\n" s) fs in
-    pf "
-\\version \"2.12.3\"
-\\header {}
 
-drh = \\drummode { cymc4.^\"crash\" hhc16^\"h.h.\" hh hhc8 hho hhc8 hh16 hh hhc4 r4 r2 }
-drl = \\drummode { bd4 sn8 bd bd4 << bd ss >>  bd8 tommh tommh bd toml toml bd tomfh16 tomfh }
-timb = \\drummode { timh4 ssh timl8 ssh r timh r4 ssh8 timl r4 cb8 cb }
+    pf "\\version \"2.12.3\"
+\\header {} " ;
+
+
+    pf "drl = \\drummode { " ; 
+    List.iter ( fun s ->
+      let section = PMap.find s.Structure.section_name song.Song.sections in
+	List.iter ( fun c ->
+	  match c with
+	    | Section.NL -> ()
+	    | Section.C c ->  (
+		match c.Chord.length with
+		  | 2 -> pf  " bd4 sn4 "  ; (* bd4 << bd ss >>  bd8 tommh tommh bd toml toml bd tomfh16 tomfh *)
+		  | 4 -> pf  " bd4 sn4 bd4 sn4"  ; (* bd4 << bd ss >>  bd8 tommh tommh bd toml toml bd tomfh16 tomfh *)
+		  | i -> __SONG__failwith ("length not managed : " ^ (string_of_int i))
+	      )
+	) section.Section.chords ;
+    ) song.Song.structure ;
+    pf " } " ;
+
+
+    pf "drh = \\drummode { " ; 
+    List.iter ( fun s ->
+      let section = PMap.find s.Structure.section_name song.Song.sections in
+	List.iter ( fun c ->
+	  match c with
+	    | Section.NL -> ()
+	    | Section.C c ->  (
+		match c.Chord.length with
+		  | 2 -> pf  "  ss8 ss8 ss8 ss8 "  ; (* bd4 << bd ss >>  bd8 tommh tommh bd toml toml bd tomfh16 tomfh *)
+		  | 4 -> pf  " ss8 ss8 ss8 ss8 ss8 ss8 ss8 ss8"  ; (* bd4 << bd ss >>  bd8 tommh tommh bd toml toml bd tomfh16 tomfh *)
+		  | i -> __SONG__failwith ("length not managed : " ^ (string_of_int i))
+	      )
+	) section.Section.chords ;
+    ) song.Song.structure ;
+
+    pf " } 
+%% timb = \\drummode { timh4 ssh timl8 ssh r timh r4 ssh8 timl r4 cb8 cb }
+
+melody = \\relative c' {
+  \\clef treble
+  \\key c \\major
+  \\time 4/4
+
+%%  f4 e8[ c] d4 g
+%%  a2 ~ a
+}
+
+harmonies = \\chordmode { " ;
+
+    List.iter ( fun s ->
+      let section = PMap.find s.Structure.section_name song.Song.sections in
+	List.iter ( fun c ->
+	  match c with
+	    | Section.NL -> ()
+	    | Section.C c ->  (
+		let rec p count =
+		  if count=0 then ()
+		  else (
+		    pf "%s" (Note.lilypond_name c.Chord.note 4) ;
+		    p (count-1)
+		  )
+		in
+		  p (c.Chord.length)
+	      )
+	) section.Section.chords ;
+    ) song.Song.structure ;
+
+    pf "
+%%  c4:m f:min7 g:maj c:aug
+%%  d2:dim b:sus
+}
 
 \\score {
-  <<
-    \\tempo 4 = 120
+  << " ;
+    pf "\\tempo 4 = %d " song.Song.tempo  ;
 
-    \\new DrumStaff \\with {
-      drumStyleTable = #timbales-style
-      \\override StaffSymbol #'line-count = #2
-      \\override BarLine #'bar-extent = #'(-1 . 1)
-    } <<
-      \\set Staff.instrumentName = #\"timbales\"
-      \\timb
-    >>
+    pf "
+
     \\new DrumStaff <<
       \\set Staff.instrumentName = #\"drums\"
       \\new DrumVoice { \\stemUp \\drh }
       \\new DrumVoice { \\stemDown \\drl }
     >>
+
+    \\new ChordNames {
+    \\set chordChanges = ##t
+      \\harmonies
+    }
+
+
+    \\new Staff \\melody
+
+
   >>
   \\layout { }
   \\midi {
   }
-} " ;
+} " 
+ ;
 
     close_out fout ;
-    let command = sprintf "lilypond --relocate --verbose --output \"%s\" \"%s.ly\" 2> /var/log/lighttpd/lilypond.log " 
-      (output_dir//base_filename) (output_dir//base_filename) in 
 
+    let lilypond = __SONG__try "LILYPOND" (Unix.getenv "LILYPOND") in
+
+    let command = sprintf "%s --relocate --verbose --output \"%s\" \"%s.ly\" &> /var/log/lighttpd/lilypond.log " 
+      lilypond (output_dir//base_filename) (output_dir//base_filename) in 
+
+(*
+    let lilypond_path = __SONG__try "lilypond_path" (Unix.getenv "lilypond_path") in
+    let command = sprintf "%s/lilypond --version /var/log/lighttpd/lilypond.log  2>&1 " lilypond_path
+    in
+*)
+(*
+    let command = sprintf "/users/t0005634/home.p119208.tts.thales/lilypond/lilypond/usr/bin/lilypond --version  &> /var/log/lighttpd/lilypond.log " in
+*)
     let () = __SONG__try command ( 
       match Unix.system command with
 	| Unix.WEXITED 0 -> ()

@@ -17,10 +17,15 @@ let render song  output_dir = __SONG__try "write lilypond" (
   let pf fs = ksprintf (fun s -> fprintf fout "%s\n" s) fs in
 
     pf "\\version \"2.12.3\"
-\\header {} " ;
+\\header {hello world} " ;
 
 
     pf "drl = \\drummode { " ; 
+    (* 1 mesure vide au début *)
+    pf "bd4 sn4 bd4 sn4" ;
+    pf "bd4 sn4 bd4 sn4" ;
+    pf "bd4 sn4 bd4 sn4" ;
+    pf "bd4 sn4 bd4 sn4" ;
     List.iter ( fun s ->
       let section = PMap.find s.Structure.section_name song.Song.sections in
 	List.iter ( fun c ->
@@ -38,6 +43,7 @@ let render song  output_dir = __SONG__try "write lilypond" (
 
 
     pf "drh = \\drummode { " ; 
+    (* 1 mesure vide au début *)
     List.iter ( fun s ->
       let section = PMap.find s.Structure.section_name song.Song.sections in
 	List.iter ( fun c ->
@@ -65,6 +71,11 @@ melody = \\relative c' {
 }
 
 harmonies = \\chordmode { " ;
+    (* 1 mesure vide au début *)
+    pf "r1 " ;
+    pf "r1 " ;
+    pf "r1 " ;
+    pf "r1 " ;
 
     List.iter ( fun s ->
       let section = PMap.find s.Structure.section_name song.Song.sections in
@@ -118,27 +129,33 @@ harmonies = \\chordmode { " ;
  ;
 
     close_out fout ;
+  (
+    Array.iter ( fun s ->
+      log "env :%s" s
+    ) (Unix.environment())
+  ) ;
 
     let lilypond = __SONG__try "LILYPOND" (Unix.getenv "LILYPOND") in
+    let timidity = __SONG__try "TIMIDITY" (Unix.getenv "TIMIDITY") in
+    let pacpl = __SONG__try "PACPL" (Unix.getenv "PACPL") in
 
-    let command = sprintf "%s --relocate --verbose --output \"%s\" \"%s.ly\" &> /var/log/lighttpd/lilypond.log " 
-      lilypond (output_dir//base_filename) (output_dir//base_filename) in 
+    let commands = [
+      sprintf "%s --relocate --verbose --output \"%s\" \"%s.ly\" &>> /var/log/lighttpd/lilypond.log " 
+	lilypond (output_dir//base_filename) (output_dir//base_filename) ;
+      sprintf "%s -Ow \"%s.midi\"" timidity (output_dir//base_filename)  ;
+      sprintf "%s --to mp3 \"%s.wav\"" pacpl (output_dir//base_filename) 
+    ] in
 
-(*
-    let lilypond_path = __SONG__try "lilypond_path" (Unix.getenv "lilypond_path") in
-    let command = sprintf "%s/lilypond --version /var/log/lighttpd/lilypond.log  2>&1 " lilypond_path
-    in
-*)
-(*
-    let command = sprintf "/users/t0005634/home.p119208.tts.thales/lilypond/lilypond/usr/bin/lilypond --version  &> /var/log/lighttpd/lilypond.log " in
-*)
-    let () = __SONG__try command ( 
-      match Unix.system command with
-	| Unix.WEXITED 0 -> ()
-	| Unix.WEXITED i -> __SONG__failwith ("exited with code " ^ (string_of_int i))
-	| Unix.WSTOPPED i -> __SONG__failwith ("stopped with code " ^ (string_of_int i))
-	| Unix.WSIGNALED i -> __SONG__failwith ("signaled with code " ^ (string_of_int i))
-    ) in
-      ()
+      List.iter ( fun command ->
+		    let () = __SONG__try command ( 
+		      log "running %s" command ;
+		      match Unix.system command with
+			| Unix.WEXITED 0 -> ()
+			| Unix.WEXITED i -> __SONG__failwith ("exited with code " ^ (string_of_int i))
+			| Unix.WSTOPPED i -> __SONG__failwith ("stopped with code " ^ (string_of_int i))
+			| Unix.WSIGNALED i -> __SONG__failwith ("signaled with code " ^ (string_of_int i))
+		    ) in
+		      ()
+		) commands 
 )
 

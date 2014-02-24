@@ -33,36 +33,39 @@ let manage_song   ~root ~output_dir ~doc_root ~relative_output_dir   ~root_path 
     try
       pf "lecture du repertoire %s<br/>" dirname ; 
       log "lecture du repertoire : '%s'" dirname ;
-    let song = Grille_of_file.read_file song    (dirname // "grille.txt") in
-    let song = Lyrics_of_file.read_file song    (dirname // "lyrics.txt") in
-    let song = Structure_of_file.read_file song (dirname // "structure.txt") in
-    let song = Main_of_file.read_file song      (dirname // "main.txt") in
-    let song = Sortie_of_file.read_file song (dirname // "sortie.txt") in
-    let song = Check.check song in
-      (* Std.output_file ~filename:(dirname//"digest.txt") ~text:(Digest.to_hex song.Song.digest) ; *)
-      pf "<!-- root_path = %s -->\n"  root_path ;
-      pf "<!-- relative_output_dir = %s -->\n" relative_output_dir ;
-      (
-	let tm = Unix.localtime(Unix.time ()) in
-	  pf "at %02d/%02d/%04d %02d:%02d:%02d</br>" 
-	    tm.Unix.tm_mday (tm.Unix.tm_mon+1) (tm.Unix.tm_year+1900)
-	    tm.Unix.tm_hour tm.Unix.tm_min tm.Unix.tm_sec
-      ) ;
-      Html.render_html song output_dir ;
-      Lilypond.render song output_dir ;
-      List.iter ( fun output ->
-	pf "<!-- output.Output.filename = %s -->\n" output.Output.filename ;
-	pf "écriture de <a href=\"%s%s/%s.html\">%s.html</a><br/>\n" root_path relative_output_dir output.Output.filename output.Output.filename
-      ) song.Song.outputs ;
-      song
-	
+      let song = __SONG__try ("song " ^ dirname) (
+	let song = Grille_of_file.read_file song    (dirname // "grille.txt") in
+	let song = Lyrics_of_file.read_file song    (dirname // "lyrics.txt") in
+	let song = Structure_of_file.read_file song (dirname // "structure.txt") in
+	let song = Main_of_file.read_file song      (dirname // "main.txt") in
+	let song = Sortie_of_file.read_file song (dirname // "sortie.txt") in
+	let song = Check.check song in
+	  (* Std.output_file ~filename:(dirname//"digest.txt") ~text:(Digest.to_hex song.Song.digest) ; *)
+	  pf "<!-- root_path = %s -->\n"  root_path ;
+	  pf "<!-- relative_output_dir = %s -->\n" relative_output_dir ;
+	  (
+	    let tm = Unix.localtime(Unix.time ()) in
+	      pf "at %02d/%02d/%04d %02d:%02d:%02d</br>" 
+		tm.Unix.tm_mday (tm.Unix.tm_mon+1) (tm.Unix.tm_year+1900)
+		tm.Unix.tm_hour tm.Unix.tm_min tm.Unix.tm_sec
+	  ) ;
+	  Html.render_html song output_dir ;
+	  Lilypond.render song output_dir ;
+	  List.iter ( fun output ->
+			pf "<!-- output.Output.filename = %s -->\n" output.Output.filename ;
+			pf "écriture de <a href=\"%s%s/%s.html\">%s.html</a><br/>\n" root_path relative_output_dir output.Output.filename output.Output.filename
+		    ) song.Song.outputs ;
+	  song
+      ) in
+	song
   with
     | e -> (
 	let msg = Song_exn.html_string_of_stack () in
 	let () = Song_exn.clear_stack () in
+	  pf "<hr/>" ;
 	  pf  "<h3>Ooops... une erreur a &eacute;t&eacute detect&eacute;e a l'execution</h3><br>\n" ;
-	  pf  "<hr>\n" ;
 	  pf  "%s" msg ;
+	  pf  "<hr/>" ;
 	  song
       )
 )

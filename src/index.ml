@@ -126,6 +126,9 @@ padding:0.1cm ;
 								    clean_filename
 							    ) s.Song.outputs ;
 						  pf "<a href=\"%s.midi\"><span class=\"index-title\">(midi)</span></a>" base_filename ;
+						  pf "<a href=\"%s.wav\"><span class=\"index-title\">(wav)</span></a>" base_filename ;
+						  pf "<a href=\"%s.mp3\"><span class=\"index-title\">(mp3)</span></a>" base_filename ;
+						  pf "<a href=\"%s.pdf\"><span class=\"index-title\">(pdf)</span></a>" base_filename ;
 					    ) songs ;
 				  
 				  pf "</p>"; 

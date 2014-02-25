@@ -1,12 +1,21 @@
 .PHONY: build
-.DEFAULT: build
+.DEFAULT: build 
 
 
+println($(absname $(srcdir)))
 
-songs[]=
-	hey-brother-avicii
+songs=$(find $(srcdir)/bookshelf -name *.song)
+songs=$(removeprefix $(srcdir)/bookshelf/,$(songs))
+println($"$(songs)")
+
+println($"destdir = $(destdir)")
 
 
 foreach(f,$(songs))
-	build : $f.song/grille.txt $f.song/lyrics.txt $f.song/structure.txt $f.song/main.txt
+	name=$(removesuffix $f)
+	$(destdir)/$(name).html : $f/grille.txt $f/lyrics.txt $f/structure.txt $f/main.txt
+		touch $@
+
+	build : $(destdir)/$(name).html
 	export .RULE
+

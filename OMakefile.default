@@ -9,11 +9,5 @@ OCAMLFLAGS += -g -warn-error A
 
 OCAMLPACKS= extlib
 
-public.destdir=$(CWD)/install
-destdir = $(dir $(absname $(destdir)))
-println("CWD = $(absname $(CWD))")
-println("destdir = $(destdir)")
-mkdir -p $(destdir)
-
 .SUBDIRS: src bookshelf
 

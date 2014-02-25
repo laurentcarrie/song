@@ -15,7 +15,7 @@ let log s =
 let manage_song dirname  = 
   try
     printf "reading song in : '%s'\n" dirname ;
-    let song = { Song.title="???" ; Song.auteur="???" ; format=None ; sections=PMap.create String.compare ; structure=[];lyrics=[];outputs=[];
+    let song = { Song.title="???" ; Song.auteur="???" ; filename = "no-filename-" ^ (string_of_int (Random.int 1000))  ; format=None ; sections=PMap.create String.compare ; structure=[];lyrics=[];outputs=[];
 		 digest=Digest.string "" ; tempo = 80 } in
     let song = Grille_of_file.read_file song (dirname // "grille.txt") in
     let song = Lyrics_of_file.read_file song (dirname // "lyrics.txt") in

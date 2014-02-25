@@ -80,10 +80,15 @@ font-size:1.1em ;
 color:red
 }
 
+div#error-msg {
+border:5px solid gray;
+background-color:#FFEEEE ; 
+}
+
+
 div.sections
 {
 padding:10px;
-#border:5px solid gray;
 margin:0px;
 }
 
@@ -165,7 +170,7 @@ let log = Fcgi.log
 let render_one_html song dirname output = __SONG__try "render_html" (
 
     let filename = dirname // ( output.Output.filename ^ ".html") in
-    let () = log "writing %s...\n" filename in
+    let () = log "writing %s..." filename in
 
     let fout =  open_out_bin filename in
 

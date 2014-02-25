@@ -2,6 +2,8 @@ open Printf
 
 type alteration = | Sharp | Flat | Rien
 
+
+
 module Note = struct 
   type t = {
     letter : char ;
@@ -81,6 +83,7 @@ module Song = struct
   type t = {
     title : string ;
     auteur : string ;
+    filename : string ;
     format : string option ;
     sections : (string,Section.t) PMap.t ;
     structure : Structure.t list ;
@@ -90,6 +93,7 @@ module Song = struct
     tempo : int ;
     (* lyrics : (string (* nom de la section *) * ((int option*string) list)) list ; *)
   }
+
 end
 
 module View = struct
@@ -102,3 +106,13 @@ let line_number = ref 1
 
 type context = | IN_TEXT | OUT_TEXT
 let context = ref OUT_TEXT
+
+
+  
+module World = struct
+  type t = {
+    songs : Song.t list ;
+  }
+end
+
+let world = ref { World.songs = [] }

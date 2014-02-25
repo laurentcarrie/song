@@ -41,5 +41,5 @@ let get_post_params () = __SONG__try "get_post_params" (
 let pf fs = ksprintf c_fcgi_log_string  fs
 
 let log fs = 
-  pf fs
+  pf fs 
 

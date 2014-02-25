@@ -75,17 +75,15 @@ let read_file song filename = __SONG__try ("read_file ") (
     )
   in
 
-  let base_filename =  sprintf "%s-%s" (Str.global_replace (Str.regexp " ") "_" song.Song.auteur) (Str.global_replace (Str.regexp " ") "_" song.Song.title) in
-
   let std_outputs = [
     {
-      Output.filename = sprintf "%s-all" base_filename ;
+      Output.filename = sprintf "%s-all" song.Song.filename ;
       col_1 = [ Output.L ; ]  ;
       col_2 = [ Output.G ; Output.S ] ;
       width = 25 ;
     } ; 
     {
-      Output.filename = sprintf "%s-grille" base_filename ;
+      Output.filename = sprintf "%s-grille" song.Song.filename ;
       col_1 = [ Output.G ; ]  ;
       col_2 = [ Output.S ] ;
       width = 25 ;

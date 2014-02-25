@@ -8,16 +8,15 @@ let (//) = Filename.concat
 let log = Fcgi.log
 
 let render song  output_dir = __SONG__try "write lilypond" (
-  let base_filename =  sprintf "%s-%s" (Str.global_replace (Str.regexp " ") "_" song.Song.auteur) (Str.global_replace (Str.regexp " ") "_" song.Song.title) in
-  let filename = output_dir // ( base_filename ^ ".ly") in
-  let () = log "writing %s...\n" filename in
+  let filename = output_dir // ( song.Song.filename ^ ".ly") in
+  let () = log "writing %s..." filename in
 
   let fout =  open_out_bin filename in
     
   let pf fs = ksprintf (fun s -> fprintf fout "%s\n" s) fs in
 
     pf "\\version \"2.12.3\"
-\\header {hello world} " ;
+%%\\header {hello world} " ;
 
 
     pf "drl = \\drummode { " ; 
@@ -129,23 +128,46 @@ harmonies = \\chordmode { " ;
  ;
 
     close_out fout ;
-  (
-    Array.iter ( fun s ->
+    (*
+      Array.iter ( fun s ->
       log "env :%s" s
-    ) (Unix.environment())
-  ) ;
+      ) (Unix.environment())
+    *) ;
 
-    let lilypond = __SONG__try "LILYPOND" (Unix.getenv "LILYPOND") in
-    let timidity = __SONG__try "TIMIDITY" (Unix.getenv "TIMIDITY") in
-    let pacpl = __SONG__try "PACPL" (Unix.getenv "PACPL") in
+      
+    let commands = [] in
 
-    let commands = [
-      sprintf "%s --relocate --verbose --output \"%s\" \"%s.ly\" &>> /var/log/lighttpd/lilypond.log " 
-	lilypond (output_dir//base_filename) (output_dir//base_filename) ;
-      sprintf "%s -Ow \"%s.midi\"" timidity (output_dir//base_filename)  ;
-      sprintf "%s --to mp3 \"%s.wav\"" pacpl (output_dir//base_filename) 
-    ] in
-
+    let commands = 
+      try
+	let pacpl = Unix.getenv "PACPL" in
+	  (sprintf "%s --to mp3 \"%s.wav\"" pacpl (output_dir//song.Song.filename)) :: commands
+      with
+	| Not_found -> (
+	    log "PACPL not found" ; commands
+	  )
+    in
+      
+    let commands = 
+      try
+	let timidity = Unix.getenv "TIMIDITY" in
+	  (sprintf "%s -Ow \"%s.midi\"" timidity (output_dir//song.Song.filename)) :: commands
+      with
+	| Not_found -> (
+	    log "TIMIDITY not found" ; commands
+	  )
+    in
+	    
+    let commands =
+      try 
+	let lilypond = Unix.getenv "LILYPOND" in
+	  sprintf "%s --relocate --verbose --output \"%s\" \"%s.ly\" &> /var/log/lighttpd/lilypond-%s.log " 
+	    lilypond (output_dir//song.Song.filename) (output_dir//song.Song.filename) song.Song.filename :: commands
+      with
+	| Not_found -> (
+	    log "TIMIDITY not found" ; commands
+	  )
+    in
+      
       List.iter ( fun command ->
 		    let () = __SONG__try command ( 
 		      log "running %s" command ;

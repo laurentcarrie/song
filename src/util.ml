@@ -45,3 +45,17 @@ let open_out_bin filename = __SONG__try ("open_out_bin " ^ filename) (
   open_out_bin filename 
 )
 
+
+module Json = struct
+  module Bu = Json_type.Build
+  module Br = Json_type.Browse
+    
+  let string_field table name = __SONG__try ("string_field " ^ name) (
+    Br.string (Br.field table name)
+  )
+
+  let int_field table name = __SONG__try ("int_field " ^ name) (
+    Br.int (Br.field table name)
+  )
+
+end

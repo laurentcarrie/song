@@ -12,7 +12,6 @@ open Printf
 exception Http_404
 
 open ExtString
-open Util
 
 let parse_query_string  () = __SONG__try "parse_query_string" (
   let s = Unix.getenv "QUERY_STRING" in

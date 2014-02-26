@@ -46,6 +46,7 @@ src[]=
 	lilypond
 	generate
 	data_j
+	edit
 
 OCAML_CLIBS+= song_stub
 #OCAMLFLAGS+= -cclib -lfcgi

@@ -59,3 +59,130 @@ module Json = struct
   )
 
 end
+
+
+
+
+let page = ref ""
+let print s = page := !page ^ s ^ "\n"
+let pf fs =  ksprintf ( fun s -> page := !page ^ s ^ "\n" ) fs
+
+
+let start_page () =
+  page := ""
+    
+let start_html_page() = (
+  start_page () ;
+  pf "<html>" ;
+  pf "<head>";
+  pf "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />" ;
+  pf "<style>
+li.not_done {
+font-style:italic;font-family:Georgia,Times,serif;font-size 1em ;
+color:#bfe1f1 ;
+} 
+
+li.ok_generated {
+font-style:bold;font-family:Georgia,Times,serif;font-size 2em ;
+color:#330033 ;
+} 
+
+li.ok_unchanged {
+font-style:bold;font-family:Georgia,Times,serif;font-size 1em ;
+color:#888888 ;
+} 
+
+li.ok_failed {
+font-style:bold;font-family:Georgia,Times,serif;font-size 1em ;
+color:#ff0000 ;
+} 
+
+li.error {
+background-color : #ffcccc ;
+border: 1px solid #000000 ;
+list-style: none ;
+}
+
+
+</style>" ;
+  pf "<script src=\"js/jquery-1.9.1.js\"></script>";
+  pf "<script src=\"js/jquery-ui-1.10.1.custom.js\"></script>" ;
+  pf "<script src=\"js/jquery.jeditable.js\" type=\"text/javascript\" charset=\"utf-8\"></script>" ;
+  pf "<script>
+function utf8_to_b64( str ) {
+  return window.btoa(unescape(encodeURIComponent( str )));
+}
+
+function b64_to_utf8( str ) {
+  return decodeURIComponent(escape(window.atob( str )));
+} 
+</script>
+";
+  
+  pf "<script>
+$(document).ready(function() {
+     $('.edit').editable('/internal-edit.songx',
+{
+  indicator : 'Sauvegarde...',
+  tootip    : 'Cliquez pour éditer',
+  submit    : 'Ok',
+  cancel    : 'Annuler',
+  type      : 'textarea',
+  submitdata  : function (value,settings) {
+      console.log(value) ;
+      console.log(utf8_to_b64(value)) ;
+      var binval = utf8_to_b64(value) ;
+      binval = binval.replace(/=/gi, '');
+      console.log(binval) ;
+//      $('#bin').text(utf8_to_b64(binval)) ;
+      return { b:binval , song:'song' } ;
+  },
+  data      : function(value, settings) {
+      /* Convert <br> to newline. */
+      var retval = value.replace(/<br[\\s\\/]?>/gi, '\\n');
+//      var ret = new Object ;
+//      ret.value = retval ;
+//      ret.song = 'xxx';
+      return retval ;
+  }
+}
+);
+ });
+</script>" ;
+)
+
+let end_page code mime = 
+  (* Fcgi.log "%s" (!page) ; *)
+  Fcgi.c_fcgi_print (sprintf "Status: %d\r\n" code) ;
+  Fcgi.c_fcgi_print (sprintf "Content-type: %s \r\n" mime) ;
+  Fcgi.c_fcgi_print (sprintf "Content-length: %d \r\n\r\n" (String.length !page)) ;
+  Fcgi.c_fcgi_print !page ;
+  page := "" ;
+  ()
+
+let end_html_page () = end_page 200 "text/html"
+let end_text_page () = end_page 200 "text/plain"
+
+let json_page j =
+  start_page() ;
+  pf "%s" (Json_io.string_of_json j) ;
+  end_page 200  "text/json"
+
+let text_page text =
+  start_page() ;
+  pf "%s" text ;
+  end_page 200  "text/plain"
+    
+let page_404 s =
+  start_page () ;
+  pf  "<html><body>no such url : <br/>%s<br/></body></html>" s ;
+  end_page 404 "text/html" ;
+  ()
+    
+let page_403 s =
+  start_page () ;
+  pf  "internal error : \n%s\n" s ;
+  end_page 403 "text/plain" ;
+  page := "" ;
+  ()
+    

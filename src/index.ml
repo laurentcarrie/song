@@ -119,7 +119,7 @@ padding:0.1cm ;
 	pf "<li>%s</li>\n" (String.capitalize  auteur) ;
 	pf "<p  class=\"index-chanson\">" ; 
 	let songs = List.sort ~cmp:compare songs in
-	  List.iter ( fun s ->
+	  List.iteri ( fun index s ->
 	    if auteur <> s.Song.auteur then __SONG__failwith "internal error" else () ;
 	    pf "%s</br>" s.Song.title ;
 	    List.iter ( fun o ->
@@ -134,6 +134,8 @@ padding:0.1cm ;
 	    pf "<a href=\"%s.wav\"><span class=\"index-title\">(wav)</span></a>" s.Song.filename ;
 	    pf "<a href=\"%s.mp3\"><span class=\"index-title\">(mp3)</span></a>" s.Song.filename ;
 	    pf "<a href=\"%s.pdf\"><span class=\"index-title\">(pdf)</span></a>" s.Song.filename ;
+	    pf "<br/>" ;
+	    pf "<a href=\"/edit_song.songx?index=%d\"><span class=\"index-title\">(edit)</span></a>" index ;
 	  ) songs ;
 	  
 	  pf "</p>"; 

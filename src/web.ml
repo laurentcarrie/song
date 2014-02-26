@@ -1,6 +1,7 @@
 open Printf
 open Data
 open Util
+open ExtString
 
 let (//) = Filename.concat 
 
@@ -8,39 +9,6 @@ type args = ( string * string ) list
 
 let log = Fcgi.log
 
-let page = ref ""
-
-let start_page () =
-  page := ""
-
-let print s = page := !page ^ s ^ "\n"
-let pf fs =  ksprintf ( fun s -> page := !page ^ s ^ "\n" ) fs
-
-let end_page code mime = 
-  (* Fcgi.log "%s" (!page) ; *)
-  Fcgi.c_fcgi_print (sprintf "Status: %d\r\n" code) ;
-  Fcgi.c_fcgi_print (sprintf "Content-type: %s \r\n" mime) ;
-  Fcgi.c_fcgi_print (sprintf "Content-length: %d \r\n\r\n" (String.length !page)) ;
-  Fcgi.c_fcgi_print !page ;
-  page := "" ;
-  ()
-
-let end_html_page () = end_page 200 "text/html"
-let end_json_page () = end_page 200 "text/json"
-
-let page_404 s =
-  start_page () ;
-  pf  "<html><body>no such url : <br/>%s<br/></body></html>" s ;
-  end_page 404 "text/html" ;
-  ()
-    
-let page_403 s =
-  start_page () ;
-  pf  "internal error : \n%s\n" s ;
-  end_page 403 "text/plain" ;
-  page := "" ;
-  ()
-    
 
 
 
@@ -49,39 +17,6 @@ let log = Fcgi.log
 
 let plog = Fcgi.c_fcgi_log_string
 
-let rec manage_all_songs   ~root ~output_dir ~doc_root ~relative_output_dir   ~root_path  songs root = __SONG__try "manage_all_songs" (
-  (* pf "manage_all_songs, root = %s<br/>\n" root ;*)
-  let dirs = Sys.readdir root in
-  let dirs = Array.to_list dirs in
-    
-    List.fold_left ( fun songs d ->
-		       let d = root//d in
-		       let () = log "Reading directory %s" d in
-			 if  Sys.is_directory d then (
-			   if Filename.check_suffix d ".song" then (
-			     try
-			       let s = Generate.generate   ~root ~output_dir ~doc_root ~relative_output_dir ~root_path ~print ~plog:Fcgi.c_fcgi_log_string d in
-				 s::songs
-			     with
-			       | e -> (
-				   let msg = Song_exn.html_string_of_stack () in
-				   let () = Song_exn.clear_stack () in
-				     pf "<div class=\"error-msg\">" ;
-				     pf "<hr/>" ;
-				     pf  "<h3>Ooops... une erreur a été détectée à l'exécution</h3><br/>\n" ;
-				     pf  "%s" msg ;
-				     pf "<hr/></div>" ;
-				     songs
-				 )
-			   )
-			   else 
-			     manage_all_songs ~root ~output_dir ~doc_root ~relative_output_dir  ~root_path  songs d
-			 ) else (
-			   songs
-			 )
-    ) songs dirs 
-)
-  
 let main_loop  ~root ~output_dir ~doc_root ~relative_output_dir ~root_path = __SONG__try "main loop" (
   log "test fcgi_log" ;
   log "root is %s" root ;
@@ -127,35 +62,7 @@ let main_loop  ~root ~output_dir ~doc_root ~relative_output_dir ~root_path = __S
 	      log "== BEGIN script : %s"  script_name ;
 	      world := { World.songs = [] } ;
 	      let song_paths = Generate.find_all_songs ~plog:Fcgi.c_fcgi_log_string root in 
-		start_page () ;
-		pf "<html>" ;
-		pf "<head>";
-		pf "<style>
-li.not_done {
-font-style:italic;font-family:Georgia,Times,serif;font-size 1em ;
-color:#bfe1f1 ;
-} 
-
-li.ok_done {
-font-style:bold;font-family:Georgia,Times,serif;font-size 1em ;
-color:#440044 ;
-} 
-
-li.ok_failed {
-font-style:bold;font-family:Georgia,Times,serif;font-size 1em ;
-color:#ff0000 ;
-} 
-
-li.error {
-background-color : #ffcccc ;
-border: 1px solid #000000 ;
-list-style: none ;
-}
-
-
-</style>" ;
-		pf "<script src=\"js/jquery-1.9.1.js\"></script>";
-		pf "<script src=\"js/jquery-ui-1.10.1.custom.js\"></script>" ;
+		start_html_page () ;
 		pf "<script>
 
 " ;
@@ -183,7 +90,11 @@ $.ajax({
 function add_result(data) {
 	$('#results').prepend(\"<li>\"+data.name+\"</li>\") ;
         if (data.success == true) {
-          $('#song-'+data.index).attr('class','ok_done') ;
+          if (data.generated==true) {
+            $('#song-'+data.index).attr('class','ok_generated') ;
+          } else {
+            $('#song-'+data.index).attr('class','ok_unchanged') ;
+          }
           songs[data.index] = data.song ;
         } else {
           $('#song-'+data.index).attr('class','ok_failed') ;
@@ -243,6 +154,7 @@ background-color:#FFEEEE ;
 		pf "<p id='nb-errors'>0 errors</p>" ;
 		pf "<ul id='errors'/>" ;
 		pf "<ul id='message'/>" ;
+		pf "<div id='bin'/>" ;
 
 		
 (*
@@ -266,21 +178,20 @@ background-color:#FFEEEE ;
 		  let path = (List.assoc "path" params) in
 		  let index = int_of_string (List.assoc "index" params) in (
 		    try 
-		      let song = Generate.generate ~root ~output_dir ~doc_root ~relative_output_dir ~root_path ~plog ~print (List.assoc "path" params) in
+		      let (song,generated) = Generate.generate ~root ~output_dir ~doc_root ~relative_output_dir ~root_path ~plog ~print (List.assoc "path" params) in
 			world := { World.songs = song :: (!world).World.songs } ;
 			(* Index.write_index ~songs:!world.World.songs ~root_path ~output_dir ~relative_output_dir ; *)
-			start_page ( ) ;
+			start_page () ;
 			let j = Json_type.Build.objekt [ 
 			  "path",Json_type.Build.string path ;
 			  "index",Json_type.Build.int index ;
 			  "success",Json_type.Build.bool true ;
 			  "song",Data_j.Song.to_json song ;
+			  "generated",Json_type.Build.bool generated ;
 			] in
-			  pf "%s"(Json_io.string_of_json j) ;
-			  end_json_page ()
+			  json_page j
 		    with
 		      | e ->
-			  start_page() ;
 			  let msg = Song_exn.string_of_stack() in
 			  let () = Song_exn.clear_stack () in
 			  let j = Json_type.Build.objekt [ 
@@ -289,8 +200,7 @@ background-color:#FFEEEE ;
 			    "success",Json_type.Build.bool false ;
 			    "msg",Json_type.Build.string msg ;
 			  ] in
-			    pf "%s" (Json_io.string_of_json j) ;
-			    end_json_page ()
+			    json_page j
 		  )
 		with
 		  | e ->
@@ -314,8 +224,25 @@ background-color:#FFEEEE ;
 		  "success",Json_type.Build.bool true ;
 		  "nb_songs",Json_type.Build.int (List.length !world.World.songs) ;
 		] in
-		  pf "%s" (Json_io.string_of_json j) ;
-		  end_json_page()
+		  json_page j
+	      with
+		| e -> (
+		    let msg = Song_exn.string_of_stack () in
+		    let () = Song_exn.clear_stack () in
+		    let j = Json_type.Build.objekt [
+		      "success",Json_type.Build.bool false ;
+		      "msg",Json_type.Build.string msg ;
+		    ] in
+		      json_page j
+		  )
+	    )
+	  | "/edit_song.songx" -> ( 
+	      try
+		let params = Fcgi.parse_query_string () in
+		let index = __SONG__try "index" ( List.assoc "index" params) in
+		let index = int_of_string index in
+		let song = List.nth  !world.World.songs index in
+		  Edit.render song
 	      with
 		| e -> (
 		    let msg = Song_exn.string_of_stack () in
@@ -325,7 +252,31 @@ background-color:#FFEEEE ;
 		      "msg",Json_type.Build.string msg ;
 		    ] in
 		      pf "%s" (Json_io.string_of_json j) ;
-		      end_json_page();
+		      end_html_page();
+		  )
+	    )
+	  | "/internal-edit.songx" -> ( 
+	      try
+		let params = Fcgi.parse_query_string () in
+		let value = __SONG__try "get value" (List.assoc "b" params) in
+		  log "VALUE : %s" value ;
+		  (* let value = List.fold_left ( fun acc c -> acc ^ "%") "" (String.explode value) in*)
+		  (*
+		  let value = "%20" in 
+		    text_page value*)
+		  let decoded = ( __SONG__try "decode"(Base64.str_decode value)) in
+		    start_page () ;
+		    pf "%s" decoded ; 
+		  end_text_page () ;
+	      with
+		| e -> (
+		    let msg = Song_exn.string_of_stack () in
+		    let () = Song_exn.clear_stack () in
+		    let j = Json_type.Build.objekt [
+		      "success",Json_type.Build.bool false ;
+		      "msg",Json_type.Build.string msg ;
+		    ] in
+		      json_page j ;
 		  )
 	    )
 	  | s -> ( log "no such page : %s" s  ; page_404 s )

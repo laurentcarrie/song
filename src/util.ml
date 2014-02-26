@@ -66,6 +66,7 @@ end
 let page = ref ""
 let print s = page := !page ^ s ^ "\n"
 let pf fs =  ksprintf ( fun s -> page := !page ^ s ^ "\n" ) fs
+let pfnl fs =  ksprintf ( fun s -> page := !page ^ s  ) fs
 
 
 let start_page () =
@@ -78,22 +79,22 @@ let start_html_page() = (
   pf "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />" ;
   pf "<style>
 li.not_done {
-font-style:italic;font-family:Georgia,Times,serif;font-size 1em ;
+font-style:italic;font-family:Georgia,Times,serif;font-size:1em ;
 color:#bfe1f1 ;
 } 
 
 li.ok_generated {
-font-style:bold;font-family:Georgia,Times,serif;font-size 2em ;
+font-style:bold;font-family:Georgia,Times,serif;font-size:2em ;
 color:#330033 ;
 } 
 
 li.ok_unchanged {
-font-style:bold;font-family:Georgia,Times,serif;font-size 1em ;
+font-style:bold;font-family:Georgia,Times,serif;font-size:1em ;
 color:#888888 ;
 } 
 
 li.ok_failed {
-font-style:bold;font-family:Georgia,Times,serif;font-size 1em ;
+font-style:bold;font-family:Georgia,Times,serif;font-size:1em ;
 color:#ff0000 ;
 } 
 
@@ -106,7 +107,7 @@ list-style: none ;
 
 </style>" ;
   pf "<script src=\"js/jquery-1.9.1.js\"></script>";
-  pf "<script src=\"js/jquery-ui-1.10.1.custom.js\"></script>" ;
+  pf "<script src=\"js/jquery-ui-1.10.2.js\"></script>" ;
   pf "<script src=\"js/jquery.jeditable.js\" type=\"text/javascript\" charset=\"utf-8\"></script>" ;
   pf "<script>
 function utf8_to_b64( str ) {
@@ -140,9 +141,8 @@ $(document).ready(function() {
   data      : function(value, settings) {
       /* Convert <br> to newline. */
       var retval = value.replace(/<br[\\s\\/]?>/gi, '\\n');
-//      var ret = new Object ;
-//      ret.value = retval ;
-//      ret.song = 'xxx';
+      retval = retval.replace(/<sub>(.*?)<\\/sub>/g, \"\\$1\");
+      retval = retval.replace(/<sup>&#x266d<\\/sup>/g, 'b');
       return retval ;
   }
 }

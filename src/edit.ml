@@ -26,8 +26,8 @@ let render song   = __SONG__try "render_html" (
     pf "<br/>%s<br/>" section.Section.name ;
     List.iter ( fun c ->
       match c with
-	| Section.NL -> pf "<br/>" ;
-	| Section.C c -> pf "%s\\%d" (Note.html_name c.Chord.note) c.Chord.length ;
+	| Section.NL -> pfnl "<br/>" ;
+	| Section.C c -> pfnl "%s " (Note.html_name c.Chord.note c.Chord.length) ;
     ) section.Section.chords ;
   ) song.Song.sections ;
   pf "</div>" ;

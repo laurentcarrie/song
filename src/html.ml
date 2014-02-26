@@ -187,7 +187,7 @@ let render_one_html song dirname output = __SONG__try "render_html" (
 	    )
 	  | (Section.C c)::[] -> (
 	      let s = if offset mod signature <> 0 then " - " else "" in
-		fprintf fout "  <span class=\"note\">%s%s</span></td>\n</tr>" (Note.html_name c.Chord.note) s
+		fprintf fout "  <span class=\"note\">%s%s</span></td>\n</tr>" (Note.html_name c.Chord.note c.Chord.length) s
 	    )
 	  | Section.NL::tl -> 
 	      let s = if offset mod signature <> 0 then " - " else "" in
@@ -196,7 +196,7 @@ let render_one_html song dirname output = __SONG__try "render_html" (
 	  | (Section.C c)::tl -> (
 	      if offset mod (signature) = 0 then  fprintf fout "<td>" ;
 	      (* if offset >= (signature) then __SONG__failwith "bad sequence of chord length" else () ; *)
-	      fprintf fout "  <span class=\"note\">%s</span> "  (Note.html_name c.Chord.note) ;
+	      fprintf fout "  <span class=\"note\">%s</span> "  (Note.html_name c.Chord.note c.Chord.length) ;
 	      let offset = offset + c.Chord.length in
 		print_chords tl signature offset
 	    )

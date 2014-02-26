@@ -43,7 +43,6 @@ let parse_text s current = __SONG__try "parse text" (
 )
 
 let read_file song filename = __SONG__try ("read_file ") (
-  let song = { song with Song.digest = Util.update_digest song.Song.digest filename } in
   let song = 
     if Sys.file_exists filename then (
       let fin = open_in_bin filename in

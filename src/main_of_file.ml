@@ -17,7 +17,6 @@ type check = {
 }
 
 let read_file song filename = __SONG__try "read_file" (
-  let song = { song with Song.digest = Util.update_digest song.Song.digest filename } in
   let check = { has_filename=false;has_title=false;has_auteur=false}  in
   let fin = open_in_bin filename in
   let rec read (song,check) linecount =

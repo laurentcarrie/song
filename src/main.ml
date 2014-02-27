@@ -16,13 +16,12 @@ let manage_song dirname  =
   try
     printf "reading song in : '%s'\n" dirname ;
     let song = { Song.title="???" ; Song.auteur="???" ; filename = "no-filename-" ^ (string_of_int (Random.int 1000))  ; format=None ; sections=PMap.create String.compare ; structure=[];lyrics=[];outputs=[];
-		 digest=Digest.string "" ; tempo = 80 } in
+		 tempo = 80 } in
     let song = Grille_of_file.read_file song (dirname // "grille.txt") in
     let song = Lyrics_of_file.read_file song (dirname // "lyrics.txt") in
     let song = Structure_of_file.read_file song (dirname // "structure.txt") in
     let song = Main_of_file.read_file song (dirname // "main.txt") in
     let song = Sortie_of_file.read_file song (dirname // "sortie.txt") in
-      Std.output_file ~filename:(dirname//"digest.txt") ~text:(Digest.to_hex song.Song.digest) ;
       Html.render_html song "songs"
       
   with

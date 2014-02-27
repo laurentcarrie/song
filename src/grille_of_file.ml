@@ -50,7 +50,6 @@ let chord_of_string s = __SONG__try ("note_of_string '" ^ s ^ "'") (
     { Data.Chord.note = note ; length=duration }
 )
 let read_file song filename = __SONG__try "Grille_of_file.read_file" (
-  let song = { song with Song.digest = Util.update_digest song.Song.digest filename } in
   let fin = Util.open_in_bin filename in
   let rec read acc current linecount =
     try

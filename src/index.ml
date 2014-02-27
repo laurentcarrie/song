@@ -111,11 +111,9 @@ padding:0.1cm ;
     pf "<div id=\"list5\" class=\"index-alphabet\">" ;
     pf "<ul class=\"index-alphabet\">"; 
     List.iter ( fun (letter,l) ->
-      log "xxxletter %c" letter ;
       pf "<li>%c</li>\n" letter ;
       pf "<ul  class=\"index-auteur\">" ;
       List.iter ( fun (auteur,songs) ->
-	pf "auteur %s" auteur ;
 	pf "<li>%s</li>\n" (String.capitalize  auteur) ;
 	pf "<p  class=\"index-chanson\">" ; 
 	let songs = List.sort ~cmp:compare songs in

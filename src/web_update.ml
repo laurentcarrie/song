@@ -80,7 +80,7 @@ let main_loop  ~root ~output_dir ~doc_root ~relative_output_dir ~root_path = __S
 	  pf "<html>" ;
 	  pf "<head>"; 
 	  pf "<script src=\"js/jquery-1.9.1.js\"></script>";
-	  pf "<script src=\"js/jquery-ui-1.10.1.custom.js\"></script>" ;
+	  pf "<script src=\"js/jquery-ui-1.10.2.js\"></script>" ;
 	  pf "<script>
 
 function add_result(data) {

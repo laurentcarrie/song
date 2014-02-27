@@ -188,7 +188,6 @@ module Song = struct
 	structure = Br.list Structure.of_json (Br.field table "structure") ;
 	lyrics = Br.list Lyrics.of_json (Br.field table "lyrics") ;
 	outputs = Br.list Output.of_json (Br.field table "outputs") ;
-	digest = Br.string (Br.field table "digest") ;
 	tempo = Br.int (Br.field table "tempo") ;
       }
   )
@@ -202,7 +201,6 @@ module Song = struct
       "structure",Bu.list Structure.to_json t.structure ;
       "lyrics",Bu.list Lyrics.to_json t.lyrics ;
       "outputs",Bu.list Output.to_json t.outputs ;
-      "digest",Bu.string t.digest ;
       "tempo",Bu.int t.tempo ;
     ]
   )

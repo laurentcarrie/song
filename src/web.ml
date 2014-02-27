@@ -2,6 +2,7 @@ open Printf
 open Data
 open Util
 open ExtString
+open ExtList
 
 let (//) = Filename.concat 
 
@@ -71,6 +72,9 @@ let main_loop  ~root ~output_dir ~doc_root ~relative_output_dir ~root_path = __S
 		pf "
 
 var nb_errors = 0 ;
+var nb_ok_unchanged = 0 ;
+var nb_ok_generated = 0 ;
+var nb_ok_failed = 0 ;
 var songs = new Array() ;
 " ;
 
@@ -88,24 +92,44 @@ $.ajax({
 " ;
 		pf "
 function add_result(data) {
-	$('#results').prepend(\"<li>\"+data.name+\"</li>\") ;
+        $('#song-todo-'+data.index).attr('class','hide-me') ;
         if (data.success == true) {
           if (data.generated==true) {
+            nb_ok_generated = nb_ok_generated + 1 ;
+            $('#title-ok_generated').text(nb_ok_generated+' chansons mises à jour') ;
+            $('#title-ok_generated').attr('class','div-title') ;
+            $('#div-ok_generated').attr('class','div-count') ;
             $('#song-'+data.index).attr('class','ok_generated') ;
+            $('#song-updated').append('<li class=\"ok_generated\">' + data.path + '</li>') ;
           } else {
+            nb_ok_unchanged = nb_ok_unchanged + 1 ;
+            $('#title-ok_unchanged').text(nb_ok_unchanged+' chansons non changées') ;
+            $('#title-ok_unchanged').attr('class','div-title') ;
             $('#song-'+data.index).attr('class','ok_unchanged') ;
+            $('#div-ok_unchanged').attr('class','div-count') ;
+            $('#song-unchanged').append('<li class=\"ok_unchanged\">' + data.path + '</li>') ;
           }
           songs[data.index] = data.song ;
         } else {
           $('#song-'+data.index).attr('class','ok_failed') ;
           nb_errors = nb_errors + 1 ;
           $('#nb-errors').text(nb_errors + ' error(s)') ;
+            nb_ok_failed = nb_ok_failed + 1 ;
+            $('#title-ok_failed').text(nb_ok_failed+' chansons comportant une erreur') ;
+            $('#title-ok_failed').attr('class','div-title') ;
+            $('#song-'+data.index).attr('class','ok_failed') ;
+            $('#div-ok_failed').attr('class','div-count') ;
+          $('#song-error').append('<li class=\"ok-failed\">' + data.path + '</li>') ;
           $('#errors').append('<li class=\"error\"><pre>'+data.msg+'</pre></li>') ;
         }
         to_go = to_go-1 ;
-        if (to_go>0) {   $('#status').text(to_go + ' restant a faire') ; }
+        if (to_go>0) {   
+          $('#title-a-traiter').text(to_go + ' restant a faire') ;
+          // $('#status').text(to_go + ' restant a faire') ; 
+        }
         else {  
            update_index() ;
+           $('#div-a-traiter').attr('class','hide-me') ;
            $('#status').text('fini !') ; 
         } 
 } ;
@@ -129,6 +153,7 @@ $.ajax({
 $(document).ready(function () { 
 "; 
 		let (song_paths,_) = List.fold_left ( fun (acc,count) s -> ((s,count)::acc),count+1) ([],0) song_paths in
+		let stripped_song_paths = List.map ( fun (s,i) -> Str.global_replace (Str.regexp (Str.quote output_dir)) "" s,i) song_paths in
 		let () = List.iter ( fun (s,i) -> pf "manage('%s',%d) ;" s i ) song_paths in
 		pf "show_end() ;";
 		pf "
@@ -144,11 +169,40 @@ background-color:#FFEEEE ;
 </style> 
 <body>
 <ul id='songs'>" ;
-		List.iter ( fun (s,i) -> pf "<li id='song-%d' class='not_done'> %s </li>" i s ) song_paths ;
+		(* List.iter ( fun (s,i) -> pf "<li id='song-%d' class='not_done'> %s </li>" i s ) stripped_song_paths ; *)
 		
 		pf "</ul>
 <div id='show_end'></div> 
 </div> " ;
+		pf "
+<div id='div-a-traiter'>
+  <p id='title-a-traiter' class='div-title'></p>" ;
+		pf "<ul id='song-todo'>";
+		List.iter ( fun (path,i) ->
+		  pf "<li id='song-todo-%d' class='todo'>%s</li>" i path 
+		) stripped_song_paths ;
+		pf "</ul>";
+		pf "
+</div> "; 
+
+		pf "
+<div id='div-ok_generated' class='hide-mex'>
+  <p id='title-ok_generated'></p>
+  <ul id='song-updated'></ul>
+</div>"; 
+		
+		pf "
+<div id='div-ok_unchanged' class='hide-mex'>
+  <p id='title-ok_unchanged'></p>
+  <ul id='song-unchanged'></ul>
+</div> ";
+		
+		pf "
+<div id='div-ok_failed' class='div-mex'>
+  <p id='title-ok_failed'></p>
+  <ul id='song-error'></ul>
+</div>" ;
+		
 		pf "<div id='status'>%d restant a faire</div>" (List.length song_paths) ;
 		pf "<div id='index'><a href='%s/index.html'>index</a></div>" relative_output_dir ;
 		pf "<p id='nb-errors'>0 errors</p>" ;
@@ -236,13 +290,13 @@ background-color:#FFEEEE ;
 		      json_page j
 		  )
 	    )
+	  | "/edit.songx" 
 	  | "/edit_song.songx" -> ( 
 	      try
 		let params = Fcgi.parse_query_string () in
-		let index = __SONG__try "index" ( List.assoc "index" params) in
-		let index = int_of_string index in
-		let song = List.nth  !world.World.songs index in
-		  Edit.render song
+		let path = __SONG__try "path" ( List.assoc "path" params) in
+		let song = Generate.song_of_path path in
+		  Edit.render song relative_output_dir
 	      with
 		| e -> (
 		    let msg = Song_exn.string_of_stack () in
@@ -257,7 +311,9 @@ background-color:#FFEEEE ;
 	    )
 	  | "/internal-edit.songx" -> ( 
 	      try
-		let params = Fcgi.parse_query_string () in
+		let params = Fcgi.get_post_params() in
+		let () = log "NBPARAMS : %d"( List.length params) in
+		let () = List.iter ( fun (key,_) -> log "KEY : %s" key ) params in
 		let value = __SONG__try "get value" (List.assoc "b" params) in
 		  log "VALUE : %s" value ;
 		  (* let value = List.fold_left ( fun acc c -> acc ^ "%") "" (String.explode value) in*)
@@ -320,11 +376,18 @@ let _ = try
     relative_output_dir : la ou seront generes les pages html, en url
     root_path : le path du doc_root
   *)
+
+  let cwd = Unix.getcwd () in
+
     let (output_dir,doc_root,relative_output_dir,root_path) = (
       let output_dir = __SONG__try "output_dir" (Sys.argv.(2)) in
 	(* let () = __SONG__try ("mkdir " ^ output_dir) (Util.mkdir output_dir) in *)
+      let output_dir = normalize_path (
+	if Filename.is_relative output_dir then cwd // output_dir else output_dir ) in
   
-      let doc_root = __SONG__try "doc_root" (Sys.argv.(3)) in
+      let doc_root = __SONG__try "doc_root" (Sys.argv.(3))  in
+      let doc_root = normalize_path ( 
+	if Filename.is_relative doc_root then cwd // doc_root else doc_root  ) in
 	
       let relative_output_dir = 
 	let a = Str.split (Str.regexp (Str.quote doc_root)) output_dir in

@@ -167,7 +167,7 @@ word-spacing:1px
 
 let log = Fcgi.log
 
-let render_one_html song dirname output = __SONG__try "render_html" (
+let render_one_html song dirname output root_path = __SONG__try "render_html" (
 
     let filename = dirname // ( output.Output.filename ^ ".html") in
     let () = log "writing %s..." filename in
@@ -257,9 +257,17 @@ let render_one_html song dirname output = __SONG__try "render_html" (
 	pf "
 </style>
 <body> " ;
-	
-	pf "<a href=\"index.html\">index</a>" ;
 
+	pf "<a href=\"index.html#song-%s\">index</a>" song.Song.filename ;
+	pf "<a href=\"/edit.songx?path=%s\">edit</a>" (Url_encode.to_url song.Song.path) ;
+	List.iter ( fun o ->
+	  pf "<a href=\"%s.html\">(%s)</a>" o.Output.filename o.Output.filename
+	) song.Song.outputs ;
+	pf "<a href=\"%s.midi\"><span class=\"index-title\">(midi)</span></a>" song.Song.filename ;
+	pf "<a href=\"%s.wav\"><span class=\"index-title\">(wav)</span></a>" song.Song.filename ;
+	pf "<a href=\"%s.mp3\"><span class=\"index-title\">(mp3)</span></a>" song.Song.filename ;
+	pf "<a href=\"%s.pdf\"><span class=\"index-title\">(pdf)</span></a>" song.Song.filename ;
+	pf "<br/>" ;
 	pf " <div id=\"main-0\">
 
 <div id=\"frame-title\">
@@ -304,12 +312,12 @@ pf "</body></html>\n" ;
 
 
 
-let render_html song dirname = __SONG__try ("render_html " ^ dirname) (
+let render_html song dirname root_path = __SONG__try ("render_html " ^ dirname) (
   match song.Song.outputs with
     | [] -> log "%s" "no output defined,... you will get no html file\n"
     | outputs -> (
 	List.iter ( fun output ->
-	  render_one_html song dirname output 
+	  render_one_html song dirname output root_path
 	) outputs
       )
 )

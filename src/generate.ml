@@ -30,20 +30,35 @@ let find_all_songs ~plog root = __SONG__try "find all songs" (
 )
 
 
+let song_of_path dirname = __SONG__try ("song_of_path " ^ dirname) (
+  let song = { Song.title="???" ; Song.auteur="???" ; 
+	       filename = "no-filename"  ^ (string_of_int (Random.int 1000)) ; format=None ; sections=PMap.create String.compare ; 
+	       structure=[];lyrics=[];outputs=[];
+	       tempo=80 ;
+	       path = dirname ;
+	       server_path = "ZZZZ";
+  } in
+  let song = Grille_of_file.read_file song    (dirname // "grille.txt") in
+  let song = Lyrics_of_file.read_file song    (dirname // "lyrics.txt") in
+  let song = Structure_of_file.read_file song (dirname // "structure.txt") in
+  let song = Main_of_file.read_file song      (dirname // "main.txt") in
+  let song = Sortie_of_file.read_file song (dirname // "sortie.txt") in
+  let song = Check.check song in
+    song
+)
+
 let generate   ~root ~output_dir ~doc_root ~relative_output_dir   ~root_path  ~plog ~print dirname  = __SONG__try ("generate song : " ^ dirname) (
   let pf fs =  ksprintf print fs in
   let log fs = ksprintf plog fs in
-  let song = { Song.title="???" ; Song.auteur="???" ; filename = "no-filename"  ^ (string_of_int (Random.int 1000)) ; format=None ; sections=PMap.create String.compare ; structure=[];lyrics=[];outputs=[];
-	       tempo=80 ;} in
     pf "lecture du repertoire %s<br/>" dirname ; 
+  let dirname = normalize_path dirname in
     log "lecture du repertoire : '%s'" dirname ;
+    log "dirname = %s" dirname ;
+    log "root_path= %s" root_path ;
+    log "output_dir = %s" output_dir ;
+    log "relative_output_dir = %s" relative_output_dir ;
     let (song,do_it) = __SONG__try ("song " ^ dirname) (
-      let song = Grille_of_file.read_file song    (dirname // "grille.txt") in
-      let song = Lyrics_of_file.read_file song    (dirname // "lyrics.txt") in
-      let song = Structure_of_file.read_file song (dirname // "structure.txt") in
-      let song = Main_of_file.read_file song      (dirname // "main.txt") in
-      let song = Sortie_of_file.read_file song (dirname // "sortie.txt") in
-      let song = Check.check song in
+      let song = song_of_path dirname in
       let filename_digest = output_dir // (song.Song.filename ^ ".digest" ) in
       let () = log "filename_digest = %s" filename_digest in
       let last_digest_hex = 
@@ -93,7 +108,7 @@ let generate   ~root ~output_dir ~doc_root ~relative_output_dir   ~root_path  ~p
 		tm.Unix.tm_mday (tm.Unix.tm_mon+1) (tm.Unix.tm_year+1900)
 		tm.Unix.tm_hour tm.Unix.tm_min tm.Unix.tm_sec
 	  ) ;
-	  Html.render_html song output_dir ;
+	  Html.render_html song output_dir relative_output_dir ;
 	  Lilypond.render song output_dir ;
 	  let digest = compute_digest false in
 	  let () =  match digest with

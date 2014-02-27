@@ -1,3 +1,5 @@
+open ExtString
+
 let codes =
   [
     " ","%20" ;
@@ -119,5 +121,11 @@ let from_url s =
   ) s codes
 
 
-let to_url s = s
+let to_url s = 
+  List.fold_left ( fun acc s ->
+    try 
+      acc ^ (List.assoc (String.of_char s) codes)
+    with
+      | Not_found -> acc ^ (String.of_char s)
+  ) "" (String.explode s)
 

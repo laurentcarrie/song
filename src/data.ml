@@ -91,6 +91,8 @@ module Song = struct
     lyrics : Lyrics.t list ;
     outputs : Output.t list ;
     tempo : int ;
+    server_path : string ;
+    path : string ;
     (* lyrics : (string (* nom de la section *) * ((int option*string) list)) list ; *)
   }
 

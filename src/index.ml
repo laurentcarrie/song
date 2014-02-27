@@ -119,7 +119,8 @@ padding:0.1cm ;
 	let songs = List.sort ~cmp:compare songs in
 	  List.iteri ( fun index s ->
 	    if auteur <> s.Song.auteur then __SONG__failwith "internal error" else () ;
-	    pf "%s</br>" s.Song.title ;
+	    pf "<a id='song-%s'></a><a href='%s/%s-all.html'>%s</a></br>" s.Song.filename relative_output_dir s.Song.filename s.Song.title ;
+	    (*
 	    List.iter ( fun o ->
 	      (* pf "<li class=\"index-title\"><a href=\"%s/%s.html\"><span class=\"index-title\">%s</span></a></li>\n" *)
 	      let clean_filename =  Str.global_replace (Str.regexp (Str.quote (s.Song.filename^"-"))) "" o.Output.filename in
@@ -128,12 +129,15 @@ padding:0.1cm ;
 		  root_path relative_output_dir o.Output.filename  
 		  clean_filename
 	    ) s.Song.outputs ;
-	    pf "<a href=\"%s.midi\"><span class=\"index-title\">(midi)</span></a>" s.Song.filename ;
-	    pf "<a href=\"%s.wav\"><span class=\"index-title\">(wav)</span></a>" s.Song.filename ;
-	    pf "<a href=\"%s.mp3\"><span class=\"index-title\">(mp3)</span></a>" s.Song.filename ;
-	    pf "<a href=\"%s.pdf\"><span class=\"index-title\">(pdf)</span></a>" s.Song.filename ;
-	    pf "<br/>" ;
-	    pf "<a href=\"/edit_song.songx?index=%d\"><span class=\"index-title\">(edit)</span></a>" index ;
+	    *)
+	    (* 
+	       pf "<a href=\"%s.midi\"><span class=\"index-title\">(midi)</span></a>" s.Song.filename ;
+	       pf "<a href=\"%s.wav\"><span class=\"index-title\">(wav)</span></a>" s.Song.filename ;
+	       pf "<a href=\"%s.mp3\"><span class=\"index-title\">(mp3)</span></a>" s.Song.filename ;
+	       pf "<a href=\"%s.pdf\"><span class=\"index-title\">(pdf)</span></a>" s.Song.filename ;
+	       pf "<br/>" ;
+	       pf "<a href=\"/edit_song.songx?index=%d\"><span class=\"index-title\">(edit)</span></a>" index ;
+	    *)
 	  ) songs ;
 	  
 	  pf "</p>"; 

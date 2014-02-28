@@ -3,10 +3,6 @@ open Printf
 open ExtString
 let (//) = Filename.concat
 
-let utf8_of_code codes = String.implode ( List.map Char.chr codes )
-
-let bemol = utf8_of_code [ 0xE2 ; 0x99 ; 0xAD ]
-
 let int_of_string s =
   try int_of_string s with | e -> failwith("cannot convert '"^s^"' to an int")
 
@@ -93,14 +89,15 @@ end
 
 
 
-let page = ref ""
-let print s = page := !page ^ s ^ "\n"
-let pf fs =  ksprintf ( fun s -> page := !page ^ s ^ "\n" ) fs
-let pfnl fs =  ksprintf ( fun s -> page := !page ^ s  ) fs
+let pagex = ref ""
+let print s = pagex := !pagex ^ s ^ "\n"
+let pf fs =  ksprintf ( fun s -> pagex := !pagex ^ s ^ "\n" ) fs
+let pfnl fs =  ksprintf ( fun s -> pagex := !pagex ^ s  ) fs
+
 
 
 let start_page () =
-  page := ""
+  pagex := ""
     
 let start_html_page() = (
   start_page () ;
@@ -204,15 +201,15 @@ $(document).ready(function() {
  });
 </script>" ;
 )
-bemol 
+  Utf8.bemol 
 
 let end_page code mime = 
   (* Fcgi.log "%s" (!page) ; *)
   Fcgi.c_fcgi_print (sprintf "Status: %d\r\n" code) ;
   Fcgi.c_fcgi_print (sprintf "Content-type: %s \r\n" mime) ;
-  Fcgi.c_fcgi_print (sprintf "Content-length: %d \r\n\r\n" (String.length !page)) ;
-  Fcgi.c_fcgi_print !page ;
-  page := "" ;
+  Fcgi.c_fcgi_print (sprintf "Content-length: %d \r\n\r\n" (String.length !pagex)) ;
+  Fcgi.c_fcgi_print !pagex ;
+  pagex := "" ;
   ()
 
 let end_html_page () = end_page 200 "text/html"
@@ -238,6 +235,132 @@ let page_403 s =
   start_page () ;
   pf  "internal error : \n%s\n" s ;
   end_page 403 "text/plain" ;
-  page := "" ;
+  pagex := "" ;1
   ()
+
+
+
    
+
+let start_page_2 code mime  : ((string->unit) * (unit->unit)) =
+  let page = ref "" in
+  let print s = 
+    page := !page ^ s ^ "\n"  ;
+    ()
+  in
+  let end_page () = 
+    Fcgi.c_fcgi_print (sprintf "Status: %d\r\n" code) ;
+    Fcgi.c_fcgi_print (sprintf "Content-type: %s \r\n" mime) ;
+    Fcgi.c_fcgi_print (sprintf "Content-length: %d \r\n\r\n" (String.length !page)) ;
+    Fcgi.c_fcgi_print !page ;
+    page := "" ;
+    ()
+  in
+    print,end_page
+
+
+let start_html_page_2 () = (
+  let (print,end_page) = start_page_2 200 "text/html" in
+  let pf fs = ksprintf print fs in
+  pf "<html>" ;
+  pf "<head>";
+  pf "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />" ;
+  pf "<style>
+
+.edit {
+background:#eeeeee ;
+}
+
+.done-hide-me {
+visibility:hidden ;
+display:none ;
+}
+
+.hide-me {
+display:none ;
+}
+
+div.div-count {
+}
+
+p.div-title {
+font-style:italic;font-family:Georgia,Times,serif;font-size:1.5em ;
+color:#000000 ;
+}
+
+li.not_done {
+font-style:italic;font-family:Georgia,Times,serif;font-size:1em ;
+color:#bfe1f1 ;
+} 
+
+
+li.ok_generated {
+font-style:bold;font-family:Georgia,Times,serif;font-size:1em ;
+color:#330033 ;
+} 
+
+li.ok_unchanged {
+font-style:bold;font-family:Georgia,Times,serif;font-size:1em ;
+color:#888888 ;
+} 
+
+li.ok_failed {
+font-style:bold;font-family:Georgia,Times,serif;font-size:1em ;
+color:#ff0000 ;
+} 
+
+li.error {
+background-color : #ffcccc ;
+border: 1px solid #000000 ;
+list-style: none ;
+}
+
+
+</style>" ;
+  pf "<script src=\"js/jquery-1.9.1.js\"></script>";
+  pf "<script src=\"js/jquery-ui-1.10.1.custom.js\"></script>" ;
+  pf "<script src=\"js/jquery.jeditable.js\" type=\"text/javascript\" charset=\"utf-8\"></script>" ;
+  pf "<script>
+function utf8_to_b64( str ) {
+  return window.btoa(unescape(encodeURIComponent( str )));
+}
+
+function b64_to_utf8( str ) {
+  return decodeURIComponent(escape(window.atob( str )));
+} 
+</script>
+";
+  
+  pf "<script>
+$(document).ready(function() {
+     $('.edit').editable('/internal-edit.songx',
+{
+  indicator : 'Sauvegarde...',
+  tootip    : 'Cliquez pour éditer',
+  submit    : 'Ok',
+  cancel    : 'Annuler',
+  type      : 'textarea',
+  rows      : 20,
+  submitdata  : function (value,settings) {
+      console.log(value) ;
+      console.log(utf8_to_b64(value)) ;
+      var binval = utf8_to_b64(value) ;
+      binval = binval.replace(/=/gi, '');
+      console.log(binval) ;
+//      $('#bin').text(utf8_to_b64(binval)) ;
+      return { b:binval , song:'song' } ;
+  },
+  data      : function(value, settings) {
+      /* Convert <br> to newline. */
+      var retval = value.replace(/<br[\\s\\/]?>/gi, '\\n');
+      retval = retval.replace(/<sub>(.*?)<\\/sub>/g, \"\\$1\");
+      retval = retval.replace(/<sup>%s<\\/sup>/g, 'b');
+      return retval ;
+  }
+}
+);
+ });
+</script>" 
+    Utf8.bemol ;
+  print,end_page
+)

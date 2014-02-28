@@ -167,54 +167,58 @@ word-spacing:1px
 
 let log = Fcgi.log
 
+
+let render_sections song print = __SONG__try "print_sections" (
+  
+  let pf fs = ksprintf print fs in 
+
+  let rec print_chords l signature offset = 
+    match l with
+      | [] -> ()
+      | Section.NL::[] -> (
+	  let s = if offset mod signature <> 0 then " - " else "" in
+	    pf "  <span class=\"note\">%s</span></td>\n</tr>\n" s ;
+	)
+      | (Section.C c)::[] -> (
+	  let s = if offset mod signature <> 0 then " - " else "" in
+	    pf "  <span class=\"note\">%s%s</span></td>\n</tr>" (Note.html_name c.Chord.note c.Chord.length) s
+	)
+      | Section.NL::tl -> 
+	  let s = if offset mod signature <> 0 then " - " else "" in
+	    pf "  <span class=\"note\">%s</span></td>\n</tr>\n<tr>\n" s ;
+	    print_chords tl signature 0
+      | (Section.C c)::tl -> (
+	  if offset mod (signature) = 0 then  pf "<td>" ;
+	  (* if offset >= (signature) then __SONG__failwith "bad sequence of chord length" else () ; *)
+	  pf "  <span class=\"note\">%s</span> "  (Note.html_name c.Chord.note c.Chord.length) ;
+	  let offset = offset + c.Chord.length in
+	    print_chords tl signature offset
+	)
+  in
+
+    
+    
+  let print_section name s = __SONG__try name (
+    pf "<h2>%s</h2>\n" s.Section.name ;
+    pf "<table id=\"chords\">\n<tr>\n" ;
+    print_chords s.Section.chords s.Section.signature 0   ;
+    pf "</table>\n" 
+  )
+  in
+    List.iter ( fun (name,s) -> print_section name s ) (List.of_enum (PMap.enum song.Song.sections))
+)
+
+
 let render_one_html song dirname output root_path = __SONG__try "render_html" (
 
     let filename = dirname // ( output.Output.filename ^ ".html") in
     let () = log "writing %s..." filename in
 
     let fout =  open_out_bin filename in
-
-    let pf fs = ksprintf (fun s -> fprintf fout "%s\n" s) fs in
-
-    let print_sections () = __SONG__try "print_sections" (
       
-      let rec print_chords l signature offset = 
-	match l with
-	  | [] -> ()
-	  | Section.NL::[] -> (
-	      let s = if offset mod signature <> 0 then " - " else "" in
-		fprintf fout "  <span class=\"note\">%s</span></td>\n</tr>\n" s ;
-	    )
-	  | (Section.C c)::[] -> (
-	      let s = if offset mod signature <> 0 then " - " else "" in
-		fprintf fout "  <span class=\"note\">%s%s</span></td>\n</tr>" (Note.html_name c.Chord.note c.Chord.length) s
-	    )
-	  | Section.NL::tl -> 
-	      let s = if offset mod signature <> 0 then " - " else "" in
-		fprintf fout "  <span class=\"note\">%s</span></td>\n</tr>\n<tr>\n" s ;
-		print_chords tl signature 0
-	  | (Section.C c)::tl -> (
-	      if offset mod (signature) = 0 then  fprintf fout "<td>" ;
-	      (* if offset >= (signature) then __SONG__failwith "bad sequence of chord length" else () ; *)
-	      fprintf fout "  <span class=\"note\">%s</span> "  (Note.html_name c.Chord.note c.Chord.length) ;
-	      let offset = offset + c.Chord.length in
-		print_chords tl signature offset
-	    )
-      in
+    let print s = fprintf fout "%s\n" s in
 
-
-
-      let print_section name s = __SONG__try name (
-	fprintf fout "<h2>%s</h2>\n" s.Section.name ;
-	fprintf fout "<table id=\"chords\">\n<tr>\n" ;
-	print_chords s.Section.chords s.Section.signature 0   ;
-	fprintf fout "</table>\n" 
-      )
-      in
-	List.iter ( fun (name,s) -> print_section name s ) (List.of_enum (PMap.enum song.Song.sections))
-    )
-    in
-
+    let pf fs = ksprintf print fs in
 
     let print_structure () = __SONG__try "print_structure" (
       fprintf fout "<h2>structure</h2>\n" ;
@@ -284,7 +288,7 @@ pf "
       List.iter ( fun s ->
 		    match s with
 		      | Data.Output.L -> print_lyrics() ;
-		      | Data.Output.G -> print_sections () ;
+		      | Data.Output.G -> render_sections song print ;
 		      | Data.Output.S -> print_structure () ;
 		) 
     in

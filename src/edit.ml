@@ -8,9 +8,9 @@ let (//) = Filename.concat
 
 let log = Fcgi.log
 
-let render song relative_output_dir  = __SONG__try "render_html" (
-
-  start_html_page () ;
+let render song relative_output_dir : unit  = __SONG__try "render_html" (
+  let (p,(end_page:unit->unit)) = start_html_page_2 () in
+  let pf fs = ksprintf p fs in
   let plinks () = 
     pf "<a href='%s/index.html#song-%s'>index</a>" relative_output_dir song.Song.filename ;
     pf "<a href='%s/%s-all.html'>html</a>" relative_output_dir song.Song.filename ;
@@ -45,6 +45,6 @@ let render song relative_output_dir  = __SONG__try "render_html" (
     ) song.Song.sections ;
     pf "</div>" ;
     
-    end_html_page ()
+    end_page ()
 )
 

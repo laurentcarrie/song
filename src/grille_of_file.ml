@@ -49,40 +49,35 @@ let chord_of_string s = __SONG__try ("note_of_string '" ^ s ^ "'") (
   let note = { Data.Note.letter=letter ; is_7=is_7 ; is_7M = is_7M ; is_m = is_m ; is_flat = is_flat ; is_sharp = is_sharp } in
     { Data.Chord.note = note ; length=duration }
 )
-let read_file song filename = __SONG__try "Grille_of_file.read_file" (
-  let fin = Util.open_in_bin filename in
-  let rec read acc current linecount =
-    try
-      let line  = input_line fin in
-	match current,line with
-	  | None,"" -> read acc None (linecount+1)
-	  | None,s -> read acc (Some { Data.Section.name=s;signature=4;chords=[] }) (linecount+1)
-	  | Some current,"" -> read (PMap.add current.Data.Section.name current acc) None (linecount+1)
-	  | Some current,line -> (
-	      let words = Str.split (Str.regexp "[ \t]+") line in
-	      let chords = __SONG__try ("file " ^ filename ^ ", line " ^ (string_of_int linecount))
-		(List.map ( fun word ->  Section.C (chord_of_string word) ) words) in
-	      let chords = chords @ [ Section.NL ] in
-	      let current = { current with Data.Section.chords = current.Data.Section.chords @ chords } in
-		read acc (Some current) (linecount+1)
-	    )
-    with
-      | End_of_file -> close_in fin ; 
+let read_data song data = __SONG__try "Grille_of_file.read_data" (
+  let data = Str.split (Str.regexp "\n") data in
+  let rec read acc current linecount data =
+    match data with
+      | [] -> (
 	  match current with
 	    | None -> acc
 	    | Some current -> PMap.add current.Data.Section.name current acc
+	)
+      | line::tl -> (
+	  match current,line with
+	    | None,"" -> read acc None (linecount+1) tl
+	    | None,s -> read acc (Some { Data.Section.name=s;signature=4;chords=[] }) (linecount+1) tl
+	    | Some current,"" -> read (PMap.add current.Data.Section.name current acc) None (linecount+1) tl
+	    | Some current,line -> (
+		let words = Str.split (Str.regexp "[ \t]+") line in
+		let chords = __SONG__try ("chords") 
+		  (List.map ( fun word ->  Section.C (chord_of_string word) ) words) in
+		let chords = chords @ [ Section.NL ] in
+		let current = { current with Data.Section.chords = current.Data.Section.chords @ chords } in
+		  read acc (Some current) (linecount+1) tl
+	      )
+	)
   in
-  let data = read (PMap.create String.compare) None 1 in
-    (* 
-       PMap.iter ( fun _ v -> 
-       printf "section %S\n" v.Data.Section.name ;
-       List.iter ( fun n ->
-       match n with
-       | Section.NL -> printf "\n"
-       | Section.C n ->
-       printf "%S, %d\n" (Data.Note.name n.Data.Chord.note) n.Data.Chord.length
-       ) v.Data.Section.chords
-       ) data ;
-    *)
+  let data = read (PMap.create String.compare) None 1 data in
     { song with Song.sections = data }
+)
+
+let read_file song filename = __SONG__try "Grille_of_file.read_file" (
+  let data = Std.input_file filename in
+    read_data song data
 )

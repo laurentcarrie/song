@@ -89,90 +89,11 @@ end
 
 
 
-let pagex = ref ""
-let print s = pagex := !pagex ^ s ^ "\n"
-let pf fs =  ksprintf ( fun s -> pagex := !pagex ^ s ^ "\n" ) fs
-let pfnl fs =  ksprintf ( fun s -> pagex := !pagex ^ s  ) fs
-
-
-
-let start_page () =
-  pagex := ""
-    
-let start_html_page() = (
-  start_page () ;
-  pf "<html>" ;
-  pf "<head>";
-  pf "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />" ;
-  pf "<style>
-
-.edit {
-background:#eeeeee ;
-}
-
-.done-hide-me {
-visibility:hidden ;
-display:none ;
-}
-
-.hide-me {
-display:none ;
-}
-
-div.div-count {
-}
-
-p.div-title {
-font-style:italic;font-family:Georgia,Times,serif;font-size:1.5em ;
-color:#000000 ;
-}
-
-li.not_done {
-font-style:italic;font-family:Georgia,Times,serif;font-size:1em ;
-color:#bfe1f1 ;
-} 
-
-
-li.ok_generated {
-font-style:bold;font-family:Georgia,Times,serif;font-size:1em ;
-color:#330033 ;
-} 
-
-li.ok_unchanged {
-font-style:bold;font-family:Georgia,Times,serif;font-size:1em ;
-color:#888888 ;
-} 
-
-li.ok_failed {
-font-style:bold;font-family:Georgia,Times,serif;font-size:1em ;
-color:#ff0000 ;
-} 
-
-li.error {
-background-color : #ffcccc ;
-border: 1px solid #000000 ;
-list-style: none ;
-}
-
-
-</style>" ;
-  pf "<script src=\"js/jquery-1.9.1.js\"></script>";
-  pf "<script src=\"js/jquery-ui-1.10.1.custom.js\"></script>" ;
-  pf "<script src=\"js/jquery.jeditable.js\" type=\"text/javascript\" charset=\"utf-8\"></script>" ;
-  pf "<script>
-function utf8_to_b64( str ) {
-  return window.btoa(unescape(encodeURIComponent( str )));
-}
-
-function b64_to_utf8( str ) {
-  return decodeURIComponent(escape(window.atob( str )));
-} 
-</script>
-";
-  
-  pf "<script>
+let print_edit p url song_path idtext field = 
+  let pf fs = ksprintf p fs in
+    pf "<script>
 $(document).ready(function() {
-     $('.edit').editable('/internal-edit.songx',
+     $('#%s').editable('%s',
 {
   indicator : 'Sauvegarde...',
   tootip    : 'Cliquez pour éditer',
@@ -181,71 +102,52 @@ $(document).ready(function() {
   type      : 'textarea',
   rows      : 20,
   submitdata  : function (value,settings) {
-      console.log(value) ;
-      console.log(utf8_to_b64(value)) ;
+      console.log('SUBMIT : ' + value) ;
       var binval = utf8_to_b64(value) ;
-      binval = binval.replace(/=/gi, '');
-      console.log(binval) ;
-//      $('#bin').text(utf8_to_b64(binval)) ;
-      return { b:binval , song:'song' } ;
+      binval = binval.replace(/=/gi,'');
+//    $('#bin').text(utf8_to_b64(binval)) ;
+      return { 
+       path:'%s',
+       t:$('#%s-hidden').text(), 
+       b:binval,
+       field:'%s'
+    } ;
   },
   data      : function(value, settings) {
-      /* Convert <br> to newline. */
-      var retval = value.replace(/<br[\\s\\/]?>/gi, '\\n');
-      retval = retval.replace(/<sub>(.*?)<\\/sub>/g, \"\\$1\");
-      retval = retval.replace(/<sup>%s<\\/sup>/g, 'b');
+      console.log('data : ' + value) ;
+      retval = $('#%s-hidden').text() ;
       return retval ;
   }
 }
 );
  });
-</script>" ;
-)
-  Utf8.bemol 
+</script>" 
+      idtext
+      url
+      song_path
+      idtext
+      field
+      idtext
 
-let end_page code mime = 
-  (* Fcgi.log "%s" (!page) ; *)
-  Fcgi.c_fcgi_print (sprintf "Status: %d\r\n" code) ;
-  Fcgi.c_fcgi_print (sprintf "Content-type: %s \r\n" mime) ;
-  Fcgi.c_fcgi_print (sprintf "Content-length: %d \r\n\r\n" (String.length !pagex)) ;
-  Fcgi.c_fcgi_print !pagex ;
-  pagex := "" ;
-  ()
-
-let end_html_page () = end_page 200 "text/html"
-let end_text_page () = end_page 200 "text/plain"
-
-let json_page j =
-  start_page() ;
-  pf "%s" (Json_io.string_of_json j) ;
-  end_page 200  "text/json"
-
-let text_page text =
-  start_page() ;
-  pf "%s" text ;
-  end_page 200  "text/plain"
-    
-let page_404 s =
-  start_page () ;
-  pf  "<html><body>no such url : <br/>%s<br/></body></html>" s ;
-  end_page 404 "text/html" ;
-  ()
-    
-let page_403 s =
-  start_page () ;
-  pf  "internal error : \n%s\n" s ;
-  end_page 403 "text/plain" ;
-  pagex := "" ;1
-  ()
 
 
 
    
 
-let start_page_2 code mime  : ((string->unit) * (unit->unit)) =
+let start_page code mime  =
   let page = ref "" in
-  let print s = 
-    page := !page ^ s ^ "\n"  ;
+  let print ?(nl=true) ?(space=true) s = 
+    page := !page ^ s ;
+    (if space then
+      page := !page  ^ " "  
+      else
+	()
+    ) ;
+    ( if nl then
+      page := !page ^ "\n"  
+      else
+	()
+    ) ;
     ()
   in
   let end_page () = 
@@ -259,8 +161,8 @@ let start_page_2 code mime  : ((string->unit) * (unit->unit)) =
     print,end_page
 
 
-let start_html_page_2 () = (
-  let (print,end_page) = start_page_2 200 "text/html" in
+let start_html_page () = (
+  let (print,end_page) = start_page 200 "text/html" in
   let pf fs = ksprintf print fs in
   pf "<html>" ;
   pf "<head>";
@@ -298,7 +200,6 @@ li.ok_generated {
 font-style:bold;font-family:Georgia,Times,serif;font-size:1em ;
 color:#330033 ;
 } 
-
 li.ok_unchanged {
 font-style:bold;font-family:Georgia,Times,serif;font-size:1em ;
 color:#888888 ;
@@ -313,6 +214,41 @@ li.error {
 background-color : #ffcccc ;
 border: 1px solid #000000 ;
 list-style: none ;
+}
+
+#chords td, #chords th 
+{ 
+font-size:1em;
+border:1px solid #98bf21;
+padding:2px 2px 2px 2px;
+text-align:center;
+height:50px ;
+width:2cm ;
+}
+
+td.half-chords
+{
+width:1cm ;
+}
+
+#chords th 
+{
+font-size:1.1em;
+text-align:left;
+padding-top:5px;
+padding-bottom:4px;
+background-color:#A7C942;
+color:#ffffff;
+}
+#chords tr.alt td 
+{
+color:#000000;
+background-color:#EAF2D3;
+}
+
+span.note {
+background-color:red
+word-spacing:1px
 }
 
 
@@ -330,37 +266,45 @@ function b64_to_utf8( str ) {
 } 
 </script>
 ";
+
+  let end_head () =
+    pf "
+</head>
+</body>
+"
+  in
+  let end_page () =
+    pf "
+</body>
+</html>
+" ;
+    end_page()
   
-  pf "<script>
-$(document).ready(function() {
-     $('.edit').editable('/internal-edit.songx',
-{
-  indicator : 'Sauvegarde...',
-  tootip    : 'Cliquez pour éditer',
-  submit    : 'Ok',
-  cancel    : 'Annuler',
-  type      : 'textarea',
-  rows      : 20,
-  submitdata  : function (value,settings) {
-      console.log(value) ;
-      console.log(utf8_to_b64(value)) ;
-      var binval = utf8_to_b64(value) ;
-      binval = binval.replace(/=/gi, '');
-      console.log(binval) ;
-//      $('#bin').text(utf8_to_b64(binval)) ;
-      return { b:binval , song:'song' } ;
-  },
-  data      : function(value, settings) {
-      /* Convert <br> to newline. */
-      var retval = value.replace(/<br[\\s\\/]?>/gi, '\\n');
-      retval = retval.replace(/<sub>(.*?)<\\/sub>/g, \"\\$1\");
-      retval = retval.replace(/<sup>%s<\\/sup>/g, 'b');
-      return retval ;
-  }
-}
-);
- });
-</script>" 
-    Utf8.bemol ;
-  print,end_page
+  in
+    print,end_head,end_page
 )
+
+let json_page j =
+  let (p,e) = start_page 200 "text/json" in
+  let pf fs = ksprintf p fs in
+    pf "%s" (Json_io.string_of_json j) ;
+    e ()
+
+let text_page text =
+  let (p,e) = start_page 200 "text/plain" in
+  let pf fs = ksprintf p fs in
+    pf "%s" text ;
+    e () 
+    
+let page_404 s =
+  let (p,e) = start_page 400 "text/html" in
+  let pf fs = ksprintf p fs in
+    pf  "<html><body>no such url : <br/>%s<br/></body></html>" s ;
+    e ()
+    
+let page_403 s =
+  let (p,e) = start_page 300 "text/plain" in
+  let pf fs = ksprintf p fs in
+    pf  "internal error : \n%s\n" s ;
+    e ()
+

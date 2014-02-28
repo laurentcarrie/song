@@ -63,7 +63,8 @@ let main_loop  ~root ~output_dir ~doc_root ~relative_output_dir ~root_path = __S
 	      log "== BEGIN script : %s"  script_name ;
 	      world := { World.songs = [] } ;
 	      let song_paths = Generate.find_all_songs ~plog:Fcgi.c_fcgi_log_string root in 
-		start_html_page () ;
+	      let (print,end_head,end_page) = start_html_page () in
+	      let pf fs = ksprintf print fs in
 		pf "<script>
 
 " ;
@@ -166,8 +167,12 @@ $(document).ready(function () {
 div.error-msg {
 background-color:#FFEEEE ; 
 }
-</style> 
-<body>
+</style>
+" ; 
+		
+	    end_head () ;
+
+	    pf "
 <ul id='songs'>" ;
 		(* List.iter ( fun (s,i) -> pf "<li id='song-%d' class='not_done'> %s </li>" i s ) stripped_song_paths ; *)
 		
@@ -218,9 +223,8 @@ background-color:#FFEEEE ;
 		  [] in
 		  (* Index.write_index ~songs ~root_path ~output_dir ~relative_output_dir ; *)
 *)
-		  pf "</body></html>";
-		  log "== END script : %s"  script_name ;
-		  end_html_page() ;
+		log "== END script : %s"  script_name ;
+		end_page () ;
 	    ) 
 	      
 	  | "/generate-song.songx" -> (
@@ -232,10 +236,10 @@ background-color:#FFEEEE ;
 		  let path = (List.assoc "path" params) in
 		  let index = int_of_string (List.assoc "index" params) in (
 		    try 
+		      let print s = () in
 		      let (song,generated) = Generate.generate ~root ~output_dir ~doc_root ~relative_output_dir ~root_path ~plog ~print (List.assoc "path" params) in
 			world := { World.songs = song :: (!world).World.songs } ;
 			(* Index.write_index ~songs:!world.World.songs ~root_path ~output_dir ~relative_output_dir ; *)
-			start_page () ;
 			let j = Json_type.Build.objekt [ 
 			  "path",Json_type.Build.string path ;
 			  "index",Json_type.Build.int index ;
@@ -273,7 +277,6 @@ background-color:#FFEEEE ;
 		log "entering /update_index"  ;
 		log "world has %d songs" (List.length !world.World.songs) ;
 		Index.write_index ~songs:!world.World.songs ~root_path ~output_dir ~relative_output_dir ;
-		start_page () ;
 		let j = Json_type.Build.objekt [
 		  "success",Json_type.Build.bool true ;
 		  "nb_songs",Json_type.Build.int (List.length !world.World.songs) ;
@@ -305,8 +308,7 @@ background-color:#FFEEEE ;
 		      "success",Json_type.Build.bool false ;
 		      "msg",Json_type.Build.string msg ;
 		    ] in
-		      pf "%s" (Json_io.string_of_json j) ;
-		      end_html_page();
+		      json_page j 
 		  )
 	    )
 	  | "/internal-edit.songx" -> ( 
@@ -315,15 +317,25 @@ background-color:#FFEEEE ;
 		let () = log "NBPARAMS : %d"( List.length params) in
 		let () = List.iter ( fun (key,_) -> log "KEY : %s" key ) params in
 		let value = __SONG__try "get value" (List.assoc "b" params) in
+		let path = __SONG__try "get path" (List.assoc "path" params) in
+		let field = __SONG__try "field" (List.assoc "field" params) in
 		  log "VALUE : %s" value ;
 		  (* let value = List.fold_left ( fun acc c -> acc ^ "%") "" (String.explode value) in*)
 		  (*
 		  let value = "%20" in 
 		    text_page value*)
-		  let decoded = ( __SONG__try "decode"(Base64.str_decode value)) in
-		    start_page () ;
-		    pf "%s" decoded ; 
-		  end_text_page () ;
+		  let (decoded:string) =  __SONG__try "decode" (Base64.str_decode value)  in 
+		    log "DECODED : %s" decoded ;
+		  let (song:Song.t) = __SONG__try "read" ( Generate.song_of_path path) in 
+		  let song =  match field with
+		    | "lyrics" -> Lyrics_of_file.read_data song decoded 
+		    | "grille" -> Grille_of_file.read_data song decoded
+		    | s -> __SONG__failwith ("champ inconnu : " ^ field )
+		  in
+		  let () = Generate.write_song song path in
+		  let ((_:bool)) = Generate.generate_from_song ~root ~output_dir ~doc_root ~relative_output_dir ~root_path 
+		    ~plog ~print:(fun _->()) ~dirname:path song in
+		    text_page decoded 
 	      with
 		| e -> (
 		    let msg = Song_exn.string_of_stack () in
@@ -342,12 +354,14 @@ background-color:#FFEEEE ;
 	  let msg = Song_exn.html_string_of_stack () in
 	  let msg2 = Song_exn.string_of_stack () in
 	  let () = Song_exn.clear_stack () in
-	  let () = start_page () in
+	  let (p,e0,e) = start_html_page () in
+	  let pf fs = ksprintf p fs in
+	    e0 () ;
 	    pf "<h3> erreur : <br/></h3> " ;
 	    pf "%s" msg ;
 	    pf "</body></html>";
 	    log "== END with error : %s"  msg2 ;
-	    end_html_page ()
+	    e () 
 	)
 	    
   in

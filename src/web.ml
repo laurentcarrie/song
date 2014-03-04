@@ -359,6 +359,13 @@ background-color:#FFEEEE ;
 		      json_page j 
 		  )
 	    )
+	  | "/env.songx" -> (
+	      let env = Unix.environment () in
+	      let buf = Buffer.create 1024 in
+	      let pf fs = ksprintf (fun s -> Buffer.add_string buf s ; Buffer.add_string buf "\n") fs in
+		Array.iter ( fun s -> pf "%s" s ) env ;
+		text_page (Buffer.contents buf)
+	    )
 	  | "/edit.songx" 
 	  | "/edit_song.songx" -> ( 
 	      try
@@ -366,6 +373,37 @@ background-color:#FFEEEE ;
 		let params = Fcgi.parse_query_string () in
 		let path = __SONG__try "path" ( List.assoc "path" params) in
 		let song = Generate.song_of_path path in
+		  Edit.render world song 
+	      with
+		| e -> (
+		    let msg = Song_exn.string_of_stack () in
+		    let () = Song_exn.clear_stack () in
+		    let j = Json_type.Build.objekt [
+		      "success",Json_type.Build.bool false ;
+		      "msg",Json_type.Build.string msg ;
+		    ] in
+		      json_page j 
+		  )
+	    )
+	  | "/new.songx" -> ( 
+	      try
+		let world = world () in
+		let filename =  sprintf "random-%d" (Random.int 10000) in
+		let song = { 
+		  Song.title = "???????????????????????????" ;
+		  auteur = "???????????????????????????????" ;
+		  filename = filename ;
+		  format = None ;
+		  sections = [] ;
+		  structure = [] ;
+		  lyrics = [] ;
+		  outputs = [] ;
+		  tempo = 80 ;
+		  server_path = "xxx"  ;
+		  path = "xxxx" ;
+		} in
+		let () = mkdir  (root // filename) in
+		let () = Generate.write_song song (root // filename) in
 		  Edit.render world song 
 	      with
 		| e -> (
@@ -388,6 +426,9 @@ background-color:#FFEEEE ;
 		let text = (match field with
 		    | "grille" ->  Grille_of_file.to_string song
 		    | "lyrics" -> Lyrics_of_file.to_string song
+		    | "titre" -> song.Song.title
+		    | "auteur" -> song.Song.auteur
+		    | "filename" -> song.Song.filename
 		    | "tempo" -> string_of_int song.Song.tempo
 		    | s -> __SONG__failwith ("champ inconnu : " ^ field )
 		) in
@@ -418,6 +459,9 @@ background-color:#FFEEEE ;
 		  | "lyrics" -> let song = Lyrics_of_file.update_data song textval in song,Lyrics_of_file.to_html song
 		  | "grille" -> let song = Grille_of_file.update_data song textval in song,Grille_of_file.to_html song
 		  | "tempo" -> let song = { song with Song.tempo = int_of_string textval } in song,textval
+		  | "titre" -> let song = { song with Song.title = textval } in song,textval
+		  | "auteur" -> let song = { song with Song.auteur = textval } in song,textval
+		  | "filename" -> let song = { song with Song.filename = textval } in song,textval
 		  | s -> __SONG__failwith ("champ inconnu : " ^ field )
 		in
 		let () = Generate.write_song song path in
@@ -515,7 +559,7 @@ let _ = try
       let songs = List.map Generate.song_of_path songs in
       let world = {
 	World.songs = songs ;
-	root = root ;
+	root = normalize_path root ;
 	output_root = output_root ;
 	doc_root = doc_root ;
 	url_root = relative_output_root ;

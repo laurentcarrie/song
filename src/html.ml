@@ -183,7 +183,8 @@ let render_output world print song output onoff = __SONG__try "render_html" (
 	let s = List.find ( fun current -> current.Section.name = sname) song.Song.sections in
 	let l = length_of_section s in
 	let count2 = !count + l in 
-	  pf "<li class=\"structure-list\">%s  (%d : %d &rarr; %d) </li>\n" s.Section.name l (!count/4+1) (count2/4) ;
+	  (* pf "<li class=\"structure-list\">%s  (%d : %d &rarr; %d) </li>\n" s.Section.name l (!count/4+1) (count2/4) ; *)
+	  pf "<li class=\"structure-list\">%s</li>\n" s.Section.name ; 
 	  count := count2  ;
       ) song.Song.structure ;
       pf "</ol>\n" ;

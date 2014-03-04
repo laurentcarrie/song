@@ -170,7 +170,7 @@ word-spacing:1px
 let log = Fcgi.log
 
 
-let render_output world print song output = __SONG__try "render_html" (
+let render_output world print song output onoff = __SONG__try "render_html" (
     
   let pf fs = ksprintf print fs in
     
@@ -191,18 +191,25 @@ let render_output world print song output = __SONG__try "render_html" (
   in
 
       
-
-    pf "<a href=\"/index.songx#song-%s\">index</a>" song.Song.filename ;
-    pf "<a href=\"/edit.songx?path=%s\">edit</a>" song.Song.path ;
-    List.iter ( fun o ->
-      pf "<a href=\"%s.html\">(%s)</a>" o.Output.filename o.Output.filename
-    ) song.Song.outputs ;
-    pf "<a href=\"%s.midi\"><span class=\"index-title\">(midi)</span></a>" song.Song.filename ;
-    pf "<a href=\"%s.wav\"><span class=\"index-title\">(wav)</span></a>" song.Song.filename ;
-    pf "<a href=\"%s.mp3\"><span class=\"index-title\">(mp3)</span></a>" song.Song.filename ;
-    pf "<a href=\"%s.pdf\"><span class=\"index-title\">(pdf)</span></a>" song.Song.filename ;
-    pf "<br/>" ;
-
+  let () = match onoff with
+      | On_line -> (
+	  pf "<a href=\"/index.songx#song-%s\">index</a>" song.Song.filename ;
+	  pf "<a href=\"/edit.songx?path=%s\">edit</a>" song.Song.path ;
+	  List.iter ( fun o ->
+	    pf "<a href=\"%s.html\">(%s)</a>" o.Output.filename o.Output.filename
+	  ) song.Song.outputs ;
+	  pf "<a href=\"%s.midi\"><span class=\"index-title\">(midi)</span></a>" song.Song.filename ;
+	  pf "<a href=\"%s.wav\"><span class=\"index-title\">(wav)</span></a>" song.Song.filename ;
+	  pf "<a href=\"%s.mp3\"><span class=\"index-title\">(mp3)</span></a>" song.Song.filename ;
+	  pf "<a href=\"%s.pdf\"><span class=\"index-title\">(pdf)</span></a>" song.Song.filename ;
+	  pf "<br/>" ;
+	)
+      | Off_line -> (
+	  pf "<a href=\"../index.html#song-%s\">index</a>" song.Song.filename ;
+	  pf "<br/>" ;
+	)
+  in
+    
     pf " <div id=\"main-0\">
 
 <div id=\"frame-title\">

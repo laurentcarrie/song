@@ -302,7 +302,7 @@ background-color:#FFEEEE ;
 	      try
 		let (p,h,e) = start_html_page () in
 		  h () ;
-		  Index.write_index p (world()) ;
+		  Index.write_index p (world()) On_line ;
 		  e ()
 	      with
 		| e -> (
@@ -346,7 +346,7 @@ background-color:#FFEEEE ;
 		let (print,h,e) = start_html_page () in
 		let () = log "path=%s ; output=%s" song.Song.filename output.Output.filename in
 		  h () ;
-		  Html.render_output world print song output ;
+		  Html.render_output world print song output On_line ;
 		  e ()
 	      with
 		| e -> (
@@ -388,6 +388,7 @@ background-color:#FFEEEE ;
 		let text = (match field with
 		    | "grille" ->  Grille_of_file.to_string song
 		    | "lyrics" -> Lyrics_of_file.to_string song
+		    | "tempo" -> string_of_int song.Song.tempo
 		    | s -> __SONG__failwith ("champ inconnu : " ^ field )
 		) in
 		  text_page text
@@ -416,7 +417,8 @@ background-color:#FFEEEE ;
 		let (song,html_textval) =  match field with
 		  | "lyrics" -> let song = Lyrics_of_file.update_data song textval in song,Lyrics_of_file.to_html song
 		  | "grille" -> let song = Grille_of_file.update_data song textval in song,Grille_of_file.to_html song
-		    | s -> __SONG__failwith ("champ inconnu : " ^ field )
+		  | "tempo" -> let song = { song with Song.tempo = int_of_string textval } in song,textval
+		  | s -> __SONG__failwith ("champ inconnu : " ^ field )
 		in
 		let () = Generate.write_song song path in
 		(* let ((_:bool)) = Generate.generate_from_song ~world ~plog ~print:(fun _->()) ~path song in *)

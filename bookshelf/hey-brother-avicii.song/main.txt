@@ -1,4 +1,8 @@
 \titre Hey, Brother
+
 \auteur avicii
-\tempo 90
+
+\tempo 900
+
 \filename avicii-hey-brother
+

@@ -3,6 +3,10 @@ open Printf
 open ExtString
 let (//) = Filename.concat
 
+type page_t = 
+    | On_line
+    | Off_line
+
 let int_of_string s =
   try int_of_string s with | e -> failwith("cannot convert '"^s^"' to an int")
 
@@ -86,11 +90,14 @@ module Json = struct
 
 end
 
+module Edit_type = struct
+  type t = 
+      | Textarea
+      | Select
+      | Text
 
-
-
-let print_edit p url song_path idtext field = 
-  let pf fs = ksprintf p fs in
+  let print p url song_path idtext field et = 
+    let pf fs = ksprintf p fs in
     pf "<script>
 $(document).ready(function() {
      $('#%s').editable('%s',
@@ -100,9 +107,22 @@ $(document).ready(function() {
   loadurl   : '/data.songx',
   submit    : 'Ok',
   cancel    : 'Annuler',
-  type      : 'textarea',
+" idtext   url
+      ;
+      (
+	let (a,b) = match et with
+	  | Textarea -> "textarea","textarea"
+	  | Select -> "select","select" 
+	  | Text -> "text","text"
+	in
+	  pf "
+  type      : '%s',
+  style     : 'editable-%s',
+" a b 
+      );
+      
+      pf "
   rows      : 20,
-  style     : 'editable-textarea',
   loaddata  : function (value,settings) {
       return { 
         path:'%s',
@@ -123,11 +143,10 @@ $(document).ready(function() {
 );
  });
 </script>" 
-      (* .editable *) idtext   url
       (* load data *) song_path field
       (* submit data *) song_path field
 
-
+end
 
 
    

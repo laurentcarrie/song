@@ -14,8 +14,9 @@ let render world song   = __SONG__try "render_html" (
 (*   let pfnnl fs = ksprintf (p ~nl:false) fs in *)
 
 
-    print_edit p "/internal-edit.songx" song.Song.path "edit-lyrics" "lyrics" ;
-    print_edit p "/internal-edit.songx" song.Song.path "edit-grille" "grille" ;
+    Edit_type.print p "/internal-edit.songx" song.Song.path "edit-tempo" "tempo" Edit_type.Text;
+    Edit_type.print p "/internal-edit.songx" song.Song.path "edit-lyrics" "lyrics" Edit_type.Textarea ;
+    Edit_type.print p "/internal-edit.songx" song.Song.path "edit-grille" "grille" Edit_type.Textarea ;
 
   let plinks () = 
     pf "<a href='/index.songx#song-%s'>index</a>" song.Song.filename ;
@@ -26,6 +27,11 @@ let render world song   = __SONG__try "render_html" (
     pf "<a href='#main'>main</a>" ;
   in
     pf "</head><body>" ;
+    plinks () ;
+    pf "tempo : <div class='edit edit-tempo' id='edit-tempo'>" ;
+    pf "%d" song.Song.tempo ;
+    pf "</div>" ;
+    
     plinks () ;
     pf "<a name='lyrics'>(cliquez pour éditer)</a>" ;
     pf "<div class=\"edit edit-lyrics\" id='edit-lyrics'>" ;

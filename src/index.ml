@@ -21,7 +21,7 @@ let compare song1 song2 =
     | 0 -> String.compare song1.Song.title song2.Song.title
     | i -> i
 
-let write_index print world = __SONG__try "index" (
+let write_index print world onoff = __SONG__try "index" (
   log "write index"; 
   let songs = world.World.songs in
   let pf fs = ksprintf ( fun s -> print s ; print "\n" ) fs in
@@ -59,13 +59,16 @@ let write_index print world = __SONG__try "index" (
     ) ;
     
     
-    (
-      let tm = Unix.localtime(Unix.time ()) in
-	pf "index généré le  %02d/%02d/%04d à  %02d:%02d:%02d</br>" 
-	  tm.Unix.tm_mday (tm.Unix.tm_mon+1) (tm.Unix.tm_year+1900)
-	  tm.Unix.tm_hour tm.Unix.tm_min tm.Unix.tm_sec
-    ) ;
-    pf "<a href='/download.songx'>Télécharger sous forme d'un fichier zip</a>" ;
+    let () = match onoff with
+      | On_line -> pf "<a href='/download.songx'>Télécharger sous forme d'un fichier zip</a>" 
+      | Off_line -> (
+	  let tm = Unix.localtime(Unix.time ()) in
+	    pf "Généré le  %02d/%02d/%04d à  %02d:%02d:%02d</br>" 
+	      tm.Unix.tm_mday (tm.Unix.tm_mon+1) (tm.Unix.tm_year+1900)
+	      tm.Unix.tm_hour tm.Unix.tm_min tm.Unix.tm_sec
+	) 
+    in
+
     pf "<div id=\"list5\" class=\"index-alphabet\">" ;
     pf "<ul class=\"index-alphabet\">"; 
     List.iter ( fun (letter,l) ->
@@ -77,20 +80,16 @@ let write_index print world = __SONG__try "index" (
 	let songs = List.sort ~cmp:compare songs in
 	  List.iteri ( fun index s ->
 	    if auteur <> s.Song.auteur then __SONG__failwith "internal error" else () ;
-	    pf "<a id='song-%s'></a><a href='/view.songx?path=%s&output=all'>%s</a></br>" 
-	      s.Song.filename 
-	      s.Song.filename
-	      s.Song.title ;
-	    (*
-	    List.iter ( fun o ->
-	      (* pf "<li class=\"index-title\"><a href=\"%s/%s.html\"><span class=\"index-title\">%s</span></a></li>\n" *)
-	      let clean_filename =  Str.global_replace (Str.regexp (Str.quote (s.Song.filename^"-"))) "" o.Output.filename in
-		(* log "clean_filename = '%s'" clean_filename ; *)
-		pf "<a href=\"%s%s/%s.html\"><span class=\"index-title\">(%s)</span></a>\n" 
-		  root_path relative_output_dir o.Output.filename  
-		  clean_filename
-	    ) s.Song.outputs ;
-	    *)
+	    ( match onoff with
+	      | On_line ->  pf "<a id='song-%s'></a><a href='/view.songx?path=%s&output=all'>%s</a></br>" 
+		  s.Song.filename 
+		    s.Song.filename
+		    s.Song.title 
+	      | Off_line ->  pf "<a id='song-%s'></a><a href='%s/all.html'>%s</a></br>" 
+		  s.Song.filename 
+		    s.Song.filename
+		    s.Song.title 
+	    ) ;
 	    (* 
 	       pf "<a href=\"%s.midi\"><span class=\"index-title\">(midi)</span></a>" s.Song.filename ;
 	       pf "<a href=\"%s.wav\"><span class=\"index-title\">(wav)</span></a>" s.Song.filename ;

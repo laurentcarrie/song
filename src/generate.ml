@@ -73,6 +73,15 @@ let write_song song dirname = __SONG__try ("write song " ^ dirname) (
       ) song.Song.lyrics ;
       close_out fout
   in
+  let () = 
+    let fout = open_out_bin    (dirname // "main.txt") in
+    let pf fs = kfprintf ( fun fout -> fprintf fout "\n" ) fout fs in
+      pf "\\titre %s\n" song.Song.title ;
+      pf "\\auteur %s\n" song.Song.auteur ;
+      pf "\\tempo %d\n" song.Song.tempo ;
+      pf "\\filename %s\n"  song.Song.filename ;
+      close_out fout
+  in
     ()
 )
 

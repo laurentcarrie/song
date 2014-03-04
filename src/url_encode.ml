@@ -168,7 +168,7 @@ let from_url s =
       
       
       
-
+(*
 
 let f ?encoding (src : [`Channel of in_channel | `String of string]) =
 
@@ -180,7 +180,7 @@ let f ?encoding (src : [`Channel of in_channel | `String of string]) =
   in
   let nln = `Readline 0x000A in
     loop  (Uutf.decoder ~nln ?encoding src) (Buffer.create 512) 0
-      
+*)      
       
       
 

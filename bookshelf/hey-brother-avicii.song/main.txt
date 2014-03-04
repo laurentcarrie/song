@@ -2,7 +2,7 @@
 
 \auteur avicii
 
-\tempo 80
+\tempo 90
 
 \filename avicii-hey-brother
 

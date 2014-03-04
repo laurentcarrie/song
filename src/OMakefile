@@ -22,7 +22,7 @@ OCAMLOPTFLAGS+=
 
 
 
-OCAMLPACKS= extlib,str,unix,json-wheel,uutf,zip
+OCAMLPACKS= extlib,str,unix,json-wheel,zip
 
 ocamlfind ocamlopt song_exn.mli -o song_exn.cmi -package extlib
 
@@ -81,4 +81,4 @@ build: $(OCamlProgram song-web,$(src) web )
 
 
 
-build : $(OCamlProgram test_utf8,test_utf8)
+#build : $(OCamlProgram test_utf8,test_utf8)

@@ -15,7 +15,7 @@ let log s =
 let manage_song dirname  = 
   try
     printf "reading song in : '%s'\n" dirname ;
-    let song = { Song.title="???" ; Song.auteur="???" ; filename = "no-filename-" ^ (string_of_int (Random.int 1000))  ; format=None ; sections=PMap.create String.compare ; structure=[];lyrics=[];outputs=[];
+    let song = { Song.title="???" ; Song.auteur="???" ; filename = "no-filename-" ^ (string_of_int (Random.int 1000))  ; format=None ; sections=[] ; structure=[];lyrics=[];outputs=[];
 		 tempo = 80  ;
 		 path = "XXXXXXXXXXXXXXXXX" ; 
 		 server_path = "YYYYYYYYYYYYYYY" ; 

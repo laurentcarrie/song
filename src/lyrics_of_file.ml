@@ -2,7 +2,7 @@ open Data
 open Printf
 open ExtString
 
-let read_data song data = __SONG__try "read_file" (
+let update_data song data = __SONG__try "read_file" (
   let data = Str.split (Str.regexp "\n") data in
   let rec read acc current linecount data =
     match data with
@@ -25,5 +25,31 @@ let read_data song data = __SONG__try "read_file" (
 
 let read_file song filename = __SONG__try "read_file" (
   let data = Std.input_file filename in
-    read_data song data
+    update_data song data
 )
+
+let to_string song = __SONG__try "to_string" (
+  let buf = Buffer.create 1024 in
+  let pf fs = ksprintf ( fun s -> Buffer.add_string buf s ) fs in
+    List.iter ( fun l ->
+      pf "%s\n" l.Lyrics.name ;
+      pf "%s\n\n" l.Lyrics.text 
+    ) song.Song.lyrics ;
+    Buffer.contents buf
+)
+
+let to_html_print print song = __SONG__try "to_html" (
+  let pf fs = ksprintf print fs in
+    List.iter ( fun l ->
+      pf "%s<br>" l.Lyrics.name ;
+      let s = Str.global_replace (Str.regexp "\n") "<br>" l.Lyrics.text in
+	pf "%s<br><br>" s
+    ) song.Song.lyrics ;
+)
+
+let to_html song = __SONG__try "to_html" (
+  let buf = Buffer.create 1024 in
+  let () = to_html_print (Buffer.add_string buf) song in
+    Buffer.contents buf
+)
+

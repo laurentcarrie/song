@@ -32,7 +32,7 @@ let find_all_songs ~plog root = __SONG__try "find all songs" (
 
 let song_of_path dirname = __SONG__try ("song_of_path " ^ dirname) (
   let song = { Song.title="???" ; Song.auteur="???" ; 
-	       filename = "no-filename"  ^ (string_of_int (Random.int 1000)) ; format=None ; sections=PMap.create String.compare ; 
+	       filename = "no-filename"  ^ (string_of_int (Random.int 1000)) ; format=None ; sections=[] ; 
 	       structure=[];lyrics=[];outputs=[];
 	       tempo=80 ;
 	       path = dirname ;
@@ -53,7 +53,7 @@ let write_song song dirname = __SONG__try ("write song " ^ dirname) (
     let fout = open_out_bin (dirname // "grille.txt") in
     let pf fs = kfprintf ( fun fout -> fprintf fout "\n" ) fout fs in
     let pfnnl fs = kfprintf ( fun fout -> () ) fout fs in
-      PMap.iter ( fun _ section -> 
+      List.iter ( fun section -> 
 	pf "%s" section.Section.name ;
 	List.iter ( fun c ->
 	  match c with
@@ -68,6 +68,7 @@ let write_song song dirname = __SONG__try ("write song " ^ dirname) (
     let fout = open_out_bin    (dirname // "lyrics.txt") in
     let pf fs = kfprintf ( fun fout -> fprintf fout "\n" ) fout fs in
       List.iter ( fun l ->
+	pf "%s" l.Lyrics.name ;
 	pf "%s" l.Lyrics.text ;
       ) song.Song.lyrics ;
       close_out fout

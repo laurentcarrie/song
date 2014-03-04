@@ -183,8 +183,7 @@ module Song = struct
 	auteur = Br.string (Br.field table "auteur") ;
 	filename = Br.string (Br.field table "filename") ;
 	format = None ;
-	sections = List.fold_left ( fun acc s -> PMap.add s.Section.name s acc )
-	  (PMap.create String.compare) ( Br.list Section.of_json (Br.field table "sections" ))  ;
+	sections =  Br.list Section.of_json (Br.field table "sections" )  ;
 	structure = Br.list Structure.of_json (Br.field table "structure") ;
 	lyrics = Br.list Lyrics.of_json (Br.field table "lyrics") ;
 	outputs = Br.list Output.of_json (Br.field table "outputs") ;
@@ -199,7 +198,7 @@ module Song = struct
       "title",Bu.string t.title ;
       "auteur",Bu.string t.auteur ;
       "filename",Bu.string t.filename ;
-      "sections",Bu.list Section.to_json (PMap.foldi ( fun k v acc -> v::acc ) t.sections []) ;
+      "sections",Bu.list Section.to_json t.sections  ;
       "structure",Bu.list Structure.to_json t.structure ;
       "lyrics",Bu.list Lyrics.to_json t.lyrics ;
       "outputs",Bu.list Output.to_json t.outputs ;

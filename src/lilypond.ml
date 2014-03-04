@@ -26,7 +26,7 @@ let render song  output_dir = __SONG__try "write lilypond" (
     pf "bd4 sn4 bd4 sn4" ;
     pf "bd4 sn4 bd4 sn4" ;
     List.iter ( fun s ->
-      let section = PMap.find s.Structure.section_name song.Song.sections in
+      let section = List.find ( fun current -> current.Section.name = s.Structure.section_name) song.Song.sections in
 	List.iter ( fun c ->
 	  match c with
 	    | Section.NL -> ()
@@ -44,7 +44,7 @@ let render song  output_dir = __SONG__try "write lilypond" (
     pf "drh = \\drummode { " ; 
     (* 1 mesure vide au début *)
     List.iter ( fun s ->
-      let section = PMap.find s.Structure.section_name song.Song.sections in
+      let section = List.find ( fun current -> current.Section.name = s.Structure.section_name) song.Song.sections in
 	List.iter ( fun c ->
 	  match c with
 	    | Section.NL -> ()
@@ -77,7 +77,7 @@ harmonies = \\chordmode { " ;
     pf "r1 " ;
 
     List.iter ( fun s ->
-      let section = PMap.find s.Structure.section_name song.Song.sections in
+      let section = List.find ( fun current -> current.Section.name = s.Structure.section_name) song.Song.sections in
 	List.iter ( fun c ->
 	  match c with
 	    | Section.NL -> ()

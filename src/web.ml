@@ -311,31 +311,49 @@ background-color:#FFEEEE ;
 		      json_page j 
 		  )
 	    )
+	  | "/data.songx" -> (
+	      try
+		let params = Fcgi.parse_query_string () in
+		let path  = __SONG__try "path"  (List.assoc "path" params) in
+		let field = __SONG__try "field"  (List.assoc "field" params) in
+		  log "path = %s" path  ;
+		let song = Generate.song_of_path path in
+		let text = (match field with
+		    | "grille" ->  Grille_of_file.to_string song
+		    | "lyrics" -> Lyrics_of_file.to_string song
+		    | s -> __SONG__failwith ("champ inconnu : " ^ field )
+		) in
+		  text_page text
+	      with
+		| e -> (
+		    let msg = Song_exn.string_of_stack () in
+		    let () = Song_exn.clear_stack () in
+		    let j = Json_type.Build.objekt [
+		      "success",Json_type.Build.bool false ;
+		      "msg",Json_type.Build.string msg ;
+		    ] in
+		      json_page j 
+		  )
+	    )
 	  | "/internal-edit.songx" -> ( 
 	      try
 		let params = Fcgi.get_post_params() in
 		let () = log "NBPARAMS : %d"( List.length params) in
 		let () = List.iter ( fun (key,_) -> log "KEY : %s" key ) params in
-		let value = __SONG__try "get value" (List.assoc "b" params) in
+		let textval = __SONG__try "get value" (List.assoc "value" params) in
+		let () = log "TEXTVAL : %s"  textval in
 		let path = __SONG__try "get path" (List.assoc "path" params) in
 		let field = __SONG__try "field" (List.assoc "field" params) in
-		  log "VALUE : %s" value ;
-		  (* let value = List.fold_left ( fun acc c -> acc ^ "%") "" (String.explode value) in*)
-		  (*
-		  let value = "%20" in 
-		    text_page value*)
-		  let (decoded:string) =  __SONG__try "decode" (Base64.str_decode value)  in 
-		    log "DECODED : %s" decoded ;
-		  let (song:Song.t) = __SONG__try "read" ( Generate.song_of_path path) in 
-		  let song =  match field with
-		    | "lyrics" -> Lyrics_of_file.read_data song decoded 
-		    | "grille" -> Grille_of_file.read_data song decoded
+		let (song:Song.t) = __SONG__try "read" ( Generate.song_of_path path) in 
+		let (song,html_textval) =  match field with
+		  | "lyrics" -> let song = Lyrics_of_file.update_data song textval in song,Lyrics_of_file.to_html song
+		  | "grille" -> let song = Grille_of_file.update_data song textval in song,Grille_of_file.to_html song
 		    | s -> __SONG__failwith ("champ inconnu : " ^ field )
-		  in
-		  let () = Generate.write_song song path in
-		  let ((_:bool)) = Generate.generate_from_song ~root ~output_dir ~doc_root ~relative_output_dir ~root_path 
-		    ~plog ~print:(fun _->()) ~dirname:path song in
-		    text_page decoded 
+		in
+		let () = Generate.write_song song path in
+		let ((_:bool)) = Generate.generate_from_song ~root ~output_dir ~doc_root ~relative_output_dir ~root_path 
+		  ~plog ~print:(fun _->()) ~dirname:path song in
+		  text_page html_textval
 	      with
 		| e -> (
 		    let msg = Song_exn.string_of_stack () in

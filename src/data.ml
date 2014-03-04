@@ -92,7 +92,7 @@ module Song = struct
     auteur : string ;
     filename : string ;
     format : string option ;
-    sections : (string,Section.t) PMap.t ;
+    sections : Section.t list ;
     structure : Structure.t list ;
     lyrics : Lyrics.t list ;
     outputs : Output.t list ;

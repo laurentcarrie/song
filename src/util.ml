@@ -97,37 +97,35 @@ $(document).ready(function() {
 {
   indicator : 'Sauvegarde...',
   tootip    : 'Cliquez pour éditer',
+  loadurl   : '/data.songx',
   submit    : 'Ok',
   cancel    : 'Annuler',
   type      : 'textarea',
   rows      : 20,
-  submitdata  : function (value,settings) {
-      console.log('SUBMIT : ' + value) ;
-      var binval = utf8_to_b64(value) ;
-      binval = binval.replace(/=/gi,'');
-//    $('#bin').text(utf8_to_b64(binval)) ;
+  style     : 'editable-textarea',
+  loaddata  : function (value,settings) {
       return { 
-       path:'%s',
-       t:$('#%s-hidden').text(), 
-       b:binval,
-       field:'%s'
+        path:'%s',
+        field:'%s'
+    } ;
+  },
+  submitdata  : function (value,settings) {
+      return { 
+        path:'%s',
+        field:'%s'
     } ;
   },
   data      : function(value, settings) {
       console.log('data : ' + value) ;
-      retval = $('#%s-hidden').text() ;
-      return retval ;
+      return value ;
   }
 }
 );
  });
 </script>" 
-      idtext
-      url
-      song_path
-      idtext
-      field
-      idtext
+      (* .editable *) idtext   url
+      (* load data *) song_path field
+      (* submit data *) song_path field
 
 
 
@@ -171,6 +169,11 @@ let start_html_page () = (
 
 .edit {
 background:#eeeeee ;
+}
+
+.editable-textarea {
+background:#eeeeee ;
+white-space:pre ;
 }
 
 .done-hide-me {

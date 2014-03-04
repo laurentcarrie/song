@@ -1,13 +1,15 @@
 couplet
-Am F C G
-Am F C G
-Am F C G
-Am F C E
+Am\4 F\4 C\4 G\4 
+Am\4 F\4 C\4 G\4 
+Am\4 F\4 C\4 G\4 
+Am\4 F\4 C\4 E\4 
 
 refrain
-Am Am F F
-Dm Dm E E
+Am\4 Am\4 F\4 F\4 
+Dm\4 Dm\4 E\4 E\4 
 
 break
-Am Am
+Am\4 Am\4 
+
+ 
 

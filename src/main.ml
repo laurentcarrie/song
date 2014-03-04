@@ -26,7 +26,7 @@ let manage_song dirname  =
     let song = Structure_of_file.read_file song (dirname // "structure.txt") in
     let song = Main_of_file.read_file song (dirname // "main.txt") in
     let song = Sortie_of_file.read_file song (dirname // "sortie.txt") in
-      Html.render_html song "songs" ""
+      Html.render_html world song "songs" ""
       
   with
     | e -> log (Song_exn.html_string_of_stack () ) ;  let () = __SONG__print_exn_stack e in Song_exn.clear_stack() ; ()

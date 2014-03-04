@@ -19,6 +19,7 @@ module PMap = struct
       | Not_found -> __SONG__failwith("key '" ^ name ^ "' not found in map")
 end
 
+(*
 let print_css fout dirname width = __SONG__try ("print_css " ^ dirname) (
 (*  let fout = open_out_bin (dirname //  "song.css") in *)
     fprintf fout "
@@ -164,74 +165,45 @@ word-spacing:1px
 
 " width 
 )
+*)
 
 let log = Fcgi.log
 
 
-let render_one_html song dirname output root_path = __SONG__try "render_html" (
+let render_output world print song output = __SONG__try "render_html" (
+    
+  let pf fs = ksprintf print fs in
+    
+  let print_structure () = __SONG__try "print_structure" (
+    pf "<h2>structure</h2>\n" ;
+    pf "<ol class=\"structure-list\">\n" ;
+    let count = ref 1 in
+      List.iter ( fun s ->
+	let sname = s.Structure.section_name in
+	let s = List.find ( fun current -> current.Section.name = sname) song.Song.sections in
+	let l = length_of_section s in
+	let count2 = !count + l in 
+	  pf "<li class=\"structure-list\">%s  (%d : %d &rarr; %d) </li>\n" s.Section.name l (!count/4+1) (count2/4) ;
+	  count := count2  ;
+      ) song.Song.structure ;
+      pf "</ol>\n" ;
+  )
+  in
 
-    let filename = dirname // ( output.Output.filename ^ ".html") in
-    let () = log "writing %s..." filename in
-
-    let fout =  open_out_bin filename in
-      
-    let print s = fprintf fout "%s\n" s in
-
-    let pf fs = ksprintf print fs in
-
-    let print_structure () = __SONG__try "print_structure" (
-      fprintf fout "<h2>structure</h2>\n" ;
-      fprintf fout "<ol class=\"structure-list\">\n" ;
-      let count = ref 1 in
-	List.iter ( fun s ->
-	  let sname = s.Structure.section_name in
-	  let s = List.find ( fun current -> current.Section.name = sname) song.Song.sections in
-	  let l = length_of_section s in
-	  let count2 = !count + l in 
-	    fprintf fout "<li class=\"structure-list\">%s  (%d : %d &rarr; %d) </li>\n" s.Section.name l (!count/4+1) (count2/4) ;
-	    count := count2  ;
-	) song.Song.structure ;
-	fprintf fout "</ol>\n" ;
-    )
-    in
-
-    let print_lyrics () = __SONG__try "print_lyrics" (
-      fprintf fout "<h2>lyrics</h2>\n" ;
-      fprintf fout "<ol class=\"lyrics-list\">\n" ;
-      List.iter ( fun lyrics ->
-	let text = lyrics.Lyrics.text in
-	let text = Str.global_replace (Str.regexp "\\[\\(.*\\)\\]") (sprintf "<span class=\"lyrics-beat\">\\1</span>") text in 
-	let text = Str.global_replace (Str.regexp "\n") "<br/>" text in
-	fprintf fout "<li class=\"lyrics-list\"><span class=\"lyrics-section\">%s</span><br/>\n" lyrics.Lyrics.name ;
-	fprintf fout "%s" text ;
-	fprintf fout "</li>" ;
-      ) song.Song.lyrics ;
-      fprintf fout "</ol>\n" ;
-    )
-    in
       
 
-      pf "\
-<html>
-<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />
-<style>
-" ;
-	print_css fout dirname output.Output.width ;
-	pf "
-</style>
-<body> " ;
+    pf "<a href=\"/index.songx#song-%s\">index</a>" song.Song.filename ;
+    pf "<a href=\"/edit.songx?path=%s\">edit</a>" song.Song.path ;
+    List.iter ( fun o ->
+      pf "<a href=\"%s.html\">(%s)</a>" o.Output.filename o.Output.filename
+    ) song.Song.outputs ;
+    pf "<a href=\"%s.midi\"><span class=\"index-title\">(midi)</span></a>" song.Song.filename ;
+    pf "<a href=\"%s.wav\"><span class=\"index-title\">(wav)</span></a>" song.Song.filename ;
+    pf "<a href=\"%s.mp3\"><span class=\"index-title\">(mp3)</span></a>" song.Song.filename ;
+    pf "<a href=\"%s.pdf\"><span class=\"index-title\">(pdf)</span></a>" song.Song.filename ;
+    pf "<br/>" ;
 
-	pf "<a href=\"index.html#song-%s\">index</a>" song.Song.filename ;
-	pf "<a href=\"/edit.songx?path=%s\">edit</a>" (Url_encode.to_url song.Song.path) ;
-	List.iter ( fun o ->
-	  pf "<a href=\"%s.html\">(%s)</a>" o.Output.filename o.Output.filename
-	) song.Song.outputs ;
-	pf "<a href=\"%s.midi\"><span class=\"index-title\">(midi)</span></a>" song.Song.filename ;
-	pf "<a href=\"%s.wav\"><span class=\"index-title\">(wav)</span></a>" song.Song.filename ;
-	pf "<a href=\"%s.mp3\"><span class=\"index-title\">(mp3)</span></a>" song.Song.filename ;
-	pf "<a href=\"%s.pdf\"><span class=\"index-title\">(pdf)</span></a>" song.Song.filename ;
-	pf "<br/>" ;
-	pf " <div id=\"main-0\">
+    pf " <div id=\"main-0\">
 
 <div id=\"frame-title\">
 
@@ -246,8 +218,8 @@ pf "
     let pp =
       List.iter ( fun s ->
 		    match s with
-		      | Data.Output.L -> print_lyrics() ;
-		      | Data.Output.G -> Grille_of_file.to_print print song ;
+		      | Data.Output.L -> Lyrics_of_file.to_html_print print song ;
+		      | Data.Output.G -> Grille_of_file.to_html_print print song ;
 		      | Data.Output.S -> print_structure () ;
 		) 
     in
@@ -266,21 +238,19 @@ pf "
 </div>
 </div>
 " ;
-pf "</body></html>\n" ;
-	log "close %s" filename ;
-	close_out fout
 	  
 )
 
 
 
-
-let render_html song dirname root_path = __SONG__try ("render_html " ^ dirname) (
+(*
+let render_html world print song  = __SONG__try ("render_html ") (
   match song.Song.outputs with
     | [] -> log "%s" "no output defined,... you will get no html file\n"
     | outputs -> (
 	List.iter ( fun output ->
-	  render_one_html song dirname output root_path
+	  render_one_html world song output
 	) outputs
       )
 )
+*)

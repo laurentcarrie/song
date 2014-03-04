@@ -72,7 +72,8 @@ let read_data song data = __SONG__try ("read_file ") (
 
   let std_outputs = [
     {
-      Output.filename = sprintf "%s-all" song.Song.filename ;
+      (* Output.filename = sprintf "%s-all" song.Song.filename ; *)
+      Output.filename = "all" ;
       col_1 = [ Output.L ; ]  ;
       col_2 = [ Output.G ; Output.S ] ;
       width = 25 ;

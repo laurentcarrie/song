@@ -21,18 +21,18 @@ let compare song1 song2 =
     | 0 -> String.compare song1.Song.title song2.Song.title
     | i -> i
 
-let write_index ~songs ~root_path ~output_dir ~relative_output_dir = __SONG__try "index" (
+let write_index print world = __SONG__try "index" (
   log "write index"; 
-  let b = Buffer.create 1024 in
-  let pf fs = ksprintf (fun s -> Buffer.add_string b s ; Buffer.add_string b "\n" ) fs in 
+  let songs = world.World.songs in
+  let pf fs = ksprintf ( fun s -> print s ; print "\n" ) fs in
   let songs_assoc = List.fold_left ( fun acc s ->
-				       let auteur = s.Song.auteur in
-					 try
-					   let l = List.assoc auteur acc in
-					     (auteur,(s::l)) :: (List.remove_assoc auteur acc)
-					 with
-					   | Not_found -> (s.Song.auteur,[s]) :: acc
-				   ) [] songs
+    let auteur = s.Song.auteur in
+      try
+	let l = List.assoc auteur acc in
+	  (auteur,(s::l)) :: (List.remove_assoc auteur acc)
+      with
+	| Not_found -> (s.Song.auteur,[s]) :: acc
+  ) [] songs
   in
   let songs_alphabet = List.map ( fun letter ->
     (* log "index, examen lettre %c" letter ; *)
@@ -59,55 +59,13 @@ let write_index ~songs ~root_path ~output_dir ~relative_output_dir = __SONG__try
     ) ;
     
     
-    pf "<html>" ;
-    pf "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />\n" ;
-    pf "<style>
-
-
-ul.index-alphabet {
-font-style:italic; font-family:Georgia, Times, serif; font-size:1em; 
-color:#bfe1f1;
-list-style-type:none ;
-margin-left: 0cm ;
-padding:0.1cm ;
-border-left: 1px solid #999 ;
-}
-
-li.index-alphabet {
-list-style-type : none ;
-}
-
-ul.index-auteur {
-font-style:italic; font-family:Georgia, Times, serif; font-size:1em; 
-color:#000000 ;
-list-style-type:none ;
-margin-left: 0.5cm ;
-padding:0.1cm ;
-border-left: 1px solid #999 ;
-}
-
-p.index-chanson {
-margin-left: 2cm ;
-}
-
-ul.index-chanson {
-font-style:italic; font-family:Georgia, Times, serif; font-size:0.5emx; 
-color:#000000 ;
-list-style-type:none ;
-margin-left: 1cm ;
-padding:0.1cm ;
-}
-
-
-</style>
-" ;
-    pf "<body>\n" ;
     (
       let tm = Unix.localtime(Unix.time ()) in
-	pf "index généré le  %02d/%02d/%04d à %02d:%02d:%02d</br>" 
+	pf "index généré le  %02d/%02d/%04d à  %02d:%02d:%02d</br>" 
 	  tm.Unix.tm_mday (tm.Unix.tm_mon+1) (tm.Unix.tm_year+1900)
 	  tm.Unix.tm_hour tm.Unix.tm_min tm.Unix.tm_sec
     ) ;
+    pf "<a href='/download.songx'>Télécharger sous forme d'un fichier zip</a>" ;
     pf "<div id=\"list5\" class=\"index-alphabet\">" ;
     pf "<ul class=\"index-alphabet\">"; 
     List.iter ( fun (letter,l) ->
@@ -119,7 +77,10 @@ padding:0.1cm ;
 	let songs = List.sort ~cmp:compare songs in
 	  List.iteri ( fun index s ->
 	    if auteur <> s.Song.auteur then __SONG__failwith "internal error" else () ;
-	    pf "<a id='song-%s'></a><a href='%s/%s-all.html'>%s</a></br>" s.Song.filename relative_output_dir s.Song.filename s.Song.title ;
+	    pf "<a id='song-%s'></a><a href='/view.songx?path=%s&output=all'>%s</a></br>" 
+	      s.Song.filename 
+	      s.Song.filename
+	      s.Song.title ;
 	    (*
 	    List.iter ( fun o ->
 	      (* pf "<li class=\"index-title\"><a href=\"%s/%s.html\"><span class=\"index-title\">%s</span></a></li>\n" *)
@@ -145,13 +106,5 @@ padding:0.1cm ;
       pf "</ul>" ;
     ) songs_alphabet ;
     pf "</ul>"  ;
-    pf "</body>" ;
-    pf "</html>" ;
-    let filename = (output_dir // "index.html") in
-      log "writing %d songs in index file : %s" (List.length songs) filename ;
-      Std.output_file ~filename ~text:(Buffer.contents b) ;
-      Std.output_file ~filename:(output_dir // "index2.html") ~text:(Buffer.contents b) ;
     ()
-      
-
 )

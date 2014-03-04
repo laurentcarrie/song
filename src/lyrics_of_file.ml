@@ -40,11 +40,17 @@ let to_string song = __SONG__try "to_string" (
 
 let to_html_print print song = __SONG__try "to_html" (
   let pf fs = ksprintf print fs in
-    List.iter ( fun l ->
-      pf "%s<br>" l.Lyrics.name ;
-      let s = Str.global_replace (Str.regexp "\n") "<br>" l.Lyrics.text in
-	pf "%s<br><br>" s
+    pf "<h2>lyrics</h2>\n" ;
+    pf "<ol class=\"lyrics-list\">\n" ;
+    List.iter ( fun lyrics ->
+      let text = lyrics.Lyrics.text in
+      let text = Str.global_replace (Str.regexp "\\[\\(.*\\)\\]") (sprintf "<span class=\"lyrics-beat\">\\1</span>") text in 
+      let text = Str.global_replace (Str.regexp "\n") "<br/>" text in
+	pf "<li class=\"lyrics-list\"><span class=\"lyrics-section\">%s</span><br/>\n" lyrics.Lyrics.name ;
+	pf "%s" text ;
+	pf "</li>" ;
     ) song.Song.lyrics ;
+    pf "</ol>\n" ;
 )
 
 let to_html song = __SONG__try "to_html" (

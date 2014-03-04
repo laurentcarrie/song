@@ -120,7 +120,35 @@ let context = ref OUT_TEXT
 module World = struct
   type t = {
     songs : Song.t list ;
+    root : string ;        (* la racine du chemin de recherche des chansons, sur le disque *)
+    output_root : string ; (* la ou sont generes les fichiers *)
+    doc_root : string ;    (* le doc_root du server web *)
+    url_root : string ;    (* le chemin relatif pour l'url *)
+    root_path : string ;
   }
 end
 
-let world = ref { World.songs = [] }
+let (r_world:World.t option ref) = ref None
+  
+let world () = match !r_world with
+  | Some w -> w
+  | None   -> __SONG__failwith "World non défini"
+    
+
+let update_world world = 
+  r_world := Some world
+
+let update_world_songs songs =
+  let world = match !r_world with
+    | Some w ->  ( { w with World.songs = songs } )
+    | None   -> __SONG__failwith "World non défini"
+  in
+    r_world := Some world
+
+let add_world_song song =
+  let world = match !r_world with
+    | Some world ->  { world with World.songs = song::world.World.songs }
+    | None   -> __SONG__failwith "World non défini"
+  in
+    r_world := Some world
+

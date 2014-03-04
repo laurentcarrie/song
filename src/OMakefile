@@ -22,7 +22,7 @@ OCAMLOPTFLAGS+=
 
 
 
-OCAMLPACKS= extlib,str,unix,json-wheel
+OCAMLPACKS= extlib,str,unix,json-wheel,uutf,zip
 
 ocamlfind ocamlopt song_exn.mli -o song_exn.cmi -package extlib
 
@@ -47,12 +47,15 @@ src[]=
 	generate
 	data_j
 	edit
+	utf8
+	package
+	css
 
 OCAML_CLIBS+= song_stub
 #OCAMLFLAGS+= -cclib -lfcgi
 OCAML_CLIBS+= /usr/local/lib/libfcgi
 
-build: $(OCamlProgram song,$(src) main)
+#build: $(OCamlProgram song,$(src) main)
 
 stub =   $(StaticCXXLibrary song_stub,fcgi_interface)
 stub_d = $(DynamicCXXLibrary song_stub,fcgi_interface)
@@ -64,7 +67,7 @@ build: $(OCamlProgram song-web,$(src) web )
 
 #build: $(OCamlProgram web-update,$(src) web_update )
 
-build: $(OCamlProgram do_nothing,song_exn util url_encode fcgi do_nothing )
+#build: $(OCamlProgram do_nothing,song_exn util url_encode fcgi do_nothing utf8 )
 
 
 #LocalOCamlGeneratedFiles(song_lex.ml song_bison.ml song_bison.mli)
@@ -78,3 +81,4 @@ build: $(OCamlProgram do_nothing,song_exn util url_encode fcgi do_nothing )
 
 
 
+build : $(OCamlProgram test_utf8,test_utf8)

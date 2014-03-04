@@ -7,8 +7,8 @@ let (//) = Filename.concat
 
 let log = Fcgi.log
 
-let render song  output_dir = __SONG__try "write lilypond" (
-  let filename = output_dir // ( song.Song.filename ^ ".ly") in
+let render world song   = __SONG__try "write lilypond" (
+  let filename = world.World.output_root // ( song.Song.filename ^ ".ly") in
   let () = log "writing %s..." filename in
 
   let fout =  open_out_bin filename in
@@ -26,7 +26,7 @@ let render song  output_dir = __SONG__try "write lilypond" (
     pf "bd4 sn4 bd4 sn4" ;
     pf "bd4 sn4 bd4 sn4" ;
     List.iter ( fun s ->
-      let section = PMap.find s.Structure.section_name song.Song.sections in
+      let section = List.find ( fun current -> current.Section.name = s.Structure.section_name) song.Song.sections in
 	List.iter ( fun c ->
 	  match c with
 	    | Section.NL -> ()
@@ -44,7 +44,7 @@ let render song  output_dir = __SONG__try "write lilypond" (
     pf "drh = \\drummode { " ; 
     (* 1 mesure vide au début *)
     List.iter ( fun s ->
-      let section = PMap.find s.Structure.section_name song.Song.sections in
+      let section = List.find ( fun current -> current.Section.name = s.Structure.section_name) song.Song.sections in
 	List.iter ( fun c ->
 	  match c with
 	    | Section.NL -> ()
@@ -77,7 +77,7 @@ harmonies = \\chordmode { " ;
     pf "r1 " ;
 
     List.iter ( fun s ->
-      let section = PMap.find s.Structure.section_name song.Song.sections in
+      let section = List.find ( fun current -> current.Section.name = s.Structure.section_name) song.Song.sections in
 	List.iter ( fun c ->
 	  match c with
 	    | Section.NL -> ()
@@ -140,7 +140,7 @@ harmonies = \\chordmode { " ;
     let commands = 
       try
 	let pacpl = Unix.getenv "PACPL" in
-	  (sprintf "%s --to mp3 \"%s.wav\"" pacpl (output_dir//song.Song.filename)) :: commands
+	  (sprintf "%s --to mp3 \"%s.wav\"" pacpl (world.World.output_root // song.Song.filename)) :: commands
       with
 	| Not_found -> (
 	    log "PACPL not found" ; commands
@@ -150,7 +150,7 @@ harmonies = \\chordmode { " ;
     let commands = 
       try
 	let timidity = Unix.getenv "TIMIDITY" in
-	  (sprintf "%s -Ow \"%s.midi\"" timidity (output_dir//song.Song.filename)) :: commands
+	  (sprintf "%s -Ow \"%s.midi\"" timidity (world.World.output_root // song.Song.filename)) :: commands
       with
 	| Not_found -> (
 	    log "TIMIDITY not found" ; commands
@@ -161,7 +161,7 @@ harmonies = \\chordmode { " ;
       try 
 	let lilypond = Unix.getenv "LILYPOND" in
 	  sprintf "%s --relocate --verbose --output \"%s\" \"%s.ly\" &> /var/log/lighttpd/lilypond-%s.log " 
-	    lilypond (output_dir//song.Song.filename) (output_dir//song.Song.filename) song.Song.filename :: commands
+	    lilypond (world.World.output_root//song.Song.filename) (world.World.output_root//song.Song.filename) song.Song.filename :: commands
       with
 	| Not_found -> (
 	    log "TIMIDITY not found" ; commands

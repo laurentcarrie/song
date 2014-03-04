@@ -3,9 +3,9 @@ open Printf
 open ExtString
 let (//) = Filename.concat
 
-let utf8_of_code codes = String.implode ( List.map Char.chr codes )
-
-let bemol = utf8_of_code [ 0xE2 ; 0x99 ; 0xAD ]
+type page_t = 
+    | On_line
+    | Off_line
 
 let int_of_string s =
   try int_of_string s with | e -> failwith("cannot convert '"^s^"' to an int")
@@ -90,75 +90,101 @@ module Json = struct
 
 end
 
+module Edit_type = struct
+  type t = 
+      | Textarea
+      | Select
+      | Text
+
+  let print p url song_path idtext field et = 
+    let pf fs = ksprintf p fs in
+    pf "<script>
+$(document).ready(function() {
+     $('#%s').editable('%s',
+{
+  indicator : 'Sauvegarde...',
+  tootip    : 'Cliquez pour éditer',
+  loadurl   : '/data.songx',
+  submit    : 'Ok',
+  cancel    : 'Annuler',
+" idtext   url
+      ;
+      (
+	let (a,b) = match et with
+	  | Textarea -> "textarea","textarea"
+	  | Select -> "select","select" 
+	  | Text -> "text","text"
+	in
+	  pf "
+  type      : '%s',
+  style     : 'editable-%s',
+" a b 
+      );
+      
+      pf "
+  rows      : 20,
+  loaddata  : function (value,settings) {
+      return { 
+        path:'%s',
+        field:'%s'
+    } ;
+  },
+  submitdata  : function (value,settings) {
+      return { 
+        path:'%s',
+        field:'%s'
+    } ;
+  },
+  data      : function(value, settings) {
+      console.log('data : ' + value) ;
+      return value ;
+  }
+}
+);
+ });
+</script>" 
+      (* load data *) song_path field
+      (* submit data *) song_path field
+
+end
 
 
+   
 
-let page = ref ""
-let print s = page := !page ^ s ^ "\n"
-let pf fs =  ksprintf ( fun s -> page := !page ^ s ^ "\n" ) fs
-let pfnl fs =  ksprintf ( fun s -> page := !page ^ s  ) fs
+let start_page code mime  =
+  let page = ref "" in
+  let print ?(nl=true) ?(space=true) s = 
+    page := !page ^ s ;
+    (if space then
+      page := !page  ^ " "  
+      else
+	()
+    ) ;
+    ( if nl then
+      page := !page ^ "\n"  
+      else
+	()
+    ) ;
+    ()
+  in
+  let end_page () = 
+    Fcgi.c_fcgi_print (sprintf "Status: %d\r\n" code) ;
+    Fcgi.c_fcgi_print (sprintf "Content-type: %s \r\n" mime) ;
+    Fcgi.c_fcgi_print (sprintf "Content-length: %d \r\n\r\n" (String.length !page)) ;
+    Fcgi.c_fcgi_print !page ;
+    page := "" ;
+    ()
+  in
+    print,end_page
 
 
-let start_page () =
-  page := ""
-    
-let start_html_page() = (
-  start_page () ;
+let start_html_page () = (
+  let (print,end_page) = start_page 200 "text/html" in
+  let pf fs = ksprintf print fs in
   pf "<html>" ;
   pf "<head>";
   pf "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />" ;
-  pf "<style>
-
-.edit {
-background:#eeeeee ;
-}
-
-.done-hide-me {
-visibility:hidden ;
-display:none ;
-}
-
-.hide-me {
-display:none ;
-}
-
-div.div-count {
-}
-
-p.div-title {
-font-style:italic;font-family:Georgia,Times,serif;font-size:1.5em ;
-color:#000000 ;
-}
-
-li.not_done {
-font-style:italic;font-family:Georgia,Times,serif;font-size:1em ;
-color:#bfe1f1 ;
-} 
-
-
-li.ok_generated {
-font-style:bold;font-family:Georgia,Times,serif;font-size:1em ;
-color:#330033 ;
-} 
-
-li.ok_unchanged {
-font-style:bold;font-family:Georgia,Times,serif;font-size:1em ;
-color:#888888 ;
-} 
-
-li.ok_failed {
-font-style:bold;font-family:Georgia,Times,serif;font-size:1em ;
-color:#ff0000 ;
-} 
-
-li.error {
-background-color : #ffcccc ;
-border: 1px solid #000000 ;
-list-style: none ;
-}
-
-
-</style>" ;
+  pf "<link rel=\"stylesheet\" href=\"/css.songx\"/>" ;
   pf "<script src=\"js/jquery-1.9.1.js\"></script>";
   pf "<script src=\"js/jquery-ui-1.10.1.custom.js\"></script>" ;
   pf "<script src=\"js/jquery.jeditable.js\" type=\"text/javascript\" charset=\"utf-8\"></script>" ;
@@ -172,72 +198,45 @@ function b64_to_utf8( str ) {
 } 
 </script>
 ";
+
+  let end_head () =
+    pf "
+</head>
+</body>
+"
+  in
+  let end_page () =
+    pf "
+</body>
+</html>
+" ;
+    end_page()
   
-  pf "<script>
-$(document).ready(function() {
-     $('.edit').editable('/internal-edit.songx',
-{
-  indicator : 'Sauvegarde...',
-  tootip    : 'Cliquez pour éditer',
-  submit    : 'Ok',
-  cancel    : 'Annuler',
-  type      : 'textarea',
-  rows      : 20,
-  submitdata  : function (value,settings) {
-      console.log(value) ;
-      console.log(utf8_to_b64(value)) ;
-      var binval = utf8_to_b64(value) ;
-      binval = binval.replace(/=/gi, '');
-      console.log(binval) ;
-//      $('#bin').text(utf8_to_b64(binval)) ;
-      return { b:binval , song:'song' } ;
-  },
-  data      : function(value, settings) {
-      /* Convert <br> to newline. */
-      var retval = value.replace(/<br[\\s\\/]?>/gi, '\\n');
-      retval = retval.replace(/<sub>(.*?)<\\/sub>/g, \"\\$1\");
-      retval = retval.replace(/<sup>%s<\\/sup>/g, 'b');
-      return retval ;
-  }
-}
-);
- });
-</script>" ;
+  in
+    print,end_head,end_page
 )
-bemol 
-
-let end_page code mime = 
-  (* Fcgi.log "%s" (!page) ; *)
-  Fcgi.c_fcgi_print (sprintf "Status: %d\r\n" code) ;
-  Fcgi.c_fcgi_print (sprintf "Content-type: %s \r\n" mime) ;
-  Fcgi.c_fcgi_print (sprintf "Content-length: %d \r\n\r\n" (String.length !page)) ;
-  Fcgi.c_fcgi_print !page ;
-  page := "" ;
-  ()
-
-let end_html_page () = end_page 200 "text/html"
-let end_text_page () = end_page 200 "text/plain"
 
 let json_page j =
-  start_page() ;
-  pf "%s" (Json_io.string_of_json j) ;
-  end_page 200  "text/json"
+  let (p,e) = start_page 200 "text/json" in
+  let pf fs = ksprintf p fs in
+    pf "%s" (Json_io.string_of_json j) ;
+    e ()
 
 let text_page text =
-  start_page() ;
-  pf "%s" text ;
-  end_page 200  "text/plain"
+  let (p,e) = start_page 200 "text/plain" in
+  let pf fs = ksprintf p fs in
+    pf "%s" text ;
+    e () 
     
 let page_404 s =
-  start_page () ;
-  pf  "<html><body>no such url : <br/>%s<br/></body></html>" s ;
-  end_page 404 "text/html" ;
-  ()
+  let (p,e) = start_page 400 "text/html" in
+  let pf fs = ksprintf p fs in
+    pf  "<html><body>no such url : <br/>%s<br/></body></html>" s ;
+    e ()
     
 let page_403 s =
-  start_page () ;
-  pf  "internal error : \n%s\n" s ;
-  end_page 403 "text/plain" ;
-  page := "" ;
-  ()
-   
+  let (p,e) = start_page 300 "text/plain" in
+  let pf fs = ksprintf p fs in
+    pf  "internal error : \n%s\n" s ;
+    e ()
+

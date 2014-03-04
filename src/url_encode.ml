@@ -113,13 +113,76 @@ let codes =
     "é","%E9" ;
     "ê","%EA" ;
   ]
+type status =
+    | Normal
+    | First
+    | Second of char
 
-let from_url s =
-  (* a optimiser *)
-  List.fold_left ( fun s (r,code) ->
-    Str.global_replace (Str.regexp_string code) r s
-  ) s codes
+let i_of_letter c = 
+  match c with
+    | '0' -> 0x00 
+    | '1' -> 0x01 
+    | '2' -> 0x02 
+    | '3' -> 0x03 
+    | '4' -> 0x04 
+    | '5' -> 0x05 
+    | '6' -> 0x06 
+    | '7' -> 0x07 
+    | '8' -> 0x08 
+    | '9' -> 0x09 
+    | 'A' -> 0x0A 
+    | 'B' -> 0x0B 
+    | 'C' -> 0x0C 
+    | 'D' -> 0x0D 
+    | 'E' -> 0x0E 
+    | 'F' -> 0x0F
+    | c    -> failwith ("bad letter : " ^ (Char.escaped c))
 
+(* conversion codage url -> utf8 *)
+let from_url s = 
+  let rec loop status chars buf count = match chars with
+    | [] -> Buffer.contents buf
+    | '+'::chars -> (
+	Buffer.add_char buf ' ' ;
+	loop status chars buf (count+1)
+      )
+    | c::chars -> ( match c with
+	| '%' -> (
+	    match status with
+	      | Normal -> loop First chars buf (count+1)
+	      | _ -> assert(false)
+	  )
+	| c  -> ( match status with
+	    | Normal -> Buffer.add_char buf c; loop Normal chars buf (count+1)
+	    | First  -> loop (Second c) chars buf (count+1)
+	    | Second u1 -> (* loop (Third (u1,c)) chars buf (count+1) *)
+		(
+		  let uu = 16*(i_of_letter u1) + (i_of_letter c) in
+		    Buffer.add_char buf (Char.chr uu) ; 
+		    loop Normal chars buf (count+1)
+		)
+	  )
+      )
+  in
+    loop Normal (String.explode s) (Buffer.create 512) 0
+      
+      
+      
+
+
+let f ?encoding (src : [`Channel of in_channel | `String of string]) =
+
+  let rec loop d buf count = match Uutf.decode d with 
+    | `Uchar u -> Uutf.Buffer.add_utf_8 buf u; loop d buf (count+1)
+    | `End -> Buffer.contents buf 
+    | `Malformed _ -> Uutf.Buffer.add_utf_8 buf Uutf.u_rep; loop d buf  (count+1)
+    | `Await -> assert false
+  in
+  let nln = `Readline 0x000A in
+    loop  (Uutf.decoder ~nln ?encoding src) (Buffer.create 512) 0
+      
+      
+      
 
 let to_url s = 
   List.fold_left ( fun acc s ->

@@ -18,12 +18,18 @@ module Note = struct
     ( if t.is_m then "m" else "")
     ( if t.is_sharp then "#" else "")
     ( if t.is_flat then "b" else "")
+  let text_name t duree = sprintf "%c%s%s%s\\%d" 
+    t.letter
+    ( if t.is_m then "m" else "")
+    ( if t.is_sharp then "#" else "")
+    ( if t.is_flat then "b" else "")
+    duree
   let html_name t duree = sprintf "%c%s%s%s%s" 
     t.letter
     ( if t.is_m then "m" else "")
     ( if t.is_sharp then "<sup>&#9839</sup>" else "")
     ( if t.is_flat then "<sup>&#x266d</sup>" else "")
-    ( sprintf "<sub>%d</sub>" duree )
+    (* ( sprintf "<sub>%d</sub>" duree ) *) ""
   let lilypond_name t duree = sprintf "%c%s%s%d%s" 
     (Char.lowercase t.letter)
     ( if t.is_sharp then "is" else "")
@@ -86,7 +92,7 @@ module Song = struct
     auteur : string ;
     filename : string ;
     format : string option ;
-    sections : (string,Section.t) PMap.t ;
+    sections : Section.t list ;
     structure : Structure.t list ;
     lyrics : Lyrics.t list ;
     outputs : Output.t list ;
@@ -114,7 +120,35 @@ let context = ref OUT_TEXT
 module World = struct
   type t = {
     songs : Song.t list ;
+    root : string ;        (* la racine du chemin de recherche des chansons, sur le disque *)
+    output_root : string ; (* la ou sont generes les fichiers *)
+    doc_root : string ;    (* le doc_root du server web *)
+    url_root : string ;    (* le chemin relatif pour l'url *)
+    root_path : string ;
   }
 end
 
-let world = ref { World.songs = [] }
+let (r_world:World.t option ref) = ref None
+  
+let world () = match !r_world with
+  | Some w -> w
+  | None   -> __SONG__failwith "World non défini"
+    
+
+let update_world world = 
+  r_world := Some world
+
+let update_world_songs songs =
+  let world = match !r_world with
+    | Some w ->  ( { w with World.songs = songs } )
+    | None   -> __SONG__failwith "World non défini"
+  in
+    r_world := Some world
+
+let add_world_song song =
+  let world = match !r_world with
+    | Some world ->  { world with World.songs = song::world.World.songs }
+    | None   -> __SONG__failwith "World non défini"
+  in
+    r_world := Some world
+

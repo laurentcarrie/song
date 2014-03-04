@@ -42,41 +42,38 @@ let parse_text s current = __SONG__try "parse text" (
   )
 )
 
-let read_file song filename = __SONG__try ("read_file ") (
-  let song = 
-    if Sys.file_exists filename then (
-      let fin = open_in_bin filename in
-      let rec read acc current linecount =
-	try
-	  let line  = input_line fin in
-	    match current,line with
-	      | None,"" -> read acc None (linecount+1)
-	      | None,line -> let current = Some { Output.filename=line ; col_1=[];col_2=[];width=20} in read acc current (linecount+1)
-	      | Some current,"" -> read (current::acc) None (linecount+1)
-	      | Some current,text ->let current = parse_text text current in read acc (Some current) (linecount+1)
-	with
-	  | End_of_file -> close_in fin ; 
-	      match current with
-		| None -> List.rev acc
-		| Some current -> List.rev (current::acc)
-      in
-      let data = read [] None 1 in
-	(*
-	  List.iter ( fun l ->
-	  printf "------------> %s\n" l.Data.Lyrics.name ;
-	  printf "-->\n%s\n" l.Data.Lyrics.text
-	  ) data ;
-	*)
-	{ song with Song.outputs = data }
-    )
-    else (
-	song
-    )
+let read_data song data = __SONG__try ("read_file ") (
+  let data = Str.split (Str.regexp "\n") data in
+  let rec read acc current linecount data =
+    match data with
+      | [] -> (
+	  match current with
+	    | None -> List.rev acc
+	    | Some current -> List.rev (current::acc)
+	)
+
+      | line::tl -> (
+	  match current,line with
+	    | None,"" -> read acc None (linecount+1) tl
+	    | None,line -> let current = Some { Output.filename=line ; col_1=[];col_2=[];width=20} in read acc current (linecount+1) tl
+	    | Some current,"" -> read (current::acc) None (linecount+1) tl
+	    | Some current,text ->let current = parse_text text current in read acc (Some current) (linecount+1) tl
+	)
   in
+  let data = read [] None 1 data in
+    (*
+      List.iter ( fun l ->
+      printf "------------> %s\n" l.Data.Lyrics.name ;
+      printf "-->\n%s\n" l.Data.Lyrics.text
+      ) data ;
+    *)
+  let song = { song with Song.outputs = data } in
+
 
   let std_outputs = [
     {
-      Output.filename = sprintf "%s-all" song.Song.filename ;
+      (* Output.filename = sprintf "%s-all" song.Song.filename ; *)
+      Output.filename = "all" ;
       col_1 = [ Output.L ; ]  ;
       col_2 = [ Output.G ; Output.S ] ;
       width = 25 ;
@@ -91,4 +88,12 @@ let read_file song filename = __SONG__try ("read_file ") (
   let song = { song with Song.outputs = song.Song.outputs @ std_outputs } in
     song
 
+)
+
+let read_file song filename = __SONG__try ("read_file ") (
+  if Sys.file_exists filename then (
+    read_data song (Std.input_file filename)
+  )
+  else
+    read_data song ""
 )

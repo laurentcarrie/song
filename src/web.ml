@@ -54,7 +54,8 @@ let main_loop  () = __SONG__try "main loop" (
 	match script_name with 
 	  | "/update.songx" -> (
 	      log "== BEGIN script : %s"  script_name ;
-	      let song_paths = Generate.find_all_songs ~plog:Fcgi.c_fcgi_log_string ~root in 
+	      (* let song_paths = Generate.find_all_songs ~plog:Fcgi.c_fcgi_log_string ~root in *)
+	      let song_paths = [] in
 	      let (print,end_head,end_page) = start_html_page () in
 	      let pf fs = ksprintf print fs in
 		pf "<script>
@@ -551,12 +552,14 @@ let _ = try
     )
     in
     let root = Sys.argv.(1) in
+    let root = normalize_path root in
     let () = if true then (
       eprintf "-- %s\n-- %s\n-- %s\n-- %s\n" doc_root relative_output_root root_path root
     ) else () in
       Fcgi.c_init () ;
-      let songs = Generate.find_all_songs ~plog:Fcgi.c_fcgi_log_string ~root in
-      let songs = List.map Generate.song_of_path songs in
+      (* let _ = __SONG__failwith "ici"  in *)
+      let (songs:Song.t list) = Rw.all_songs_from_root root in
+      (* let songs = List.map Generate.song_of_path songs in *)
       let world = {
 	World.songs = songs ;
 	root = normalize_path root ;

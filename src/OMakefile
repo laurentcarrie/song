@@ -50,6 +50,7 @@ src[]=
 	utf8
 	package
 	css
+	rw
 
 OCAML_CLIBS+= song_stub
 #OCAMLFLAGS+= -cclib -lfcgi

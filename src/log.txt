@@ -1,0 +1,31 @@
+
+http://stackoverflow.com/questions/20411450/ocaml-exposing-a-printf-function-in-an-objects-method
+
+class logger (name: string) =
+    object (self)
+    method logf : 'a. log_level -> ('a, unit, string, unit) format4 -> 'a =
+        fun lvl -> logf name lvl
+    end
+The extra syntax creates a so-called polymorphic method.
+
+Here's a session that shows it working:
+
+$ ocaml
+        OCaml version 4.00.1
+
+# #use "opf.ml";;
+type log_level = Error | Warn | Info
+val ord : log_level -> int = <fun>
+val current_level : int ref = {contents = 40}
+val logf : 'a -> log_level -> ('b, unit, string, unit) format4 -> 'b = <fun>
+class logger :
+  string ->
+  object
+    method logf : log_level -> ('a, unit, string, unit) format4 -> 'a
+  end
+# let l = new logger "name";;
+val l : logger = <obj>
+# l#logf Warn "Testing with %d %s" 88 "maybe";;
+Testing with 88 maybe
+- : unit = ()
+#

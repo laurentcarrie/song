@@ -106,6 +106,10 @@ let from_file filename = __SONG__try ("from file " ^ filename) (
 )
 
 let write_song song = __SONG__try "write" (
+  let () = 
+    let d = Filename.dirname song.D.Song.path in
+      mkdir d
+  in
   log "writing song to %s" song.D.Song.path ;
   let fout = open_out_bin song.D.Song.path in
   let print s = fprintf fout "%s" s in

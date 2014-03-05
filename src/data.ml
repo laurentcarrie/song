@@ -153,6 +153,16 @@ let update_world_errors errors =
   in
     r_world := Some world
 
+let update_song song = 
+  let world = world () in
+  let songs = List.fold_left ( fun acc s ->
+    let s = 
+      if s.Song.path = song.Song.path then song else s in
+      s::acc
+  ) [] world.World.songs in
+    r_world := Some { world with World.songs = songs }
+	
+
 
 let add_world_song song =
   let world = match !r_world with

@@ -364,27 +364,10 @@ background-color:#FFEEEE ;
 		      json_page j 
 		  )
 	    )
-(*
 	  | "/new.songx" -> ( 
 	      try
 		let world = D.world () in
-		let filename =  sprintf "random-%d" (Random.int 10000) in
-		let song = { 
-		  D.Song.title = "???????????????????????????" ;
-		  auteur = "???????????????????????????????" ;
-		  filename = filename ;
-		  format = None ;
-		  sections = [] ;
-		  structure = [] ;
-		  lyrics = [] ;
-		  outputs = [] ;
-		  tempo = 80 ;
-		  server_path = "xxx"  ;
-		  path = "xxxx" ;
-		} in
-		let () = mkdir  (root // filename) in
-		let () = Generate.write_song song (root // filename) in
-		  Edit.render world song 
+		  Edit.new_song world 
 	      with
 		| e -> (
 		    let msg = Song_exn.string_of_stack () in
@@ -396,7 +379,6 @@ background-color:#FFEEEE ;
 		      json_page j 
 		  )
 	    )
-*)
 	  | "/data.songx" -> (
 	      try
 		let world = D.world () in
@@ -463,6 +445,7 @@ background-color:#FFEEEE ;
 		  | s -> __SONG__failwith ("champ inconnu : " ^ field )
 		in
 		let () = Rw.write_song song in
+		let _ = D.update_song song in
 		(* let ((_:bool)) = Generate.generate_from_song ~world ~plog ~print:(fun _->()) ~path song in *)
 		  text_page html_textval
 	      with
@@ -499,8 +482,49 @@ background-color:#FFEEEE ;
 		      json_page j ;
 		  )
 	    )
+	  | "/internal-new.songx" -> ( 
+	      try
+		let world = D.world () in 
+		let params = Fcgi.get_post_params() in
+		let path = __SONG__try "get path" (List.assoc "path" params) in
+		let path = normalize_path (world.D.World.root // (path ^ ".song")) in
+		let () = try
+		    let (_:D.Song.t) = List.find ( fun s -> 
+		      log "compare\n'%s' and\n'%s'" s.D.Song.path path ;
+		      s.D.Song.path = path ) world.D.World.songs in
+		      __SONG__failwith ("il y a dejà un morceau pour ce chemin")
+		  with
+		    | Not_found -> ()
+		in
+		let song = {
+		  D.Song.title = "???????????????????????" ;
+		  auteur = "???????????????????????" ;
+		  format = None ;
+		  sections = [] ;
+		  structure = [] ;
+		  lyrics = [] ;
+		  outputs = [] ;
+		  tempo = 80 ;
+		  server_path = "" ;
+		  path = path ;
+		} in
+		let songs = song::world.D.World.songs in
+		let () = Rw.write_song song in
+		  D.update_world_songs songs ;
+		  text_page (sprintf "ok, %s is now valid" (strip_root world path)) 
+	      with
+		| e -> (
+		    let msg = Song_exn.string_of_stack () in
+		    let () = Song_exn.clear_stack () in
+		    let j = Json_type.Build.objekt [
+		      "success",Json_type.Build.bool false ;
+		      "msg",Json_type.Build.string msg ;
+		    ] in
+		      json_page j ;
+		  )
+	    )
 	  | s -> ( log "no such page : %s" s  ; page_404 s )
-
+	      
     with
       | e -> (
 	  let msg = Song_exn.html_string_of_stack () in

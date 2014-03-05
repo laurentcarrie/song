@@ -54,7 +54,6 @@ let from_file filename = __SONG__try ("from file " ^ filename) (
   let song = {
     D.Song.title = "xxxxxxxxxxx" ;
     auteur = "xxxxxxxxxxxxxxx" ;
-    filename = "xxxxxxxxxxxxxx" ;
     format = None ;
     sections = [] ;
     structure = [] ;
@@ -66,14 +65,25 @@ let from_file filename = __SONG__try ("from file " ^ filename) (
   } in
   let find (z:Read.t) = 
     let acc = List.fold_left ( fun acc (t,data) -> 
-      if t = z then acc ^ data else acc
-    ) "" zones 
+      if t = z then 
+	match acc with
+	  | None -> Some data
+	  | Some s -> Some (s^data)
+      else 
+	acc
+    ) None zones 
     in
       acc
   in
-  let song = Lyrics.update_data song (find Lyrics) in
-  let song = Grille.update_data song (find Grille) in
-  let song = Info.update_data song   (find Info) in
+  let find_or_default z = match find z with | None -> "" | Some s -> s in
+  let song = Lyrics.update_data song (find_or_default Lyrics) in
+  let song = Grille.update_data song (find_or_default Grille) in
+  let song = 
+    match find Info with
+      | None -> __SONG__failwith "section info non trouvée, ( === BEGIN INFO === ..... === END INFO === )" 
+      | Some info ->  Info.update_data song  info
+  in
+  let song = Structure.update_data song (find_or_default Structure) in
   let song = 
     let std_outputs = [
       {
@@ -127,14 +137,14 @@ let find_all_songs root = __SONG__try "find all songs" (
 let all_songs_from_root root =  __SONG__try "all_songs_from_root" (
   log "all_songs_from_root"  ;
   let paths = find_all_songs root in
-    List.fold_left ( fun acc path ->
+    List.fold_left ( fun (songs,errors) path ->
       try
-	(from_file path)::acc
+	(from_file path)::songs,errors
       with
 	| e -> 
 	    let msg = Song_exn.string_of_stack () in
 	    let ()  = Song_exn.clear_stack () in
 	    let () = log "ERROR : %s" msg in
-	      acc
-    ) [] paths
+	      songs,path::errors
+    ) ([],[]) paths
 )

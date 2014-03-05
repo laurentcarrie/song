@@ -11,14 +11,13 @@ let int_of_string s =
 
 
 type check = {
-  has_filename : bool ;
   has_title : bool ;
   has_auteur : bool ;
 }
 
 
 let update_data song data = __SONG__try "update_data" (
-  let check = { has_filename=false;has_title=false;has_auteur=false}  in
+  let check = { has_title=false;has_auteur=false}  in
 
   let rec read (song,check) data linecount =
     match data with
@@ -39,7 +38,6 @@ let update_data song data = __SONG__try "update_data" (
 	      | "\\titre" | "\\title"   -> { song with D.Song.title=String.strip data },{ check with has_title=true }
 	      | "\\auteur" | "\\author" -> { song with D.Song.auteur=String.strip data },{ check with has_auteur=true }
 	      | "\\tempo"  -> { song with D.Song.tempo=int_of_string (String.strip data) },check
-	      | "\\filename"  -> { song with D.Song.filename=String.strip data } , { check with has_filename = true }
 	      | s -> __SONG__failwith ("unknown keyword : '" ^ s ^ "'")
 	    in
 	      read (song,check) tl (linecount+1)
@@ -48,7 +46,6 @@ let update_data song data = __SONG__try "update_data" (
   in
   let (song,check) = read (song,check) (Str.split (Str.regexp "\n") data) 1 in
   let () = if not check.has_title then __SONG__failwith ("\\titre non défini") else () in
-  let () = if not check.has_filename then __SONG__failwith ("\\filename non défini") else () in
   let () = if not check.has_auteur then __SONG__failwith ("\\auteur non défini") else () in
     song
 )

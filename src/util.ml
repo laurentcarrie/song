@@ -23,6 +23,7 @@ let path_to_list p = __SONG__try ("path_to_list " ^ p) (
   let l = r p [] in
   let (l,_) = List.fold_left ( fun (acc,skip) s ->
     match skip,s with
+      | skip , "." -> acc,skip
       | false,".." -> acc,true
       | false,s    -> s::acc,false
       | true,".."  -> acc,true
@@ -96,19 +97,22 @@ module Edit_type = struct
       | Select
       | Text
 
-  let print p url song_path idtext field et = 
+  let print ~loadurl p url song_path idtext field et = 
     let pf fs = ksprintf p fs in
-    pf "<script>
+      pf "<script>
 $(document).ready(function() {
      $('#%s').editable('%s',
 {
   indicator : 'Sauvegarde...',
   tootip    : 'Cliquez pour éditer',
-  loadurl   : '/data.songx',
+"  idtext   url  ;
+      pf "
+  loadurl   : '%s',
+" loadurl ;
+      pf"
   submit    : 'Ok',
   cancel    : 'Annuler',
-" idtext   url
-      ;
+" ;
       (
 	let (a,b) = match et with
 	  | Textarea -> "textarea","textarea"
@@ -239,4 +243,6 @@ let page_403 s =
   let pf fs = ksprintf p fs in
     pf  "internal error : \n%s\n" s ;
     e ()
-
+      
+let strip_root world s =
+  Str.global_replace (Str.regexp (Str.quote world.World.root)) "" s

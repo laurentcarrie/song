@@ -8,7 +8,7 @@ let (//) = Filename.concat
 let log = Fcgi.log
 
 let render world song   = __SONG__try "write lilypond" (
-  let filename = world.World.output_root // ( song.Song.filename ^ ".ly") in
+  let filename = world.World.output_root // ((Filename.basename song.Song.path) ^ ".ly") in
   let () = log "writing %s..." filename in
 
   let fout =  open_out_bin filename in
@@ -136,11 +136,11 @@ harmonies = \\chordmode { " ;
 
       
     let commands = [] in
-
+    let filename = Filename.basename song.Song.path in
     let commands = 
       try
 	let pacpl = Unix.getenv "PACPL" in
-	  (sprintf "%s --to mp3 \"%s.wav\"" pacpl (world.World.output_root // song.Song.filename)) :: commands
+	  (sprintf "%s --to mp3 \"%s.wav\"" pacpl (world.World.output_root // filename)) :: commands
       with
 	| Not_found -> (
 	    log "PACPL not found" ; commands
@@ -150,7 +150,7 @@ harmonies = \\chordmode { " ;
     let commands = 
       try
 	let timidity = Unix.getenv "TIMIDITY" in
-	  (sprintf "%s -Ow \"%s.midi\"" timidity (world.World.output_root // song.Song.filename)) :: commands
+	  (sprintf "%s -Ow \"%s.midi\"" timidity (world.World.output_root // filename)) :: commands
       with
 	| Not_found -> (
 	    log "TIMIDITY not found" ; commands
@@ -161,7 +161,7 @@ harmonies = \\chordmode { " ;
       try 
 	let lilypond = Unix.getenv "LILYPOND" in
 	  sprintf "%s --relocate --verbose --output \"%s\" \"%s.ly\" &> /var/log/lighttpd/lilypond-%s.log " 
-	    lilypond (world.World.output_root//song.Song.filename) (world.World.output_root//song.Song.filename) song.Song.filename :: commands
+	    lilypond (world.World.output_root//filename) (world.World.output_root//filename) filename :: commands
       with
 	| Not_found -> (
 	    log "TIMIDITY not found" ; commands

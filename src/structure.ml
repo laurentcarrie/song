@@ -3,28 +3,26 @@ open ExtString
 
 module D = Data
 
-let read_file song filename = __SONG__try "read_file" (
-  let fin = open_in_bin filename in
-  let rec read acc current linecount =
-    try
-      let line  = String.strip (input_line fin) in
-	match current,line with
-	  | None,"" -> read acc None (linecount+1)
-	  | None,line -> let current = Some { D.Structure.section_name=line ; comment="";} in read acc current (linecount+1)
-	  | Some current,"" -> read (current::acc) None (linecount+1)
-	  | Some current,text ->let current = { current with D.Structure.comment=current.D.Structure.comment^line^"\n" } in read acc (Some current) (linecount+1)
-    with
-      | End_of_file -> close_in fin ; 
+let update_data song data = __SONG__try "update_data" (
+  let data = Str.split (Str.regexp "\n") data in
+  let rec read acc current data linecount =
+    match data with
+      | [] -> (
 	  match current with
 	    | None -> List.rev acc
 	    | Some current -> List.rev (current::acc)
+	)
+      | line::tl -> (
+	  let line  = String.strip line in
+	    match current,line with
+	      | None,"" -> read acc None tl (linecount+1)
+	      | None,line -> let current = Some { D.Structure.section_name=line ; comment="";} in read acc current tl (linecount+1)
+	      | Some current,"" -> read (current::acc) None tl (linecount+1)
+	      | Some current,text ->let current = { current with D.Structure.comment=current.D.Structure.comment^line^"\n" } in 
+				      read acc (Some current) tl (linecount+1)
+	)
   in
-  let data = read [] None 1 in
-    (*
-      List.iter ( fun l ->
-      printf "structure ----------> %s\n" l.Structure.section_name ;
-      printf "-->\n%s\n" l.Structure.comment
-      ) data ;
-    *)
+  let data = read [] None data 1 in
     { song with D.Song.structure=data }
 )
+

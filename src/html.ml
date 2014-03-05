@@ -191,22 +191,23 @@ let render_output world print song output onoff = __SONG__try "render_html" (
   )
   in
 
+  let filename = strip_root world song.D.Song.path in
       
   let () = match onoff with
       | On_line -> (
-	  pf "<a href=\"/index.songx#song-%s\">index</a>" song.D.Song.filename ;
+	  pf "<a href=\"/index.songx#song-%s\">index</a>" filename ;
 	  pf "<a href=\"/edit.songx?path=%s\">edit</a>" song.D.Song.path ;
 	  List.iter ( fun o ->
 	    pf "<a href=\"%s.html\">(%s)</a>" o.D.Output.filename o.D.Output.filename
 	  ) song.D.Song.outputs ;
-	  pf "<a href=\"%s.midi\"><span class=\"index-title\">(midi)</span></a>" song.D.Song.filename ;
-	  pf "<a href=\"%s.wav\"><span class=\"index-title\">(wav)</span></a>" song.D.Song.filename ;
-	  pf "<a href=\"%s.mp3\"><span class=\"index-title\">(mp3)</span></a>" song.D.Song.filename ;
-	  pf "<a href=\"%s.pdf\"><span class=\"index-title\">(pdf)</span></a>" song.D.Song.filename ;
+	  pf "<a href=\"%s.midi\"><span class=\"index-title\">(midi)</span></a>" filename ;
+	  pf "<a href=\"%s.wav\"><span class=\"index-title\">(wav)</span></a>" filename ;
+	  pf "<a href=\"%s.mp3\"><span class=\"index-title\">(mp3)</span></a>" filename ;
+	  pf "<a href=\"%s.pdf\"><span class=\"index-title\">(pdf)</span></a>" filename ;
 	  pf "<br/>" ;
 	)
       | Off_line -> (
-	  pf "<a href=\"../index.html#song-%s\">index</a>" song.D.Song.filename ;
+	  pf "<a href=\"../index.html#song-%s\">index</a>" filename ;
 	  pf "<br/>" ;
 	)
   in

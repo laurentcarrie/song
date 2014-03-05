@@ -181,7 +181,7 @@ module Song = struct
       {
 	title = Br.string (Br.field table "title") ;
 	auteur = Br.string (Br.field table "auteur") ;
-	filename = Br.string (Br.field table "filename") ;
+(*	filename = Br.string (Br.field table "filename") ; *)
 	format = None ;
 	sections =  Br.list Section.of_json (Br.field table "sections" )  ;
 	structure = Br.list Structure.of_json (Br.field table "structure") ;
@@ -197,7 +197,7 @@ module Song = struct
     Bu.objekt [
       "title",Bu.string t.title ;
       "auteur",Bu.string t.auteur ;
-      "filename",Bu.string t.filename ;
+      (* "filename",Bu.string t.filename ; *)
       "sections",Bu.list Section.to_json t.sections  ;
       "structure",Bu.list Structure.to_json t.structure ;
       "lyrics",Bu.list Lyrics.to_json t.lyrics ;

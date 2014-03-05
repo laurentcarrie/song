@@ -46,6 +46,11 @@ font-style:bold;font-family:Georgia,Times,serif;font-size:1em ;
 color:#888888 ;
 } 
 
+.error-msg {
+font-style:bold;font-family:Georgia,Times,serif;font-size:1em ;
+color:#ff0000 ;
+} 
+
 li.ok_failed {
 font-style:bold;font-family:Georgia,Times,serif;font-size:1em ;
 color:#ff0000 ;

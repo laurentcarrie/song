@@ -90,7 +90,7 @@ module Song = struct
   type t = {
     title : string ;
     auteur : string ;
-    filename : string ;
+(*    filename : string ; *)
     format : string option ;
     sections : Section.t list ;
     structure : Structure.t list ;
@@ -120,6 +120,7 @@ let context = ref OUT_TEXT
 module World = struct
   type t = {
     songs : Song.t list ;
+    errors : string list ;
     root : string ;        (* la racine du chemin de recherche des chansons, sur le disque *)
     output_root : string ; (* la ou sont generes les fichiers *)
     doc_root : string ;    (* le doc_root du server web *)
@@ -144,6 +145,14 @@ let update_world_songs songs =
     | None   -> __SONG__failwith "World non défini"
   in
     r_world := Some world
+
+let update_world_errors errors =
+  let world = match !r_world with
+    | Some w ->  ( { w with World.errors = errors } )
+    | None   -> __SONG__failwith "World non défini"
+  in
+    r_world := Some world
+
 
 let add_world_song song =
   let world = match !r_world with

@@ -1,6 +1,7 @@
-open Data
 open Printf
 open Util
+
+module D = Data
 
 let (//) = Filename.concat
 
@@ -9,7 +10,7 @@ let make_zip world print = __SONG__try "make_zip" (
   let pf fs = ksprintf print fs in
 
 
-    let zf = __SONG__try "create zip file" (Zip.open_out (world.World.doc_root // "download" // "songs.zip")) in
+    let zf = __SONG__try "create zip file" (Zip.open_out (world.D.World.doc_root // "download" // "songs.zip")) in
 
       (
 	let buf = Buffer.create 1024 in
@@ -45,10 +46,11 @@ let make_zip world print = __SONG__try "make_zip" (
 " ;
 	    let () = Html.render_output world print song output Off_line in
 	    let data = Buffer.contents buf in
-	    let filename = song.Song.filename // (sprintf "%s.html" output.Output.filename) in
+	    let filename = strip_root world song.D.Song.path in
+	    let filename = filename // (sprintf "%s.html" output.D.Output.filename) in
 	      Zip.add_entry data zf filename
-	) song.Song.outputs
-      ) world.World.songs ;
+	) song.D.Song.outputs
+      ) world.D.World.songs ;
       
       Zip.close_out zf ;
 

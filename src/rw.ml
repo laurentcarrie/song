@@ -106,12 +106,27 @@ let from_file filename = __SONG__try ("from file " ^ filename) (
 )
 
 let write_song song = __SONG__try "write" (
+  log "writing song to %s" song.D.Song.path ;
   let fout = open_out_bin song.D.Song.path in
-  let print s = fprintf fout "%s\n" s in
-  let pf fs = ksprintf print fs in
-    pf "=== BEGIN LYRICS ===" ;
+  let print s = fprintf fout "%s" s in
+  (* let pf fs = ksprintf print fs in *)
+  let pfnl fs = ksprintf ( fun s -> print s ; print "\n") fs in
+    pfnl "=== BEGIN INFO ===" ;
+    Info.to_print print song ;
+    pfnl "=== END INFO ===" ;
+
+    pfnl "=== BEGIN LYRICS ===" ;
     Lyrics.to_print print song ;
-    pf "=== END LYRICS ===" ;
+    pfnl "=== END LYRICS ===" ;
+
+    pfnl "=== BEGIN GRILLE ===" ;
+    Grille.to_print print song ;
+    pfnl "=== END GRILLE ===" ;
+
+    pfnl "=== BEGIN STRUCTURE ===" ;
+    Structure.to_print print song ;
+    pfnl "=== END STRUCTURE ===" ;
+    close_out fout
 )
   
 let find_all_songs root = __SONG__try "find all songs" (

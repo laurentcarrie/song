@@ -3,6 +3,14 @@ open ExtString
 
 module D = Data
 
+let to_print print song = __SONG__try "to_string" (
+  let pf fs = ksprintf print fs in
+    List.iter ( fun s ->
+      pf "%s\n" s.D.Structure.section_name ;
+      pf "%s\n" s.D.Structure.comment ;
+    ) song.D.Song.structure
+)
+
 let update_data song data = __SONG__try "update_data" (
   let data = Str.split (Str.regexp "\n") data in
   let rec read acc current data linecount =

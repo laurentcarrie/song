@@ -180,7 +180,8 @@ let render_output world print song output onoff = __SONG__try "render_html" (
     let count = ref 1 in
       List.iter ( fun s ->
 	let sname = s.D.Structure.section_name in
-	let s = List.find ( fun current -> current.D.Section.name = sname) song.D.Song.sections in
+	let s = try List.find ( fun current -> current.D.Section.name = sname) song.D.Song.sections with
+	  | Not_found -> __SONG__failwith ("pas de structure nommee " ^ sname )in
 	let l = length_of_section s in
 	let count2 = !count + l in 
 	  (* pf "<li class=\"structure-list\">%s  (%d : %d &rarr; %d) </li>\n" s.D.Section.name l (!count/4+1) (count2/4) ; *)

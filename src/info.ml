@@ -15,6 +15,12 @@ type check = {
   has_auteur : bool ;
 }
 
+let to_print print song = __SONG__try "to_string" (
+  let pf fs = ksprintf print fs in
+    pf "\\titre %s\n" song.D.Song.title ;
+    pf "\\auteur %s\n" song.D.Song.auteur ;
+    pf "\\tempo %d\n" song.D.Song.tempo ;
+)
 
 let update_data song data = __SONG__try "update_data" (
   let check = { has_title=false;has_auteur=false}  in

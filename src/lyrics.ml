@@ -3,6 +3,8 @@ open ExtString
 
 module D = Data
 
+let log fs = ksprintf Fcgi.c_fcgi_log_string fs
+
 let update_data song data = __SONG__try "read_file" (
   let data = Str.split (Str.regexp "\n") data in
   let rec read acc current linecount data =
@@ -21,6 +23,7 @@ let update_data song data = __SONG__try "read_file" (
 	)
   in
   let data = read [] None 1 data in
+  let () = log "lyrics update data to %s" (String.join "\n" (List.map ( fun l -> l.D.Lyrics.text ) data)) in
     { song with D.Song.lyrics = data }
 )
 

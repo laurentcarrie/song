@@ -2,7 +2,7 @@ open Util
 open Printf
 open ExtString
 open ExtList
-open Data
+module D = Data
 
 module Read = struct
   type t = 
@@ -20,7 +20,7 @@ open Read
 
 let log = Fcgi.log
 
-let from_file filename = __SONG__try "from file" (
+let from_file filename = __SONG__try ("from file " ^ filename) (
   let split filename =
     let fin = open_in_bin filename in
     let rec split acc status = 
@@ -52,7 +52,7 @@ let from_file filename = __SONG__try "from file" (
   in
   let zones = split filename in
   let song = {
-    Song.title = "xxxxxxxxxxx" ;
+    D.Song.title = "xxxxxxxxxxx" ;
     auteur = "xxxxxxxxxxxxxxx" ;
     filename = "xxxxxxxxxxxxxx" ;
     format = None ;
@@ -71,8 +71,37 @@ let from_file filename = __SONG__try "from file" (
     in
       acc
   in
-  let song = Lyrics_of_file.update_data song (find Lyrics) in
+  let song = Lyrics.update_data song (find Lyrics) in
+  let song = Grille.update_data song (find Grille) in
+  let song = Info.update_data song   (find Info) in
+  let song = 
+    let std_outputs = [
+      {
+	(* Output.filename = sprintf "%s-all" song.Song.filename ; *)
+	D.Output.filename = "all" ;
+	col_1 = [ D.Output.L ; ]  ;
+	col_2 = [ D.Output.G ; D.Output.S ] ;
+	width = 25 ;
+      } ; 
+      {
+	D.Output.filename = "grille" ;
+	col_1 = [ D.Output.G ; ]  ;
+	col_2 = [ D.Output.S ] ;
+	width = 25 ;
+      } ; 
+    ] in
+      { song with D.Song.outputs = std_outputs }
+  in
     song
+)
+
+let write_song song = __SONG__try "write" (
+  let fout = open_out_bin song.D.Song.path in
+  let print s = fprintf fout "%s\n" s in
+  let pf fs = ksprintf print fs in
+    pf "=== BEGIN LYRICS ===" ;
+    Lyrics.to_print print song ;
+    pf "=== END LYRICS ===" ;
 )
   
 let find_all_songs root = __SONG__try "find all songs" (
@@ -95,9 +124,17 @@ let find_all_songs root = __SONG__try "find all songs" (
     find [] root
 )
 
-let all_songs_from_root root : Song.t list =  __SONG__try "all_songs_from_root" (
+let all_songs_from_root root =  __SONG__try "all_songs_from_root" (
   log "all_songs_from_root"  ;
   let paths = find_all_songs root in
-    List.map from_file paths
-    
+    List.fold_left ( fun acc path ->
+      try
+	(from_file path)::acc
+      with
+	| e -> 
+	    let msg = Song_exn.string_of_stack () in
+	    let ()  = Song_exn.clear_stack () in
+	    let () = log "ERROR : %s" msg in
+	      acc
+    ) [] paths
 )

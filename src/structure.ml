@@ -1,7 +1,7 @@
-open Data
 open Printf
 open ExtString
 
+module D = Data
 
 let read_file song filename = __SONG__try "read_file" (
   let fin = open_in_bin filename in
@@ -10,9 +10,9 @@ let read_file song filename = __SONG__try "read_file" (
       let line  = String.strip (input_line fin) in
 	match current,line with
 	  | None,"" -> read acc None (linecount+1)
-	  | None,line -> let current = Some { Structure.section_name=line ; comment="";} in read acc current (linecount+1)
+	  | None,line -> let current = Some { D.Structure.section_name=line ; comment="";} in read acc current (linecount+1)
 	  | Some current,"" -> read (current::acc) None (linecount+1)
-	  | Some current,text ->let current = { current with Structure.comment=current.Structure.comment^line^"\n" } in read acc (Some current) (linecount+1)
+	  | Some current,text ->let current = { current with D.Structure.comment=current.D.Structure.comment^line^"\n" } in read acc (Some current) (linecount+1)
     with
       | End_of_file -> close_in fin ; 
 	  match current with
@@ -26,5 +26,5 @@ let read_file song filename = __SONG__try "read_file" (
       printf "-->\n%s\n" l.Structure.comment
       ) data ;
     *)
-    { song with Song.structure=data }
+    { song with D.Song.structure=data }
 )

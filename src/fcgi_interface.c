@@ -129,7 +129,7 @@ value fcgi_input(value olength) {
   // fcgi_log2("not enough read, %d, %d",nbread,length) ;
   // }
   header[length] = '\0' ;
-  fcgi_log1("FCFI input : %s",header) ;
+  fcgi_log1("FCGI input : %s",header) ;
   CAMLlocal1(ret) ;
   ret = caml_copy_string(header); 
   CAMLreturn(ret) ;

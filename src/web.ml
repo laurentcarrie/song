@@ -517,7 +517,8 @@ background-color:#FFEEEE ;
 		let world = D.world () in 
 		let params = Fcgi.get_post_params() in
 		let path = __SONG__try "get path" (List.assoc "path" params) in
-		let whole_path = normalize_path (world.D.World.root // (path ^ ".song")) in
+		let () = log "root = '%s'" world.D.World.root in 
+		let whole_path = __SONG__try "normalize path" (normalize_path (world.D.World.root // (path ^ ".song"))) in
 		let () = try
 		    let (_:D.Song.t) = List.find ( fun s -> 
 		      log "compare\n'%s' and\n'%s'" s.D.Song.path whole_path ;
@@ -536,12 +537,12 @@ background-color:#FFEEEE ;
 		  outputs = [] ;
 		  lilyponds = [] ;
 		  tempo = 80 ;
-		  path = path ;
+		  path = whole_path ;
 		} in
 		let songs = song::world.D.World.songs in
-		let () = Rw.write_song song in
+		let () = __SONG__try "write" (Rw.write_song song) in
 		  D.update_world_songs songs ;
-		  text_page (sprintf "ok, %s is now valid" (strip_root world path)) 
+		  text_page (sprintf "ok, %s is now valid" (strip_root world whole_path)) 
 	      with
 		| e -> (
 		    let msg = Song_exn.string_of_stack () in

@@ -110,6 +110,10 @@ let from_file filename = __SONG__try ("from file " ^ filename) (
 )
 
 let write_song song = __SONG__try "write" (
+  let () = if Filename.is_relative song.D.Song.path then
+    __SONG__failwith ("cannot write to relative path : " ^ song.D.Song.path)
+  else ()
+  in
   let () = 
     let d = Filename.dirname song.D.Song.path in
       mkdir d

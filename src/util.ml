@@ -12,8 +12,6 @@ type page_t =
 let int_of_string s =
   try int_of_string s with | e -> failwith("cannot convert '"^s^"' to an int")
 
-
-
 let path_to_list p = __SONG__try ("path_to_list " ^ p) (
   if Filename.is_relative p then __SONG__failwith "is_relative" else () ;
   let rec r current acc = 
@@ -34,8 +32,8 @@ let path_to_list p = __SONG__try ("path_to_list " ^ p) (
     l
 )
 
-let normalize_path p = 
-  List.fold_left ( fun acc d -> acc // d ) "/" (path_to_list p)
+let normalize_path p = __SONG__try ("normalize_path " ^ p) (
+  List.fold_left ( fun acc d -> acc // d ) "/" (path_to_list p))
 
 
 
@@ -254,5 +252,6 @@ let page_403 s =
     pf  "internal error : \n%s\n" s ;
     e ()
       
-let strip_root world s =
+let strip_root world s = __SONG__try "strip_root" (
   String.strip ~chars:"/" (normalize_path (Str.global_replace (Str.regexp (Str.quote world.World.root)) "" s))
+)

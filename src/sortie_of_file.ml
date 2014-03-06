@@ -61,12 +61,6 @@ let read_data song data = __SONG__try ("read_file ") (
 	)
   in
   let data = read [] None 1 data in
-    (*
-      List.iter ( fun l ->
-      printf "------------> %s\n" l.Data.Lyrics.name ;
-      printf "-->\n%s\n" l.Data.Lyrics.text
-      ) data ;
-    *)
   let song = { song with Song.outputs = data } in
 
 
@@ -79,7 +73,7 @@ let read_data song data = __SONG__try ("read_file ") (
       width = 25 ;
     } ; 
     {
-      Output.filename = sprintf "%s-grille" song.Song.filename ;
+      Output.filename = sprintf "grille" ;
       col_1 = [ Output.G ; ]  ;
       col_2 = [ Output.S ] ;
       width = 25 ;

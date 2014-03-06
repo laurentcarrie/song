@@ -46,6 +46,11 @@ font-style:bold;font-family:Georgia,Times,serif;font-size:1em ;
 color:#888888 ;
 } 
 
+.error-msg {
+font-style:bold;font-family:Georgia,Times,serif;font-size:1em ;
+color:#ff0000 ;
+} 
+
 li.ok_failed {
 font-style:bold;font-family:Georgia,Times,serif;font-size:1em ;
 color:#ff0000 ;
@@ -165,6 +170,17 @@ padding : 10px ;
 }
 
 div.lyrics
+{
+padding:10px;
+/* border:5px solid gray; */
+margin:0px;
+}
+
+.lilyponds-list {
+padding : 10px ;
+}
+
+div.lilyponds
 {
 padding:10px;
 /* border:5px solid gray; */

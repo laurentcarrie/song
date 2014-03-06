@@ -125,13 +125,16 @@ module Output = struct
       | "L" -> L
       | "G" -> G
       | "S" -> S
+      | "Y" -> Lily
       | s -> __SONG__failwith s
   )
   let json_of_col c = 
     Bu.string (match c with
       | L -> "L"
       | G -> "G"
-      | S -> "S")
+      | S -> "S"
+      | Lily -> "Y"
+    )
 
 
   let of_json j = __SONG__try "of_json" (
@@ -173,6 +176,25 @@ module Structure = struct
   )
 end
 
+module Lilypond = struct
+  include Data.Lilypond 
+  let of_json j = __SONG__try "of_json" (
+    let j = Br.objekt j in
+    let table = Br.make_table j in
+      {
+	name = string_field table "name" ;
+	data = string_field table "data" ;
+      }
+  )
+  let to_json t = __SONG__try "to_json" (
+    Bu.objekt [
+      "name",Bu.string t.name ;
+      "data",Bu.string t.data ;
+    ]
+  )
+end
+ 
+
 module Song = struct 
   include Data.Song
   let of_json j = __SONG__try "song_of_json" (
@@ -181,15 +203,14 @@ module Song = struct
       {
 	title = Br.string (Br.field table "title") ;
 	auteur = Br.string (Br.field table "auteur") ;
-	filename = Br.string (Br.field table "filename") ;
 	format = None ;
 	sections =  Br.list Section.of_json (Br.field table "sections" )  ;
 	structure = Br.list Structure.of_json (Br.field table "structure") ;
 	lyrics = Br.list Lyrics.of_json (Br.field table "lyrics") ;
 	outputs = Br.list Output.of_json (Br.field table "outputs") ;
+	lilyponds = Br.list Lilypond.of_json (Br.field table "lilyponds") ;
 	tempo = Br.int (Br.field table "tempo") ;
 	path = Br.string (Br.field table "path") ;
-	server_path = Br.string (Br.field table "server_path") ;
       }
   )
 
@@ -197,14 +218,13 @@ module Song = struct
     Bu.objekt [
       "title",Bu.string t.title ;
       "auteur",Bu.string t.auteur ;
-      "filename",Bu.string t.filename ;
       "sections",Bu.list Section.to_json t.sections  ;
       "structure",Bu.list Structure.to_json t.structure ;
       "lyrics",Bu.list Lyrics.to_json t.lyrics ;
       "outputs",Bu.list Output.to_json t.outputs ;
+      "lilyponds",Bu.list Lilypond.to_json t.lilyponds ; 
       "tempo",Bu.int t.tempo ;
       "path",Bu.string t.path ;
-      "server_path",Bu.string t.server_path ;
     ]
   )
 

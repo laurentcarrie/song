@@ -1,8 +1,0 @@
-\titre Hey, Brother
-
-\auteur avicii
-
-\tempo 90
-
-\filename avicii-hey-brother
-

@@ -3,6 +3,8 @@ open Printf
 open ExtString
 let (//) = Filename.concat
 
+let log = Fcgi.log
+
 type page_t = 
     | On_line
     | Off_line
@@ -23,6 +25,7 @@ let path_to_list p = __SONG__try ("path_to_list " ^ p) (
   let l = r p [] in
   let (l,_) = List.fold_left ( fun (acc,skip) s ->
     match skip,s with
+      | skip , "." -> acc,skip
       | false,".." -> acc,true
       | false,s    -> s::acc,false
       | true,".."  -> acc,true
@@ -96,19 +99,22 @@ module Edit_type = struct
       | Select
       | Text
 
-  let print p url song_path idtext field et = 
+  let print ~loadurl p url song_path idtext field et = 
     let pf fs = ksprintf p fs in
-    pf "<script>
+      pf "<script>
 $(document).ready(function() {
      $('#%s').editable('%s',
 {
   indicator : 'Sauvegarde...',
   tootip    : 'Cliquez pour éditer',
-  loadurl   : '/data.songx',
+"  idtext   url  ;
+      pf "
+  loadurl   : '%s',
+" loadurl ;
+      pf"
   submit    : 'Ok',
   cancel    : 'Annuler',
-" idtext   url
-      ;
+" ;
       (
 	let (a,b) = match et with
 	  | Textarea -> "textarea","textarea"
@@ -219,6 +225,14 @@ function b64_to_utf8( str ) {
 let json_page j =
   let (p,e) = start_page 200 "text/json" in
   let pf fs = ksprintf p fs in
+  let s = Json_io.string_of_json j in
+    log "send json : %s" s ;
+    pf "%s" s ;
+    e ()
+
+let json_error_page j =
+  let (p,e) = start_page 404 "text/json" in
+  let pf fs = ksprintf p fs in
     pf "%s" (Json_io.string_of_json j) ;
     e ()
 
@@ -239,4 +253,6 @@ let page_403 s =
   let pf fs = ksprintf p fs in
     pf  "internal error : \n%s\n" s ;
     e ()
-
+      
+let strip_root world s =
+  String.strip ~chars:"/" (normalize_path (Str.global_replace (Str.regexp (Str.quote world.World.root)) "" s))

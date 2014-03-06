@@ -18,7 +18,6 @@ let manage_song dirname  =
     let song = { Song.title="???" ; Song.auteur="???" ; filename = "no-filename-" ^ (string_of_int (Random.int 1000))  ; format=None ; sections=[] ; structure=[];lyrics=[];outputs=[];
 		 tempo = 80  ;
 		 path = "XXXXXXXXXXXXXXXXX" ; 
-		 server_path = "YYYYYYYYYYYYYYY" ; 
 	
     } in
     let song = Grille_of_file.read_file song (dirname // "grille.txt") in

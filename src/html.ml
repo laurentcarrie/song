@@ -1,16 +1,10 @@
-open Data
 open Printf
 open ExtList
 open Util
+module D = Data
 
 let (//) = Filename.concat
 
-let length_of_section s =
-  List.fold_left ( fun acc c -> acc + 
-    match c with
-      | Section.NL -> 0
-      | Section.C c -> c.Chord.length 
-  ) 0 s.Section.chords
 
 module PMap = struct 
   include PMap
@@ -174,39 +168,24 @@ let render_output world print song output onoff = __SONG__try "render_html" (
     
   let pf fs = ksprintf print fs in
     
-  let print_structure () = __SONG__try "print_structure" (
-    pf "<h2>structure</h2>\n" ;
-    pf "<ol class=\"structure-list\">\n" ;
-    let count = ref 1 in
-      List.iter ( fun s ->
-	let sname = s.Structure.section_name in
-	let s = List.find ( fun current -> current.Section.name = sname) song.Song.sections in
-	let l = length_of_section s in
-	let count2 = !count + l in 
-	  (* pf "<li class=\"structure-list\">%s  (%d : %d &rarr; %d) </li>\n" s.Section.name l (!count/4+1) (count2/4) ; *)
-	  pf "<li class=\"structure-list\">%s</li>\n" s.Section.name ; 
-	  count := count2  ;
-      ) song.Song.structure ;
-      pf "</ol>\n" ;
-  )
-  in
 
+  let filename = strip_root world song.D.Song.path in
       
   let () = match onoff with
       | On_line -> (
-	  pf "<a href=\"/index.songx#song-%s\">index</a>" song.Song.filename ;
-	  pf "<a href=\"/edit.songx?path=%s\">edit</a>" song.Song.path ;
+	  pf "<a href=\"/index.songx#song-%s\">index</a>" filename ;
+	  pf "<a href=\"/edit.songx?path=%s\">edit</a>" song.D.Song.path ;
 	  List.iter ( fun o ->
-	    pf "<a href=\"%s.html\">(%s)</a>" o.Output.filename o.Output.filename
-	  ) song.Song.outputs ;
-	  pf "<a href=\"%s.midi\"><span class=\"index-title\">(midi)</span></a>" song.Song.filename ;
-	  pf "<a href=\"%s.wav\"><span class=\"index-title\">(wav)</span></a>" song.Song.filename ;
-	  pf "<a href=\"%s.mp3\"><span class=\"index-title\">(mp3)</span></a>" song.Song.filename ;
-	  pf "<a href=\"%s.pdf\"><span class=\"index-title\">(pdf)</span></a>" song.Song.filename ;
+	    pf "<a href=\"%s.html\">(%s)</a>" o.D.Output.filename o.D.Output.filename
+	  ) song.D.Song.outputs ;
+	  pf "<a href=\"%s.midi\"><span class=\"index-title\">(midi)</span></a>" filename ;
+	  pf "<a href=\"%s.wav\"><span class=\"index-title\">(wav)</span></a>" filename ;
+	  pf "<a href=\"%s.mp3\"><span class=\"index-title\">(mp3)</span></a>" filename ;
+	  pf "<a href=\"%s.pdf\"><span class=\"index-title\">(pdf)</span></a>" filename ;
 	  pf "<br/>" ;
 	)
       | Off_line -> (
-	  pf "<a href=\"../index.html#song-%s\">index</a>" song.Song.filename ;
+	  pf "<a href=\"../index.html#song-%s\">index</a>" filename ;
 	  pf "<br/>" ;
 	)
   in
@@ -215,9 +194,9 @@ let render_output world print song output onoff = __SONG__try "render_html" (
 
 <div id=\"frame-title\">
 
-<div class=\"title\">%s</div>\n" song.Song.title ;
+<div class=\"title\">%s</div>\n" song.D.Song.title ;
       pf "\
-<div class=\"auteur\">%s</div>\n" song.Song.auteur ;
+<div class=\"auteur\">%s</div>\n" song.D.Song.auteur ;
 
 pf "
 <!-- frame-title -->
@@ -226,9 +205,10 @@ pf "
     let pp =
       List.iter ( fun s ->
 		    match s with
-		      | Data.Output.L -> Lyrics_of_file.to_html_print print song ;
-		      | Data.Output.G -> Grille_of_file.to_html_print print song ;
-		      | Data.Output.S -> print_structure () ;
+		      | D.Output.L -> Lyrics.to_html_print print song ;
+		      | D.Output.G -> Grille.to_html_print print song ;
+		      | D.Output.S -> Structure.to_html_print print song ;
+		      | D.Output.Lily -> Lilypond.to_html_print print onoff world song ;
 		) 
     in
 
@@ -236,12 +216,12 @@ pf "
 <div id=\"main\">
 <div id=\"col_1\">
 " ;
-      pp output.Output.col_1 ;
+      pp output.D.Output.col_1 ;
 pf "
 </div>
 <div id=\"col_2\">
 " ;
-pp output.Output.col_2 ;
+pp output.D.Output.col_2 ;
 pf "
 </div>
 </div>
@@ -253,7 +233,7 @@ pf "
 
 (*
 let render_html world print song  = __SONG__try ("render_html ") (
-  match song.Song.outputs with
+  match song.D.Song.outputs with
     | [] -> log "%s" "no output defined,... you will get no html file\n"
     | outputs -> (
 	List.iter ( fun output ->

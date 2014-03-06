@@ -1,62 +1,38 @@
-\song {
-
-    \song_title{"Personal Jesus"}
-
-\section{
-    Riff1
-    \e \f \c \d
-    }
-
-\section{
-    Riff2
-    \e \f \c \d
-    }
+=== BEGIN INFO ===
+\titre Personal Jesus
+\auteur Depeche Mode
+=== END INFO ===
 
 
-\structure {
-    Riff1
-    Riff2
-    Riff1
-    }
+=== BEGIN GRILLE ===
+riff 1
+E F C D
 
-\lyrics {
-Riff1
-Your own, personal, Jesus
-Someone to hear your prayers
-}
+riff 2
+E F C D
+=== END GRILLE ===
 
-\lyrics{
-Riff2
-Someone who cares
-}
-
-\lyrics{
-Riff1
-Your own, personal, Jesus
-Someone to hear your prayers,
-}
-
-\lyrics{
-Riff2
-Someone who's there
-}
-
-\lyrics{
-Riff1
+=== BEGIN LYRICS ===
+couplet
 Feeling unknown
 And you're all alone,
 Flesh and bone, By the telephone,
 Lift up the receiver,
 I'll make you a believer
-}
 
-\lyrics{
-Riff1
+couplet
 Take second best,
 Put me to the test,
 Things on your chest, You need to confess,
 I will deliver,
 You know i'm a forgiver
-}
+=== END LYRICS ===
 
-}
+ 
+=== BEGIN STRUCTURE ===
+riff 1
+
+riff 2
+
+riff 1
+=== END STRUCTURE ===

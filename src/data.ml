@@ -71,11 +71,19 @@ module Output = struct
     | L (* lyrics *)
     | G (* grille *)
     | S (* structure *)
+    | Lily (* lilypond *)
   type t = {
     filename : string ;
     col_1 : w list ;
     col_2 : w list ;
     width : int ;
+  }
+end
+
+module Lilypond = struct
+  type t = {
+    name : string ;
+    data : string ;
   }
 end
 
@@ -90,16 +98,14 @@ module Song = struct
   type t = {
     title : string ;
     auteur : string ;
-    filename : string ;
     format : string option ;
     sections : Section.t list ;
     structure : Structure.t list ;
     lyrics : Lyrics.t list ;
     outputs : Output.t list ;
     tempo : int ;
-    server_path : string ;
     path : string ;
-    (* lyrics : (string (* nom de la section *) * ((int option*string) list)) list ; *)
+    lilyponds : Lilypond.t list ;
   }
 
 end
@@ -120,6 +126,7 @@ let context = ref OUT_TEXT
 module World = struct
   type t = {
     songs : Song.t list ;
+    errors : string list ;
     root : string ;        (* la racine du chemin de recherche des chansons, sur le disque *)
     output_root : string ; (* la ou sont generes les fichiers *)
     doc_root : string ;    (* le doc_root du server web *)
@@ -144,6 +151,24 @@ let update_world_songs songs =
     | None   -> __SONG__failwith "World non défini"
   in
     r_world := Some world
+
+let update_world_errors errors =
+  let world = match !r_world with
+    | Some w ->  ( { w with World.errors = errors } )
+    | None   -> __SONG__failwith "World non défini"
+  in
+    r_world := Some world
+
+let update_song song = 
+  let world = world () in
+  let songs = List.fold_left ( fun acc s ->
+    let s = 
+      if s.Song.path = song.Song.path then song else s in
+      s::acc
+  ) [] world.World.songs in
+    r_world := Some { world with World.songs = songs }
+	
+
 
 let add_world_song song =
   let world = match !r_world with

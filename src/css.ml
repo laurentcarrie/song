@@ -176,6 +176,17 @@ padding:10px;
 margin:0px;
 }
 
+.lilyponds-list {
+padding : 10px ;
+}
+
+div.lilyponds
+{
+padding:10px;
+/* border:5px solid gray; */
+margin:0px;
+}
+
 .lyrics-beat {
 /* color:#ff0000 ; */
 text-decoration:underline ;

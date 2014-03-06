@@ -352,7 +352,7 @@ background-color:#FFEEEE ;
 		let params = Fcgi.parse_query_string () in
 		let path = __SONG__try "path" ( List.assoc "path" params) in
 		let song = List.find ( fun s -> s.D.Song.path = path ) world.D.World.songs in
-		  Edit.render world song 
+		  Edit.render world On_line song 
 	      with
 		| e -> (
 		    let msg = Song_exn.string_of_stack () in
@@ -391,6 +391,7 @@ background-color:#FFEEEE ;
 		    | "lyrics" -> Lyrics.to_string song
 		    | "titre" -> song.D.Song.title
 		    | "auteur" -> song.D.Song.auteur
+		    | "lilyponds" -> Lilypond.to_string song
 (*		    | "filename" -> song.D.Song.filename*)
 		    | "tempo" -> string_of_int song.D.Song.tempo
 		    | s -> __SONG__failwith ("champ inconnu : " ^ field )
@@ -400,11 +401,13 @@ background-color:#FFEEEE ;
 		| e -> (
 		    let msg = Song_exn.string_of_stack () in
 		    let () = Song_exn.clear_stack () in
-		    let j = Json_type.Build.objekt [
-		      "success",Json_type.Build.bool false ;
-		      "msg",Json_type.Build.string msg ;
-		    ] in
-		      json_page j 
+		      (*
+			let j = Json_type.Build.objekt [
+			"success",Json_type.Build.bool false ;
+			"msg",Json_type.Build.string msg ;
+			] in
+		      *)
+		      text_page msg
 		  )
 	    )
 	  | "/data-error.songx" -> (
@@ -441,6 +444,7 @@ background-color:#FFEEEE ;
 		  | "tempo" -> let song = { song with D.Song.tempo = int_of_string textval } in song,textval
 		  | "titre" -> let song = { song with D.Song.title = textval } in song,textval
 		  | "auteur" -> let song = { song with D.Song.auteur = textval } in song,textval
+		  | "lilyponds" -> let song = Lilypond.update_data song textval in song,Lilypond.to_html world On_line song
 (*		  | "filename" -> let song = { song with D.Song.filename = textval } in song,textval*)
 		  | s -> __SONG__failwith ("champ inconnu : " ^ field )
 		in
@@ -448,6 +452,32 @@ background-color:#FFEEEE ;
 		let _ = D.update_song song in
 		(* let ((_:bool)) = Generate.generate_from_song ~world ~plog ~print:(fun _->()) ~path song in *)
 		  text_page html_textval
+	      with
+		| e -> (
+		    let msg = Song_exn.string_of_stack () in
+		    let () = Song_exn.clear_stack () in
+		    let j = Json_type.Build.objekt [
+		      "success",Json_type.Build.bool false ;
+		      "msg",Json_type.Build.string msg ;
+		    ] in
+		      json_page j ;
+		  )
+	    )
+	  | "/json-of.songx" -> ( 
+	      try
+		let world = D.world () in 
+		let params = Fcgi.parse_query_string () in
+		let path = __SONG__try "get % path" (List.assoc "path" params) in
+		let path = normalize_path (world.D.World.root // path) in
+		  log "json-of , path = '%s'" path ;
+		let song = __SONG__try "find song" (List.find ( fun s -> s.D.Song.path = path ) world.D.World.songs) in
+		let j = Data_j.Song.to_json song in
+		let s = Json_io.string_of_json j in
+		  log "j = %s ; size %d" s (String.length s) ;
+		  if false then
+		    text_page "hello world" 
+		  else
+		    json_page j
 	      with
 		| e -> (
 		    let msg = Song_exn.string_of_stack () in
@@ -487,12 +517,12 @@ background-color:#FFEEEE ;
 		let world = D.world () in 
 		let params = Fcgi.get_post_params() in
 		let path = __SONG__try "get path" (List.assoc "path" params) in
-		let path = normalize_path (world.D.World.root // (path ^ ".song")) in
+		let whole_path = normalize_path (world.D.World.root // (path ^ ".song")) in
 		let () = try
 		    let (_:D.Song.t) = List.find ( fun s -> 
-		      log "compare\n'%s' and\n'%s'" s.D.Song.path path ;
-		      s.D.Song.path = path ) world.D.World.songs in
-		      __SONG__failwith ("il y a dejà un morceau pour ce chemin")
+		      log "compare\n'%s' and\n'%s'" s.D.Song.path whole_path ;
+		      s.D.Song.path = whole_path ) world.D.World.songs in
+		      __SONG__failwith ("il y a dejà un morceau pour ce chemin : " ^ path )
 		  with
 		    | Not_found -> ()
 		in
@@ -504,8 +534,8 @@ background-color:#FFEEEE ;
 		  structure = [] ;
 		  lyrics = [] ;
 		  outputs = [] ;
+		  lilyponds = [] ;
 		  tempo = 80 ;
-		  server_path = "" ;
 		  path = path ;
 		} in
 		let songs = song::world.D.World.songs in

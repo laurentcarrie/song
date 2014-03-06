@@ -3,6 +3,8 @@ open Printf
 open ExtString
 let (//) = Filename.concat
 
+let log = Fcgi.log
+
 type page_t = 
     | On_line
     | Off_line
@@ -223,6 +225,14 @@ function b64_to_utf8( str ) {
 let json_page j =
   let (p,e) = start_page 200 "text/json" in
   let pf fs = ksprintf p fs in
+  let s = Json_io.string_of_json j in
+    log "send json : %s" s ;
+    pf "%s" s ;
+    e ()
+
+let json_error_page j =
+  let (p,e) = start_page 404 "text/json" in
+  let pf fs = ksprintf p fs in
     pf "%s" (Json_io.string_of_json j) ;
     e ()
 
@@ -245,4 +255,4 @@ let page_403 s =
     e ()
       
 let strip_root world s =
-  Str.global_replace (Str.regexp (Str.quote world.World.root)) "" s
+  String.strip ~chars:"/" (normalize_path (Str.global_replace (Str.regexp (Str.quote world.World.root)) "" s))

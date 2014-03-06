@@ -23,7 +23,6 @@ let update_data song data = __SONG__try "read_file" (
 	)
   in
   let data = read [] None 1 data in
-  let () = log "lyrics update data to %s" (String.join "\n" (List.map ( fun l -> l.D.Lyrics.text ) data)) in
     { song with D.Song.lyrics = data }
 )
 

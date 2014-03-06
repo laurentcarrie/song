@@ -1,9 +1,12 @@
 open Printf
 open Util
+open ExtList
 
 module D = Data
 
 let (//) = Filename.concat
+
+let log = Fcgi.log
 
 let make_zip world print = __SONG__try "make_zip" (
   
@@ -34,6 +37,8 @@ let make_zip world print = __SONG__try "make_zip" (
       ) ;
 
       List.iter ( fun song ->
+
+
 	List.iter ( fun output ->
 	  let buf = Buffer.create 1024 in
 	  let print = Buffer.add_string buf in
@@ -49,7 +54,22 @@ let make_zip world print = __SONG__try "make_zip" (
 	    let filename = strip_root world song.D.Song.path in
 	    let filename = filename // (sprintf "%s.html" output.D.Output.filename) in
 	      Zip.add_entry data zf filename
-	) song.D.Song.outputs
+	) song.D.Song.outputs ;
+
+	let base = strip_root world song.D.Song.path in
+	List.iteri ( fun index lily ->
+	  let filename = sprintf "%s/tmp/%s-%d.png" world.D.World.doc_root base index in
+	    try
+	      Zip.copy_file_to_entry filename zf (sprintf "%s/%s-%d.png" base base index)
+	    with
+	      | e -> 
+		  let msg = Song_exn.string_of_stack () in
+		  let () = Song_exn.clear_stack () in
+		  let () = log "ERROR : %s" msg in
+		    ()
+	) song.D.Song.lilyponds ;
+
+	  
       ) world.D.World.songs ;
       
       Zip.close_out zf ;

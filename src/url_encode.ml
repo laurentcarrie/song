@@ -1,4 +1,5 @@
 open ExtString
+open Printf
 
 let codes =
   [
@@ -181,14 +182,10 @@ let f ?encoding (src : [`Channel of in_channel | `String of string]) =
   let nln = `Readline 0x000A in
     loop  (Uutf.decoder ~nln ?encoding src) (Buffer.create 512) 0
       
-      
-      
+
 
 let to_url s = 
-  List.fold_left ( fun acc s ->
-    try 
-      acc ^ (List.assoc (String.of_char s) codes)
-    with
-      | Not_found -> acc ^ (String.of_char s)
+  List.fold_left ( fun acc c ->
+    sprintf "%s%%%02x" acc (Char.code c)
   ) "" (String.explode s)
 

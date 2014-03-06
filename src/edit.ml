@@ -9,7 +9,7 @@ let (//) = Filename.concat
 
 let log = Fcgi.log
 
-let render world song   = __SONG__try "render_html" (
+let render world onoff song   = __SONG__try "render_html" (
   let (p,end_head,end_page) = start_html_page () in
   let pf fs = ksprintf (p ~nl:true) fs in
 (*   let pfnnl fs = ksprintf (p ~nl:false) fs in *)
@@ -20,6 +20,7 @@ let render world song   = __SONG__try "render_html" (
     Edit_type.print ~loadurl:"data.songx" p "/internal-edit.songx" song.D.Song.path "edit-tempo" "tempo" Edit_type.Text;
     Edit_type.print ~loadurl:"data.songx" p "/internal-edit.songx" song.D.Song.path "edit-lyrics" "lyrics" Edit_type.Textarea ;
     Edit_type.print ~loadurl:"data.songx" p "/internal-edit.songx" song.D.Song.path "edit-grille" "grille" Edit_type.Textarea ;
+    Edit_type.print ~loadurl:"data.songx" p "/internal-edit.songx" song.D.Song.path "edit-lilyponds" "lilyponds" Edit_type.Textarea ;
 
     let filename = strip_root world song.D.Song.path in
 
@@ -48,6 +49,12 @@ let render world song   = __SONG__try "render_html" (
     pf "<a name='grille'>(cliquez pour éditer)</a>" ;
     pf "<div class=\"edit edit-grille\" id='edit-grille'>" ;
     Grille.to_html_print p song ;
+    pf "</div>" ;
+
+    plinks() ;
+    pf "<a name='lilyponds'>(cliquez pour éditer)</a>" ;
+    pf "<div class=\"edit edit-lilyponds\" id='edit-lilyponds'>" ;
+    Lilypond.to_html_print p onoff world song ;
     pf "</div>" ;
     
     end_page ()
@@ -220,6 +227,7 @@ let new_song world = __SONG__try "new song" (
               })
               .done(function (data) {
                   console.log('data : ' + data.success) ;
+                  if ( ! data.success ) { alert(data.msg) ; }
               }) 
               .fail(function () {
                   alert('error')

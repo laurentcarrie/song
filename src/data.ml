@@ -71,11 +71,19 @@ module Output = struct
     | L (* lyrics *)
     | G (* grille *)
     | S (* structure *)
+    | Lily (* lilypond *)
   type t = {
     filename : string ;
     col_1 : w list ;
     col_2 : w list ;
     width : int ;
+  }
+end
+
+module Lilypond = struct
+  type t = {
+    name : string ;
+    data : string ;
   }
 end
 
@@ -90,16 +98,14 @@ module Song = struct
   type t = {
     title : string ;
     auteur : string ;
-(*    filename : string ; *)
     format : string option ;
     sections : Section.t list ;
     structure : Structure.t list ;
     lyrics : Lyrics.t list ;
     outputs : Output.t list ;
     tempo : int ;
-    server_path : string ;
     path : string ;
-    (* lyrics : (string (* nom de la section *) * ((int option*string) list)) list ; *)
+    lilyponds : Lilypond.t list ;
   }
 
 end

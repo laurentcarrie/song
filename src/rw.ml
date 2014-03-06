@@ -10,6 +10,7 @@ module Read = struct
       | Lyrics
       | Grille
       | Structure
+      | Lilypond
 	  
   type r = 
       | Normal
@@ -33,12 +34,14 @@ let from_file filename = __SONG__try ("from file " ^ filename) (
 	    | Normal,"=== BEGIN LYRICS ==="   -> split acc (Zone(Lyrics,""))
 	    | Normal,"=== BEGIN GRILLE ==="   -> split acc (Zone(Grille,""))
 	    | Normal,"=== BEGIN STRUCTURE ==="   -> split acc (Zone(Structure,""))
+	    | Normal,"=== BEGIN LILYPONDS ==="   -> split acc (Zone(Lilypond,""))
 	    | Normal,"" -> split acc Normal
 	    | Normal,line -> log "ligne hors zone : %s"  line ; split acc Normal
 
 	    | Zone (Read.Info,i)  ,"=== END INFO ==="   -> split ((Info,i)::acc) Normal
 	    | Zone (Read.Lyrics,i),"=== END LYRICS ==="   -> split ((Lyrics,i)::acc) Normal
 	    | Zone (Read.Grille,i),"=== END GRILLE ==="   -> split ((Grille,i)::acc) Normal
+	    | Zone (Read.Lilypond,i),"=== END LILYPONDS ==="   -> split ((Lilypond,i)::acc) Normal
 	    | Zone (Read.Structure,i),"=== END STRUCTURE ==="   -> split ((Structure,i)::acc) Normal
 	    | Zone (z,i),line ->             split acc (Zone (z,i^"\n"^line))
       with
@@ -59,8 +62,8 @@ let from_file filename = __SONG__try ("from file " ^ filename) (
     structure = [] ;
     lyrics = [] ;
     outputs = [] ;
+    lilyponds = [] ;
     tempo = 80 ;
-    server_path = "xxxxxxxxxxxxxxx" ;
     path = filename 
   } in
   let find (z:Read.t) = 
@@ -78,6 +81,7 @@ let from_file filename = __SONG__try ("from file " ^ filename) (
   let find_or_default z = match find z with | None -> "" | Some s -> s in
   let song = Lyrics.update_data song (find_or_default Lyrics) in
   let song = Grille.update_data song (find_or_default Grille) in
+  let song = Lilypond.update_data song (find_or_default Lilypond) in
   let song = 
     match find Info with
       | None -> __SONG__failwith "section info non trouvée, ( === BEGIN INFO === ..... === END INFO === )" 
@@ -90,7 +94,7 @@ let from_file filename = __SONG__try ("from file " ^ filename) (
 	(* Output.filename = sprintf "%s-all" song.Song.filename ; *)
 	D.Output.filename = "all" ;
 	col_1 = [ D.Output.L ; ]  ;
-	col_2 = [ D.Output.G ; D.Output.S ] ;
+	col_2 = [ D.Output.G ; D.Output.S ; D.Output.Lily ] ;
 	width = 25 ;
       } ; 
       {
@@ -130,6 +134,9 @@ let write_song song = __SONG__try "write" (
     pfnl "=== BEGIN STRUCTURE ===" ;
     Structure.to_print print song ;
     pfnl "=== END STRUCTURE ===" ;
+
+    Lilypond.to_print print song ;
+
     close_out fout
 )
   

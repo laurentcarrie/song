@@ -72,7 +72,7 @@ let write_index print world onoff = __SONG__try "index" (
       List.iter ( fun (s,_) -> log "auteur : %s" s ) songs_assoc
     ) ;
     
-    
+    pf "<a name='top' />" ;
     let () = match onoff with
       | On_line -> (
 	  pf "<a href='/download.songx'>Télécharger sous forme d'un fichier zip</a><br/>"  ;
@@ -93,7 +93,7 @@ let write_index print world onoff = __SONG__try "index" (
     pf "<div id=\"list5\" class=\"index-alphabet\">" ;
     pf "<ul class=\"index-alphabet\">"; 
     List.iter ( fun (letter,l) ->
-      pf "<li>%c</li>\n" letter ;
+      pf "<li><a href='#top'>%c</a></li>\n" letter ;
       pf "<ul  class=\"index-auteur\">" ;
       let l = List.sort ~cmp:( fun (a1,_) (a2,_) -> String.compare a1 a2) l in
       List.iter ( fun (auteur,songs) ->

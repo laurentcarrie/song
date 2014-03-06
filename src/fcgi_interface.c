@@ -12,7 +12,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-#define MAX_LENGTH_HEADER 100000
+#define MAX_LENGTH_HEADER 1000000
 
 
 FILE * flog = 0 ;
@@ -56,8 +56,7 @@ CAMLprim
 value fcgi_print(value os) {
   CAMLparam1(os) ;
   const char* s = String_val(os) ;
-  printf(s) ;
-  // fcgi_log0(s) ;
+  printf("%s",s) ;
   CAMLreturn(Val_unit) ;
 }
 

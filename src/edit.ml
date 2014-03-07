@@ -80,7 +80,7 @@ let errors world    = __SONG__try "errors" (
 	  let (_:D.Song.t) = Rw.from_file path in ""
 	with
 	  | e ->
-	      let msg = Song_exn.string_of_stack () in
+	      let msg = Song_exn.string_of_stack e in
 	      let () = Song_exn.clear_stack () in
 		msg
       in

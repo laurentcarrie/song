@@ -58,17 +58,22 @@ let make_zip world print = __SONG__try "make_zip" (
 
 	let base = strip_root world song.D.Song.path in
 	List.iteri ( fun index lily ->
-	  let filename = sprintf "%s/tmp/%s-%d.png" world.D.World.doc_root base index in
-	    try
-	      Zip.copy_file_to_entry filename zf (sprintf "%s/%s-%d.png" base base index)
-	    with
-	      | e -> 
-		  let msg = Song_exn.string_of_stack () in
-		  let () = Song_exn.clear_stack () in
-		  let () = log "ERROR : %s" msg in
-		    ()
+	  match lily.D.Lilypond.status with
+	    | D.Lilypond.Ok filename -> (
+		let filename = sprintf "%s/tmp/%s" world.D.World.doc_root filename in
+		  try
+		    Zip.copy_file_to_entry filename zf (sprintf "%s/%s" base (Filename.basename filename))
+		  with
+		    | e -> 
+			let msg = Song_exn.string_of_stack e in
+			let () = Song_exn.clear_stack () in
+			let () = log "ERROR : %s" msg in
+			  ()
+	      )
+	    | D.Lilypond.Error _ -> ()
+	    | D.Lilypond.Unknown -> log "in package, UNKNOWN status found ????"
 	) song.D.Song.lilyponds ;
-
+	  
 	  
       ) world.D.World.songs ;
       

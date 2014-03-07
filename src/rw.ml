@@ -135,24 +135,29 @@ let write_song song = __SONG__try "write" (
     Structure.to_print print song ;
     pfnl "=== END STRUCTURE ===" ;
 
+    pfnl "=== BEGIN LILYPONDS ===" ;
     Lilypond.to_print print song ;
+    pfnl "=== END LILYPONDS ===" ;
 
     close_out fout
 )
   
 let find_all_songs root = __SONG__try "find all songs" (
   let rec find acc root =
-    let dirs = Sys.readdir root in
-    let dirs = Array.to_list dirs in
+    let dirs = __SONG__try "readdir" (Sys.readdir root) in
+    let dirs = __SONG__try "to list" ( Array.to_list dirs) in
       List.fold_left ( fun acc d ->
 	let d = root//d in
 	let () = log "Reading directory %s" d in
 	let acc = (
-	  if  Sys.is_directory d then (
-	    find acc d
-	  ) else (
-	    if Filename.check_suffix d ".song" then  d :: acc  else acc
-	  )
+	  try
+	    if  __SONG__try "is_directory" (Sys.is_directory d) then (
+	      find acc d
+	    ) else (
+	      if __SONG__try "check_suffix" (Filename.check_suffix d ".song") then  d :: acc  else acc
+	    )
+	  with
+	    | Sys_error e -> log "error : %s" e ; acc
 	) in
 	  acc
       ) acc dirs 
@@ -168,7 +173,7 @@ let all_songs_from_root root =  __SONG__try "all_songs_from_root" (
 	(from_file path)::songs,errors
       with
 	| e -> 
-	    let msg = Song_exn.string_of_stack () in
+	    let msg = Song_exn.string_of_stack e in
 	    let ()  = Song_exn.clear_stack () in
 	    let () = log "ERROR : %s" msg in
 	      songs,path::errors

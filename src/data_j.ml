@@ -178,17 +178,32 @@ end
 
 module Lilypond = struct
   include Data.Lilypond 
+
   let of_json j = __SONG__try "of_json" (
     let j = Br.objekt j in
     let table = Br.make_table j in
       {
-	name = string_field table "name" ;
 	data = string_field table "data" ;
+	status = match string_field table "status" with
+	  | "ok" -> Ok ( string_field table "status_data")
+	  | "unknown" -> Unknown
+	  | "error" -> Error ( string_field table "status_data")
+	  | s -> __SONG__failwith ("unvalid value for status : " ^ s )
       }
   )
   let to_json t = __SONG__try "to_json" (
+	
     Bu.objekt [
-      "name",Bu.string t.name ;
+      "status",Bu.string (match t.status with
+	| Ok _ -> "ok"
+	| Unknown -> "unknown"
+	| Error _ -> "error")
+      ;
+      "status_data",Bu.string (match t.status with
+	| Ok s -> s
+	| Unknown -> ""
+	| Error s -> s )
+      ;
       "data",Bu.string t.data ;
     ]
   )

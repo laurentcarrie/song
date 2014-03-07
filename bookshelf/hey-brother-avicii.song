@@ -68,9 +68,14 @@ refrain
 couplet
 
 === END STRUCTURE ===
-=== BEGIN LILYPONDS ====== BEGIN LILYPONDS ====== BEGIN LILYPONDS ====== BEGIN LILYPONDS ====== BEGIN LILYPONDS ===
+=== BEGIN LILYPONDS ===
+
+
+
+
+
 \version "2.12.3"
-\include "predefined-guitar-fretboards.lyx"
+\include "predefined-guitar-fretboards.ly"
 
 
 #(set-default-paper-size "a4")
@@ -99,7 +104,7 @@ myMusic = { \intro }
 \score {
 \new StaffGroup { <<
 
-\new TabStaff {
+\new TabStaffx {
 \set Staff.midiInstrument = #"acoustic guitar (steel)"
 \myMusic
 }
@@ -116,8 +121,7 @@ short-indent = 2\cm
 }
 
 
-
-
+=== END ===
 
 
 \version "2.12.3"
@@ -209,16 +213,44 @@ short-indent = 2\cm
 
 
 
-=== END LILYPONDS === 
 
 
-=== END LILYPONDS === 
 
 
-=== END LILYPONDS === 
 
 
-=== END LILYPONDS === 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+ 
+
+
+
+
+ 
+
+
+
+=== END ===
 
 === END LILYPONDS ===

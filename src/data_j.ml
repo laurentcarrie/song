@@ -79,6 +79,7 @@ module Section = struct
     match c with
       | NL -> Bu.string "NL" ;
       | C c -> Chord.to_json c
+      | G g -> Bu.list ( Chord.to_json ) g
 	  
   let of_json j = __SONG__try "of_json" (
     let j = Br.objekt j in

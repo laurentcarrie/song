@@ -41,6 +41,7 @@ let render world song   = __SONG__try "write lilypond" (
 		  | 4 -> pf  " bd4 sn4 bd4 sn4"  ; (* bd4 << bd ss >>  bd8 tommh tommh bd toml toml bd tomfh16 tomfh *)
 		  | i -> __SONG__failwith ("length not managed : " ^ (string_of_int i))
 	      )
+	    | D.Section.G g -> __SONG__NOT_IMPLEMENTED__
 	) section.D.Section.chords ;
     ) song.D.Song.structure ;
     pf " } " ;
@@ -59,6 +60,7 @@ let render world song   = __SONG__try "write lilypond" (
 		  | 4 -> pf  " ss8 ss8 ss8 ss8 ss8 ss8 ss8 ss8"  ; (* bd4 << bd ss >>  bd8 tommh tommh bd toml toml bd tomfh16 tomfh *)
 		  | i -> __SONG__failwith ("length not managed : " ^ (string_of_int i))
 	      )
+	    | D.Section.G g -> __SONG__NOT_IMPLEMENTED__
 	) section.D.Section.chords ;
     ) song.D.Song.structure ;
 
@@ -96,6 +98,7 @@ harmonies = \\chordmode { " ;
 		in
 		  p (c.D.Chord.length)
 	      )
+	    | D.Section.G _ -> __SONG__NOT_IMPLEMENTED__
 	) section.D.Section.chords ;
     ) song.D.Song.structure ;
 

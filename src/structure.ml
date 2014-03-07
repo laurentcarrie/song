@@ -39,6 +39,7 @@ let length_of_section s =
     match c with
       | D.Section.NL -> 0
       | D.Section.C c -> c.D.Chord.length 
+      | D.Section.G _ -> 4
   ) 0 s.D.Section.chords
 
 let to_html_print print song = __SONG__try "to_html_print" (

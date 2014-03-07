@@ -50,6 +50,7 @@ end
 module Section = struct
   type c = 
       | C of Chord.t
+      | G of Chord.t list
       | NL
   type t = {
     name: string ;

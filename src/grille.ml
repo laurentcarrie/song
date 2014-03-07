@@ -65,10 +65,16 @@ let update_data song data = __SONG__try "Grille_of_file.read_data" (
 	    | None,s -> read acc (Some { Data.Section.name=s;signature=4;chords=[] }) (linecount+1) tl
 	    | Some current,"" -> read (current::acc) None (linecount+1) tl
 	    | Some current,line -> (
-		let words = Str.split (Str.regexp "[ \t]+") line in
-		let chords = __SONG__try ("chords") 
-		  (List.map ( fun word ->  Section.C (chord_of_string word) ) words) in
-		let chords = chords @ [ Section.NL ] in
+		let line = String.strip line in
+		let groups = Str.split (Str.regexp (Str.quote "|")) line in
+		let groups = List.fold_left ( fun acc group ->
+		  let words = Str.split (Str.regexp "[ \t]+") group in
+		  let chords = __SONG__try ("chords") 
+		    (List.map ( fun word ->  chord_of_string word ) words) in
+		    (Section.G chords)::acc
+		) [] groups in
+		let groups = List.rev groups in
+		let chords = groups @ [ Section.NL ] in
 		let current = { current with Data.Section.chords = current.Data.Section.chords @ chords } in
 		  read acc (Some current) (linecount+1) tl
 	      )
@@ -93,6 +99,10 @@ let to_print print song = __SONG__try "to_string" (
 	  | Section.NL -> pf "\n" ;
 	  | Section.C c ->
 	      pf "%s " (Note.text_name c.Chord.note c.Chord.length)
+	  | Section.G g -> (
+	      List.iter ( fun c ->  pf "%s " (Note.text_name c.Chord.note c.Chord.length) ) g ;
+	      pf " |"  ;
+	    )
       ) section.Section.chords  ;
       pf "\n" ;
     ) song.Song.sections ;
@@ -129,6 +139,10 @@ let to_html_print print song = (
 	  let offset = offset + c.Chord.length in
 	    print_chords tl signature offset
 	)
+      | (Section.G g)::tl ->
+	  pf "<td>" ;
+	  List.iter ( fun c -> pf "  <span class=\"note\">%s</span> "  (Note.html_name c.Chord.note c.Chord.length) ) g ;
+	  print_chords tl signature offset
   in
     
   let print_section s = __SONG__try "print" (

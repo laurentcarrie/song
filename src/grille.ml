@@ -10,6 +10,7 @@ let int_of_string s =
   try int_of_string s with | e -> failwith("cannot convert '"^s^"' to an int")
 
 let chord_of_string s = __SONG__try ("note_of_string '" ^ s ^ "'") (
+  log "note=%s" s ;
   let s = String.explode s in
   let (letter,s) = 
     match s with
@@ -26,6 +27,7 @@ let chord_of_string s = __SONG__try ("note_of_string '" ^ s ^ "'") (
       | '#'::tl -> true,tl
       | l -> false, l
   in
+  let () = log "is_sharp=%b" is_sharp in
   let (is_m,s) =
     match s with
       | 'm'::tl -> true,tl
@@ -40,7 +42,8 @@ let chord_of_string s = __SONG__try ("note_of_string '" ^ s ^ "'") (
   let (duration,s) =
     match s with
       | [] -> 4,s
-      | '\\'::c:: tl -> (int_of_string (String.of_char c)),tl
+      | '\\'::c::[] -> (int_of_string (String.of_char c)),[]
+      | '\\'::c::tl -> (int_of_string (String.of_char c)),tl
       | l -> __SONG__failwith ("invalid note (duration?) : " ^ (String.implode l))
   in
   let () = match s with
@@ -50,7 +53,7 @@ let chord_of_string s = __SONG__try ("note_of_string '" ^ s ^ "'") (
   let note = { Data.Note.letter=letter ; is_7=is_7 ; is_7M = is_7M ; is_m = is_m ; is_flat = is_flat ; is_sharp = is_sharp } in
     { Data.Chord.note = note ; length=duration }
 )
-let update_data song data = __SONG__try "Grille_of_file.read_data" (
+let update_data song data = __SONG__try "Grille.read_data" (
   let data = Str.split (Str.regexp "\n") data in
   let rec read acc current linecount data =
     match data with
@@ -97,8 +100,6 @@ let to_print print song = __SONG__try "to_string" (
       List.iter ( fun c ->
 	match c with
 	  | Section.NL -> pf "\n" ;
-	  | Section.C c ->
-	      pf "%s " (Note.text_name c.Chord.note c.Chord.length)
 	  | Section.G g -> (
 	      List.iter ( fun c ->  pf "%s " (Note.text_name c.Chord.note c.Chord.length) ) g ;
 	      pf " |"  ;
@@ -124,21 +125,10 @@ let to_html_print print song = (
 	  let s = if offset mod signature <> 0 then " - " else "" in
 	    pf "  <span class=\"note\">%s</span></td>\n</tr>\n" s ;
 	)
-      | (Section.C c)::[] -> (
-	  let s = if offset mod signature <> 0 then " - " else "" in
-	    pf "  <span class=\"note\">%s%s</span></td>\n</tr>" (Note.html_name c.Chord.note c.Chord.length) s
-	)
       | Section.NL::tl -> 
 	  let s = if offset mod signature <> 0 then " - " else "" in
 	    pf "  <span class=\"note\">%s</span></td>\n</tr>\n<tr>\n" s ;
 	    print_chords tl signature 0
-      | (Section.C c)::tl -> (
-	  if offset mod (signature) = 0 then  pf "<td>" ;
-	  (* if offset >= (signature) then __SONG__failwith "bad sequence of chord length" else () ; *)
-	  pf "  <span class=\"note\">%s</span> "  (Note.html_name c.Chord.note c.Chord.length) ;
-	  let offset = offset + c.Chord.length in
-	    print_chords tl signature offset
-	)
       | (Section.G g)::tl ->
 	  pf "<td>" ;
 	  List.iter ( fun c -> pf "  <span class=\"note\">%s</span> "  (Note.html_name c.Chord.note c.Chord.length) ) g ;

@@ -42,16 +42,27 @@ let make_zip world print = __SONG__try "make_zip" (
 	List.iter ( fun output ->
 	  let buf = Buffer.create 1024 in
 	  let print = Buffer.add_string buf in
+	  let filename = strip_root world song.D.Song.path in
+	    log "FILENAME : %s" filename ;
+	  let depth = List.length (path_to_list ("/"^filename)) in
+	    log "DEPTH : %s %d" filename depth ;
+	  let path_to_css = 
+	    let rec r path d =
+	      if d=0 then path else r ("../"^path) (d-1)
+	    in
+	      r "song.css" depth
+	  in
 	  let pf fs = ksprintf print fs in
 	    pf "
 <html>
 <head>
 <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />
-<link rel=\"stylesheet\" href=\"../song.css\"/>
+<link rel=\"stylesheet\" ";
+	    pf "href=\"%s\"" path_to_css ;
+	    pf "\"/>
 " ;
 	    let () = Html.render_output world print song output Off_line in
 	    let data = Buffer.contents buf in
-	    let filename = strip_root world song.D.Song.path in
 	    let filename = filename // (sprintf "%s.html" output.D.Output.filename) in
 	      Zip.add_entry data zf filename
 	) song.D.Song.outputs ;

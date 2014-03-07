@@ -307,7 +307,7 @@ background-color:#FFEEEE ;
 		  e ()
 	      with
 		| e -> (
-		    error_page ()
+		    error_page e
 		  )
 	    )
 	  | "/view.songx" -> (
@@ -329,7 +329,7 @@ background-color:#FFEEEE ;
 		  e ()
 	      with
 		| e -> (
-		    error_page ()
+		    error_page e
 		  )
 	    )
 	  | "/env.songx" -> (
@@ -453,6 +453,7 @@ background-color:#FFEEEE ;
 		  text_page html_textval
 	      with
 		| e -> (
+		    (*
 		    let msg = Song_exn.string_of_stack e in
 		    let () = Song_exn.clear_stack () in
 		    let j = Json_type.Build.objekt [
@@ -460,6 +461,8 @@ background-color:#FFEEEE ;
 		      "msg",Json_type.Build.string msg ;
 		    ] in
 		      json_page j ;
+		    *)
+		    error_page e
 		  )
 	    )
 	  | "/json-of.songx" -> ( 

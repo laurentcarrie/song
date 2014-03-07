@@ -20,15 +20,15 @@ module Note = struct
     ( if t.is_flat then "b" else "")
   let text_name t duree = sprintf "%c%s%s%s\\%d" 
     t.letter
-    ( if t.is_m then "m" else "")
     ( if t.is_sharp then "#" else "")
     ( if t.is_flat then "b" else "")
+    ( if t.is_m then "m" else "")
     duree
   let html_name t duree = sprintf "%c%s%s%s%s" 
     t.letter
-    ( if t.is_m then "m" else "")
     ( if t.is_sharp then "<sup>&#9839</sup>" else "")
     ( if t.is_flat then "<sup>&#x266d</sup>" else "")
+    ( if t.is_m then "m" else "")
     (* ( sprintf "<sub>%d</sub>" duree ) *) ""
   let lilypond_name t duree = sprintf "%c%s%s%d%s" 
     (Char.lowercase t.letter)
@@ -49,7 +49,6 @@ end
   
 module Section = struct
   type c = 
-      | C of Chord.t
       | G of Chord.t list
       | NL
   type t = {

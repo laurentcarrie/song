@@ -66,19 +66,18 @@ end
   
 module Section = struct
   include Data.Section
-  let c_of_json j = __SONG__try "of_json" (
+  let g_of_json j = __SONG__try "of_json" (
     let table = Br.make_table(Br.objekt j) in
     match Br.optfield table "NL",Br.optfield table "chord" with
       | None,None -> __SONG__failwith "internal error"
       | Some _,Some _ -> __SONG__failwith "internal error"
       | Some _,None -> NL
-      | None, Some j -> C (Chord.of_json j)
+      | None, Some j -> G (Br.list Chord.of_json j)
   )
     
-  let json_of_c c =
+  let json_of_g c =
     match c with
       | NL -> Bu.string "NL" ;
-      | C c -> Chord.to_json c
       | G g -> Bu.list ( Chord.to_json ) g
 	  
   let of_json j = __SONG__try "of_json" (
@@ -86,7 +85,7 @@ module Section = struct
     let table = Br.make_table j in
       {
 	name = string_field table "name" ;
-	chords = Br.list c_of_json (Br.field table "chords") ;
+	chords = Br.list g_of_json (Br.field table "chords") ;
 	signature = int_field table "signature" ;
       }
   )
@@ -94,7 +93,7 @@ module Section = struct
   let to_json t = __SONG__try "to_json" (
     Bu.objekt [
       "name",Bu.string t.name ;
-      "chords",Bu.list json_of_c t.chords ;
+      "chords",Bu.list json_of_g t.chords ;
       "signature",Bu.int t.signature ;
     ]
   )

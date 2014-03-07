@@ -38,8 +38,7 @@ let length_of_section s =
   List.fold_left ( fun acc c -> acc + 
     match c with
       | D.Section.NL -> 0
-      | D.Section.C c -> c.D.Chord.length 
-      | D.Section.G _ -> 4
+      | D.Section.G _ -> s.D.Section.signature
   ) 0 s.D.Section.chords
 
 let to_html_print print song = __SONG__try "to_html_print" (

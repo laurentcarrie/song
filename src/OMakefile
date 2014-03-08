@@ -37,7 +37,7 @@ src[]=
 	lyrics
 	structure
 	info
-	sortie_of_file
+#	sortie_of_file
 	fcgi
 #	lighttpd
 	url_encode

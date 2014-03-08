@@ -174,6 +174,7 @@ let render_output world print song output onoff = __SONG__try "render_html" (
   let () = match onoff with
       | On_line -> (
 	  pf "<a href=\"/index.songx#song-%s\">index</a>" filename ;
+	  pf "<a href=\"/reload.songx\">reload</a>"  ;
 	  pf "<a href=\"/edit.songx?path=%s\">edit</a>" song.D.Song.path ;
 	  List.iter ( fun o ->
 	    pf "<a href=\"%s.html\">(%s)</a>" o.D.Output.filename o.D.Output.filename
@@ -185,8 +186,15 @@ let render_output world print song output onoff = __SONG__try "render_html" (
 	  pf "<br/>" ;
 	)
       | Off_line -> (
-	  pf "<a href=\"../index.html#song-%s\">index</a>" filename ;
-	  pf "<br/>" ;
+	  let path_to_index = 
+	    let depth = List.length (path_to_list ("/"^filename)) in
+	    let rec r path d =
+	      if d=0 then path else r ("../"^path) (d-1)
+	    in
+	      r "index.html" depth
+	  in
+	    pf "<a href=\"%s#song-%s\">index</a>" path_to_index filename ;
+	    pf "<br/>" ;
 	)
   in
     

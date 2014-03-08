@@ -65,6 +65,11 @@ let errors world    = __SONG__try "errors" (
   let pf fs = ksprintf (p ~nl:true) fs in
 (*   let pfnnl fs = ksprintf (p ~nl:false) fs in *)
 
+    pf "
+<a href='/index.songx'>index</a>
+<a href='/reload.songx'>reload</a> 
+" ;
+
     List.iter (fun path ->
       Edit_type.print ~loadurl:"data-error.songx" p "/internal-edit-error.songx" path "edit-error" "data" Edit_type.Textarea
     ) world.D.World.errors ;
@@ -80,7 +85,7 @@ let errors world    = __SONG__try "errors" (
 	  let (_:D.Song.t) = Rw.from_file path in ""
 	with
 	  | e ->
-	      let msg = Song_exn.string_of_stack () in
+	      let msg = Song_exn.string_of_stack e in
 	      let () = Song_exn.clear_stack () in
 		msg
       in

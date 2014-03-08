@@ -144,7 +144,7 @@ background-color:#FFEEEE ;
 	with
 	  | e -> (
 	      let msg = Song_exn.html_string_of_stack () in
-	      let msg2 = Song_exn.string_of_stack () in
+	      let msg2 = Song_exn.string_of_stack e in
 	      let () = Song_exn.clear_stack () in
 	      let () = start_page () in
 		pf "<h3> erreur : <br/></h3> " ;
@@ -211,6 +211,6 @@ let _ = try
     exit 33
   with
     | e -> let () = 
-	eprintf "%s\n" (Song_exn.string_of_stack ()) ;
+	eprintf "%s\n" (Song_exn.string_of_stack e) ;
 	     __SONG__print_exn_stack e in exit 1
 					 

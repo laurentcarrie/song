@@ -43,7 +43,7 @@ let main_loop  ()  = __SONG__try "main loop" (
       end_page() ;
     with
       | e -> (
-	  pf0 (Song_exn.html_string_of_stack()) ;
+	  pf0 (Song_exn.html_string_of_stack e) ;
 	  end_page ()
 	)
 	    

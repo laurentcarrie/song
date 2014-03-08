@@ -7,6 +7,11 @@ let (//) = Filename.concat
 
 let log = Fcgi.log
 
+let r_count = ref 0
+let count () =
+  incr r_count ;
+  !r_count
+    
 let render world song   = __SONG__try "write lilypond" (
   let filename = world.D.World.output_root // ((Filename.basename song.D.Song.path) ^ ".ly") in
   let () = log "writing %s..." filename in
@@ -30,12 +35,15 @@ let render world song   = __SONG__try "write lilypond" (
 	List.iter ( fun c ->
 	  match c with
 	    | D.Section.NL -> ()
+(*
 	    | D.Section.C c ->  (
 		match c.D.Chord.length with
 		  | 2 -> pf  " bd4 sn4 "  ; (* bd4 << bd ss >>  bd8 tommh tommh bd toml toml bd tomfh16 tomfh *)
 		  | 4 -> pf  " bd4 sn4 bd4 sn4"  ; (* bd4 << bd ss >>  bd8 tommh tommh bd toml toml bd tomfh16 tomfh *)
 		  | i -> __SONG__failwith ("length not managed : " ^ (string_of_int i))
 	      )
+*)
+	    | D.Section.G g -> __SONG__NOT_IMPLEMENTED__
 	) section.D.Section.chords ;
     ) song.D.Song.structure ;
     pf " } " ;
@@ -48,12 +56,15 @@ let render world song   = __SONG__try "write lilypond" (
 	List.iter ( fun c ->
 	  match c with
 	    | D.Section.NL -> ()
+(*
 	    | D.Section.C c ->  (
 		match c.D.Chord.length with
 		  | 2 -> pf  "  ss8 ss8 ss8 ss8 "  ; (* bd4 << bd ss >>  bd8 tommh tommh bd toml toml bd tomfh16 tomfh *)
 		  | 4 -> pf  " ss8 ss8 ss8 ss8 ss8 ss8 ss8 ss8"  ; (* bd4 << bd ss >>  bd8 tommh tommh bd toml toml bd tomfh16 tomfh *)
 		  | i -> __SONG__failwith ("length not managed : " ^ (string_of_int i))
 	      )
+*)
+	    | D.Section.G g -> __SONG__NOT_IMPLEMENTED__
 	) section.D.Section.chords ;
     ) song.D.Song.structure ;
 
@@ -81,6 +92,7 @@ harmonies = \\chordmode { " ;
 	List.iter ( fun c ->
 	  match c with
 	    | D.Section.NL -> ()
+(*
 	    | D.Section.C c ->  (
 		let rec p count =
 		  if count=0 then ()
@@ -91,6 +103,8 @@ harmonies = \\chordmode { " ;
 		in
 		  p (c.D.Chord.length)
 	      )
+*)
+	    | D.Section.G _ -> __SONG__NOT_IMPLEMENTED__
 	) section.D.Section.chords ;
     ) song.D.Song.structure ;
 
@@ -185,23 +199,12 @@ harmonies = \\chordmode { " ;
 
 
 let update_data song data = __SONG__try "read_file" (
-  let data = Str.split (Str.regexp "========\n") data in
-  let rec read acc current linecount data =
-    match data with
-      | [] -> (
-    	  match current with
-	    | None -> List.rev acc
-	    | Some current -> List.rev (current::acc)
-	)
-      | line::tl -> (
-	  match current,line with
-	    | None,"" -> read acc None (linecount+1) tl
-	    | None,line -> let current = Some { D.Lilypond.name="XXXXXXXXXX" ; data=line;} in read acc current (linecount+1) tl
-	    | Some current,"" -> read (current::acc) None (linecount+1) tl
-	    | Some current,text ->let current = { current with D.Lilypond.data=current.D.Lilypond.data^line^"\n" } in read acc (Some current) (linecount+1) tl
-	)
-  in
-  let data = read [] None 1 data in
+  let data = Str.split (Str.regexp (Str.quote "=== END ===\n")) data in
+    log "split : %d" (List.length data) ;
+    List.iteri ( fun index s ->
+      log "lilypond split %d %s" index s
+    ) data ;
+    let data = List.map ( fun s -> { D.Lilypond.data=s ; status = D.Lilypond.Unknown ; } ) data in
     { song with D.Song.lilyponds = data }
 )
 
@@ -213,9 +216,7 @@ let read_file song filename = __SONG__try "read_file" (
 let to_print print song = __SONG__try "to_string" (
   let pf fs = ksprintf print fs in
     List.iter ( fun l ->
-      pf "=== BEGIN LILYPONDS ===" ;
-      pf "%s\n\n" l.D.Lilypond.data ; 
-      pf "=== END LILYPONDS ===" ;
+      pf "%s\n\n=== END ===\n\n" l.D.Lilypond.data ; 
     ) song.D.Song.lilyponds
 )
 
@@ -227,71 +228,95 @@ let to_string song = __SONG__try "to_string" (
 )
 
 
-let to_png world song =  __SONG__try "to_png" (
+let generate_png world song =  __SONG__try "generate_png" (
   let lilypond = try Unix.getenv "LILYPOND" with | Not_found -> __SONG__failwith "LILYPOND env variable not set" in
-  let () = log "to_png lilypond %d sections" (List.length song.D.Song.lilyponds) in
-    List.iteri ( fun index l ->
-      let filename = strip_root world song.D.Song.path in
-      let digest_filename = sprintf "%s/tmp/%s-%d.digest" world.D.World.doc_root filename index in
-      let digest_hex = if Sys.file_exists digest_filename then Some (Std.input_file digest_filename) 
-	else  (
-	  log "digest_filename does not exist" ;
-	  None )
-      in
-      let lilypond_hex = Digest.to_hex (Digest.string l.D.Lilypond.data) in
-      let do_it = match digest_hex with
-	| None -> true
-	| Some d -> log "digest compare '%s' '%s'" d lilypond_hex ; d <> lilypond_hex
-      in
-      let () = log "lilypond do_it = %b ; %d" do_it index in
-	if do_it then (
-	  let () = 
-	    let filename = sprintf "%s/tmp/%s-%d.ly" 	world.D.World.doc_root filename index in
-	    let () = log "lilypond : %s" filename in
-	      Std.output_file ~filename ~text:l.D.Lilypond.data 
+  let () = log "genearte_png lilypond %d sections" (List.length song.D.Song.lilyponds) in
+  let (lilyponds:D.Lilypond.t list) = List.fold_left ( fun acc l ->
+    let filename = strip_root world song.D.Song.path in
+    let png_filename = match l.D.Lilypond.status with
+      | D.Lilypond.Ok filename -> filename
+      | D.Lilypond.Error _ 
+      | D.Lilypond.Unknown -> sprintf "%d.png" (count ())
+    in
+    let basename = 
+      let basename = Filename.basename png_filename in
+	Filename.chop_extension basename
+    in
+    let () = log "basename = %s" basename in
+    let digest_filename = sprintf "%s/tmp/%s.digest" world.D.World.doc_root basename in
+    let digest_hex = if Sys.file_exists digest_filename then Some (Std.input_file digest_filename) 
+      else  (
+	log "digest_filename does not exist" ;
+	None )
+    in
+    let lilypond_hex = Digest.to_hex (Digest.string l.D.Lilypond.data) in
+    let do_it = match digest_hex with
+      | None -> true
+      | Some d -> log "digest compare '%s' '%s'" d lilypond_hex ; d <> lilypond_hex
+    in
+    let () = log "lilypond do_it = %b ; %s" do_it png_filename in
+    let status = 
+      if do_it then (
+	let ly_filename = sprintf "%s/tmp/%s-%s.ly" 	world.D.World.doc_root filename basename in
+	let () = log "lilypond : %s" ly_filename in
+	let () = Std.output_file ~filename:ly_filename ~text:l.D.Lilypond.data in
+	let command = sprintf "%s --verbose --png --output \"%s/tmp/%s\" \"%s\" &> /var/log/lighttpd/lilypond-%s.log " 
+	  lilypond 
+	  world.D.World.doc_root basename 
+	  ly_filename
+	  basename
+	in
+	let status = 
+	  log "running %s" command ;
+	  let msg () = __SONG__try "read error file" ( 
+	    Std.input_file (sprintf "/var/log/lighttpd/lilypond-%s.log"  basename )) 
 	  in
-	  let command = sprintf "%s --verbose --png --output \"%s/tmp/%s-%d\" \"%s/tmp/%s-%d.ly\" &> /var/log/lighttpd/lilypond-%s-%d.log " 
-	    lilypond 
-	    world.D.World.doc_root filename index 
-	    world.D.World.doc_root filename index 
-	    filename index 
-	  in
-	  let () = __SONG__try command ( 
-	    log "running %s" command ;
 	    match Unix.system command with
-	      | Unix.WEXITED 0 -> log "command ok" ; ()
-	      | Unix.WEXITED i -> __SONG__failwith ("exited with code " ^ (string_of_int i))
-	      | Unix.WSTOPPED i -> __SONG__failwith ("stopped with code " ^ (string_of_int i))
-	      | Unix.WSIGNALED i -> __SONG__failwith ("signaled with code " ^ (string_of_int i))
-	  ) in
-	  let () = Std.output_file ~filename:digest_filename ~text:lilypond_hex in
-	    ()
-	) else (
-	)
-    ) song.D.Song.lilyponds
-
+	      | Unix.WEXITED 0 ->   log "command ok" ; D.Lilypond.Ok png_filename
+	      | Unix.WEXITED i ->   D.Lilypond.Error (sprintf "exited with code %d\n%s"  i (msg()))
+	      | Unix.WSTOPPED i ->  D.Lilypond.Error (sprintf "stopped with code %d\n%s"  i (msg()))
+	      | Unix.WSIGNALED i -> D.Lilypond.Error (sprintf "signaled with code %d\n%s"  i (msg()))
+	in
+	let () = Std.output_file ~filename:digest_filename ~text:lilypond_hex in
+	  status
+      ) else (
+	l.D.Lilypond.status
+      )
+    in
+      { l with D.Lilypond.status = status }::acc
+  ) [] song.D.Song.lilyponds in
+  let song = { song with D.Song.lilyponds = List.rev lilyponds } in
+    song
 )
 
 let to_html_print print onoff world song = __SONG__try "to_html" (
   let () = log "to hml print" in
-  let () = to_png world song in
   let pf fs = ksprintf print fs in
     pf "<h2>lilypond</h2>\n" ;
     pf "<ol class=\"lilypond-list\">\n" ;
-    let filename = strip_root world song.D.Song.path in
     List.iteri ( fun index lily ->
       (match onoff with
-	| On_line -> pf "<img src='/tmp/%s-%d.png'></img>"  filename index
-	| Off_line -> pf "<img src='%s-%d.png'/>" filename index
+	| On_line -> (
+	    match lily.D.Lilypond.status with 
+	      | D.Lilypond.Ok filename -> pf "<img src='/tmp/%s'></img>"   filename
+	      | D.Lilypond.Unknown  -> pf "<p>UNKNOWN</p>"
+	      | D.Lilypond.Error msg -> pf "<p>%s</p>" msg
+	  )
+	| Off_line -> (
+	    match lily.D.Lilypond.status with 
+	      | D.Lilypond.Ok filename -> pf "<img src='%s'></img>"  filename 
+	      | D.Lilypond.Unknown  -> pf "<p>UNKNOWN</p>"
+	      | D.Lilypond.Error msg -> pf "<p>%s</p>" msg
+	  )
       ) ;
       pf "</li>" ;
     ) song.D.Song.lilyponds ;
-      pf "</ol>\n" ;
+    pf "</ol>\n"
 )
-
+  
 let to_html world onoff song = __SONG__try "to_html" (
   let buf = Buffer.create 1024 in
   let () = to_html_print (Buffer.add_string buf) onoff world song in
-    Buffer.contents buf
+    Buffer.contents buf 
 )
 

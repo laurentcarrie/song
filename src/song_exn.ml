@@ -27,10 +27,11 @@ let print_stack () =
 ;;
     
 
-let string_of_stack () =
+let string_of_stack e =
+  let msg_stack = ("",0,Printexc.to_string e)::(List.rev !msg_stack) in
   let (_,ret) = List.fold_left ( fun (i,acc) (filename,line,msg) -> 
     i+1,sprintf "%s%2d : %s:%d -> %s\n" acc i filename line msg 
-  ) (0,sprintf "stack of size %d\n" (List.length !msg_stack)) (List.rev !msg_stack) in
+  ) (0,sprintf "stack of size %d\n" (List.length msg_stack)) msg_stack in
     ret
 ;;
     

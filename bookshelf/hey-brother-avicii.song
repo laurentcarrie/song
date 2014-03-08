@@ -47,16 +47,22 @@ there's nothing in this world I wouldn't do
 === END LYRICS ===
 === BEGIN GRILLE ===
 couplet
-Gm\4 Gm\4 Eb\2 Bb\2 F\2 Gm\2 Gm\2 
-Gm\4 Gm\4 Eb\2 Bb\2 F\2 Gm\2 Gm\2 
-F\4 Bb\2 Eb\2 F\4 F\4 
-Bb\2 Eb\2 Gm\4 Gm\4 
+Gm\4  |Gm\4  |Eb\2 Bb\2  |F\2 Gm\2  |Gm\2  |
+Gm\4 Gm\4  |Eb\2 Bb\2  |F\2 Gm\2  |Gm\2  |
+F\4  |Bb\2 Eb\2  |F\4  |F\4  |
+Bb\2 Eb\2  |Gm\4  |Gm\4  |
 
 refrain
-Gm\4 Eb\2 Bb\2 Bb\4 Bb\2 
-Gm\4 Eb\2 Bb\2 Bb\4 Bb\2 
-F\4 Bb\2 Eb\2 F\4 F\4 
-Bb\2 Eb\2 Gm\4 Gm\4 
+Gm\4  |Eb\2 Bb\2  |Bb\4  |Bb\2  |
+Gm\4  |Eb\2 Bb\2  |Bb\4  |Bb\2  |
+F\4  |Bb\2 Eb\2  |F\4  |F\4  |
+Bb\2 Eb\2  |Gm\4  |Gm\4  |
+
+ 
+
+ 
+
+ 
 
 === END GRILLE ===
 === BEGIN STRUCTURE ===
@@ -68,9 +74,16 @@ refrain
 couplet
 
 === END STRUCTURE ===
-=== BEGIN LILYPONDS ====== BEGIN LILYPONDS ====== BEGIN LILYPONDS ====== BEGIN LILYPONDS ====== BEGIN LILYPONDS ===
+=== BEGIN LILYPONDS ===
+
+
+
+
+
+
+
 \version "2.12.3"
-\include "predefined-guitar-fretboards.lyx"
+\include "predefined-guitar-fretboards.ly"
 
 
 #(set-default-paper-size "a4")
@@ -99,7 +112,7 @@ myMusic = { \intro }
 \score {
 \new StaffGroup { <<
 
-\new TabStaff {
+\new TabStaffx {
 \set Staff.midiInstrument = #"acoustic guitar (steel)"
 \myMusic
 }
@@ -116,6 +129,11 @@ short-indent = 2\cm
 }
 
 
+
+
+
+
+=== END ===
 
 
 
@@ -209,16 +227,48 @@ short-indent = 2\cm
 
 
 
-=== END LILYPONDS === 
 
 
-=== END LILYPONDS === 
 
 
-=== END LILYPONDS === 
 
 
-=== END LILYPONDS === 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+=== END ===
 
 === END LILYPONDS ===

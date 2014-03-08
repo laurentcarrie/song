@@ -255,3 +255,20 @@ let page_403 s =
 let strip_root world s = __SONG__try "strip_root" (
   String.strip ~chars:"/" (normalize_path (Str.global_replace (Str.regexp (Str.quote world.World.root)) "" s))
 )
+let error_page (exn:exn) = (
+  let stack = Song_exn.get_stack () in
+  let () = Song_exn.clear_stack () in
+  let (p,h,e) = start_html_page () in
+  (* let pf fs = ksprintf p fs in *)
+  let pfnl fs = ksprintf ( fun s -> p s ; p "\n" ) fs in
+    h () ;
+    let (msg:string) = Printexc.to_string exn in
+      pfnl "<p>%s</p>" msg ;
+      pfnl "<table>" ;
+      List.iter ( fun (file,line,msg) ->
+	let msg = Str.global_replace (Str.regexp "\n") "<br/>" msg in
+	  pfnl "<tr><td class='error-filename'>%s</td><td class='error-line'>%d</td><td class='error-msg'>%s</td></tr>\n" file line msg
+      ) stack ;
+      pfnl "</table>" ;
+    e ()
+)

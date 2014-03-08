@@ -20,15 +20,15 @@ module Note = struct
     ( if t.is_flat then "b" else "")
   let text_name t duree = sprintf "%c%s%s%s\\%d" 
     t.letter
-    ( if t.is_m then "m" else "")
     ( if t.is_sharp then "#" else "")
     ( if t.is_flat then "b" else "")
+    ( if t.is_m then "m" else "")
     duree
   let html_name t duree = sprintf "%c%s%s%s%s" 
     t.letter
-    ( if t.is_m then "m" else "")
     ( if t.is_sharp then "<sup>&#9839</sup>" else "")
     ( if t.is_flat then "<sup>&#x266d</sup>" else "")
+    ( if t.is_m then "m" else "")
     (* ( sprintf "<sub>%d</sub>" duree ) *) ""
   let lilypond_name t duree = sprintf "%c%s%s%d%s" 
     (Char.lowercase t.letter)
@@ -49,7 +49,7 @@ end
   
 module Section = struct
   type c = 
-      | C of Chord.t
+      | G of Chord.t list
       | NL
   type t = {
     name: string ;
@@ -81,9 +81,13 @@ module Output = struct
 end
 
 module Lilypond = struct
+  type s =
+      | Unknown
+      | Ok of string (* filename *)
+      | Error of string (* error msg *)
   type t = {
-    name : string ;
     data : string ;
+    status : s ;
   }
 end
 
@@ -145,28 +149,27 @@ let world () = match !r_world with
 let update_world world = 
   r_world := Some world
 
-let update_world_songs songs =
-  let world = match !r_world with
-    | Some w ->  ( { w with World.songs = songs } )
-    | None   -> __SONG__failwith "World non défini"
-  in
-    r_world := Some world
+let update_world_songs world songs =
+  let world = { world with World.songs = songs } in
+    r_world := Some world ;
+    world
+      
 
-let update_world_errors errors =
-  let world = match !r_world with
-    | Some w ->  ( { w with World.errors = errors } )
-    | None   -> __SONG__failwith "World non défini"
-  in
-    r_world := Some world
+let update_world_errors world errors =
+  let world = { world with World.errors = errors } in
+    r_world := Some world ;
+    world
 
-let update_song song = 
-  let world = world () in
+let update_song world song = 
   let songs = List.fold_left ( fun acc s ->
     let s = 
       if s.Song.path = song.Song.path then song else s in
       s::acc
   ) [] world.World.songs in
-    r_world := Some { world with World.songs = songs }
+  let world =  { world with World.songs = songs } in
+  let () = update_world world in
+    world
+      
 	
 
 

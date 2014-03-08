@@ -228,7 +228,7 @@ background-color:#FFEEEE ;
 		  e ()
 	      with
 		| e -> (
-		    let msg = Song_exn.string_of_stack () in
+		    let msg = Song_exn.string_of_stack e in
 		    let () = Song_exn.clear_stack () in
 		    let j = Json_type.Build.objekt [
 		      "success",Json_type.Build.bool false ;
@@ -241,8 +241,8 @@ background-color:#FFEEEE ;
 	      try
 		let world = D.world () in
 		let (songs,errors) = Rw.all_songs_from_root world.D.World.root in
-		let () = D.update_world_songs songs in
-		let () = D.update_world_errors errors in
+		let world = D.update_world_songs world songs in
+		let _ = D.update_world_errors world errors in
 		let (p,h,e) = start_html_page () in
 		let pf fs = ksprintf p fs in
 		  h () ;
@@ -252,7 +252,7 @@ background-color:#FFEEEE ;
 		  e ()
 	      with
 		| e -> (
-		    let msg = Song_exn.string_of_stack () in
+		    let msg = Song_exn.string_of_stack e in
 		    let () = Song_exn.clear_stack () in
 		    let j = Json_type.Build.objekt [
 		      "success",Json_type.Build.bool false ;
@@ -270,7 +270,7 @@ background-color:#FFEEEE ;
 		  e ()
 	      with
 		| e -> (
-		    let msg = Song_exn.string_of_stack () in
+		    let msg = Song_exn.string_of_stack e in
 		    let () = Song_exn.clear_stack () in
 		    let j = Json_type.Build.objekt [
 		      "success",Json_type.Build.bool false ;
@@ -286,7 +286,7 @@ background-color:#FFEEEE ;
 		  Edit.errors world 
 	      with
 		| e -> (
-		    let msg = Song_exn.string_of_stack () in
+		    let msg = Song_exn.string_of_stack e in
 		    let () = Song_exn.clear_stack () in
 		    let j = Json_type.Build.objekt [
 		      "success",Json_type.Build.bool false ;
@@ -298,18 +298,16 @@ background-color:#FFEEEE ;
 	  | "/download.songx" -> (
 	      try
 		let world = D.world () in
+		let songs = List.map ( fun song ->
+		  Lilypond.generate_png world song
+		) world.D.World.songs in
+		let world = D.update_world_songs world songs in
 		let (p,h,e) = start_html_page () in
 		  Package.make_zip world p ;
 		  e ()
 	      with
 		| e -> (
-		    let msg = Song_exn.string_of_stack () in
-		    let () = Song_exn.clear_stack () in
-		    let j = Json_type.Build.objekt [
-		      "success",Json_type.Build.bool false ;
-		      "msg",Json_type.Build.string msg ;
-		    ] in
-		      json_page j 
+		    error_page e
 		  )
 	    )
 	  | "/view.songx" -> (
@@ -320,6 +318,8 @@ background-color:#FFEEEE ;
 		let path = normalize_path (world.D.World.root // path) in
 		let song = try List.find ( fun s -> s.D.Song.path = path ) world.D.World.songs
 		  with | Not_found -> __SONG__failwith ("pas de chanson trouvée pour : "^ path) in
+		let song = Lilypond.generate_png world song in
+		let world = D.update_song world song in
 		let output = __SONG__try "output" ( List.assoc "output" params) in
 		let output = try List.find ( fun o -> o.D.Output.filename = output ) song.D.Song.outputs 
 		  with | Not_found -> __SONG__failwith ("pas de sortie trouvée pour : " ^ output) in
@@ -329,13 +329,7 @@ background-color:#FFEEEE ;
 		  e ()
 	      with
 		| e -> (
-		    let msg = Song_exn.string_of_stack () in
-		    let () = Song_exn.clear_stack () in
-		    let j = Json_type.Build.objekt [
-		      "success",Json_type.Build.bool false ;
-		      "msg",Json_type.Build.string msg ;
-		    ] in
-		      json_page j 
+		    error_page e
 		  )
 	    )
 	  | "/env.songx" -> (
@@ -352,10 +346,12 @@ background-color:#FFEEEE ;
 		let params = Fcgi.parse_query_string () in
 		let path = __SONG__try "path" ( List.assoc "path" params) in
 		let song = List.find ( fun s -> s.D.Song.path = path ) world.D.World.songs in
+		let song = Lilypond.generate_png world song in
+		let world = D.update_song world song in
 		  Edit.render world On_line song 
 	      with
 		| e -> (
-		    let msg = Song_exn.string_of_stack () in
+		    let msg = Song_exn.string_of_stack e in
 		    let () = Song_exn.clear_stack () in
 		    let j = Json_type.Build.objekt [
 		      "success",Json_type.Build.bool false ;
@@ -370,7 +366,7 @@ background-color:#FFEEEE ;
 		  Edit.new_song world 
 	      with
 		| e -> (
-		    let msg = Song_exn.string_of_stack () in
+		    let msg = Song_exn.string_of_stack e in
 		    let () = Song_exn.clear_stack () in
 		    let j = Json_type.Build.objekt [
 		      "success",Json_type.Build.bool false ;
@@ -399,7 +395,7 @@ background-color:#FFEEEE ;
 		  text_page text
 	      with
 		| e -> (
-		    let msg = Song_exn.string_of_stack () in
+		    let msg = Song_exn.string_of_stack e in
 		    let () = Song_exn.clear_stack () in
 		      (*
 			let j = Json_type.Build.objekt [
@@ -417,7 +413,7 @@ background-color:#FFEEEE ;
 		  text_page (Std.input_file path)
 	      with
 		| e -> (
-		    let msg = Song_exn.string_of_stack () in
+		    let msg = Song_exn.string_of_stack e in
 		    let () = Song_exn.clear_stack () in
 		    let j = Json_type.Build.objekt [
 		      "success",Json_type.Build.bool false ;
@@ -444,23 +440,29 @@ background-color:#FFEEEE ;
 		  | "tempo" -> let song = { song with D.Song.tempo = int_of_string textval } in song,textval
 		  | "titre" -> let song = { song with D.Song.title = textval } in song,textval
 		  | "auteur" -> let song = { song with D.Song.auteur = textval } in song,textval
-		  | "lilyponds" -> let song = Lilypond.update_data song textval in song,Lilypond.to_html world On_line song
-(*		  | "filename" -> let song = { song with D.Song.filename = textval } in song,textval*)
+		  | "lilyponds" -> (
+		      let song = Lilypond.update_data song textval in 
+		      let song = Lilypond.generate_png world song in
+			song,Lilypond.to_html world On_line song 
+		    )
 		  | s -> __SONG__failwith ("champ inconnu : " ^ field )
 		in
 		let () = Rw.write_song song in
-		let _ = D.update_song song in
+		let _ = D.update_song world song in
 		(* let ((_:bool)) = Generate.generate_from_song ~world ~plog ~print:(fun _->()) ~path song in *)
 		  text_page html_textval
 	      with
 		| e -> (
-		    let msg = Song_exn.string_of_stack () in
+		    (*
+		    let msg = Song_exn.string_of_stack e in
 		    let () = Song_exn.clear_stack () in
 		    let j = Json_type.Build.objekt [
 		      "success",Json_type.Build.bool false ;
 		      "msg",Json_type.Build.string msg ;
 		    ] in
 		      json_page j ;
+		    *)
+		    error_page e
 		  )
 	    )
 	  | "/json-of.songx" -> ( 
@@ -480,7 +482,7 @@ background-color:#FFEEEE ;
 		    json_page j
 	      with
 		| e -> (
-		    let msg = Song_exn.string_of_stack () in
+		    let msg = Song_exn.string_of_stack e in
 		    let () = Song_exn.clear_stack () in
 		    let j = Json_type.Build.objekt [
 		      "success",Json_type.Build.bool false ;
@@ -498,12 +500,12 @@ background-color:#FFEEEE ;
 		let () = __SONG__try "write file" (Std.output_file ~filename:path ~text:textval) in
 		let (_:D.Song.t) = __SONG__try "read file" (Rw.from_file path) in
 		let (songs,errors) = __SONG__try "rw" (Rw.all_songs_from_root world.D.World.root) in
-		  D.update_world_songs songs ;
-		  D.update_world_errors errors ;
+		let world = D.update_world_songs world songs in
+		let world = D.update_world_errors world errors in
 		  text_page (sprintf "ok, %s is now valid" (strip_root world path)) 
 	      with
 		| e -> (
-		    let msg = Song_exn.string_of_stack () in
+		    let msg = Song_exn.string_of_stack e in
 		    let () = Song_exn.clear_stack () in
 		    let j = Json_type.Build.objekt [
 		      "success",Json_type.Build.bool false ;
@@ -541,11 +543,11 @@ background-color:#FFEEEE ;
 		} in
 		let songs = song::world.D.World.songs in
 		let () = __SONG__try "write" (Rw.write_song song) in
-		  D.update_world_songs songs ;
+		let world = D.update_world_songs world songs in
 		  text_page (sprintf "ok, %s is now valid" (strip_root world whole_path)) 
 	      with
 		| e -> (
-		    let msg = Song_exn.string_of_stack () in
+		    let msg = Song_exn.string_of_stack e in
 		    let () = Song_exn.clear_stack () in
 		    let j = Json_type.Build.objekt [
 		      "success",Json_type.Build.bool false ;
@@ -559,7 +561,7 @@ background-color:#FFEEEE ;
     with
       | e -> (
 	  let msg = Song_exn.html_string_of_stack () in
-	  let msg2 = Song_exn.string_of_stack () in
+	  let msg2 = Song_exn.string_of_stack e in
 	  let () = Song_exn.clear_stack () in
 	  let (p,e0,e) = start_html_page () in
 	  let pf fs = ksprintf p fs in
@@ -647,12 +649,13 @@ let _ = try
       let () = try 
 	  D.update_world world 
 	with
-	  | e -> eprintf "%s\n" (Song_exn.string_of_stack ()) 
+	  | e -> eprintf "%s\n" (Song_exn.string_of_stack e) 
       in
 	main_loop ()  ;
 	exit 33
   with
-    | e -> let () = 
-	eprintf "%s\n" (Song_exn.string_of_stack ()) ;
-	     __SONG__print_exn_stack e in exit 1
+    | e -> 
+	let () = eprintf "%s\n" (Song_exn.string_of_stack e) in
+	let () = __SONG__print_exn_stack e in 
+	  exit 1
 					 

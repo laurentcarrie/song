@@ -131,7 +131,7 @@ margin:0px;
 div#main-0 
 {
 padding:10px;
-width:25cm ;
+width:100%% ;
 /* border:1px solid #98bf21; */
 }
 
@@ -162,7 +162,6 @@ float:right ;
 /* top:2cm ; */
 /* border:5px solid gray ;*/
 /* background-color:#EEFFEE ; */
-
 }
 
 .lyrics-list {

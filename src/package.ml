@@ -43,9 +43,7 @@ let make_zip world print = __SONG__try "make_zip" (
 	  let buf = Buffer.create 1024 in
 	  let print = Buffer.add_string buf in
 	  let filename = strip_root world song.D.Song.path in
-	    log "FILENAME : %s" filename ;
 	  let depth = List.length (path_to_list ("/"^filename)) in
-	    log "DEPTH : %s %d" filename depth ;
 	  let path_to_css = 
 	    let rec r path d =
 	      if d=0 then path else r ("../"^path) (d-1)

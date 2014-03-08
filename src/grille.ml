@@ -10,7 +10,6 @@ let int_of_string s =
   try int_of_string s with | e -> failwith("cannot convert '"^s^"' to an int")
 
 let chord_of_string s = __SONG__try ("note_of_string '" ^ s ^ "'") (
-  log "note=%s" s ;
   let s = String.explode s in
   let (letter,s) = 
     match s with
@@ -27,7 +26,6 @@ let chord_of_string s = __SONG__try ("note_of_string '" ^ s ^ "'") (
       | '#'::tl -> true,tl
       | l -> false, l
   in
-  let () = log "is_sharp=%b" is_sharp in
   let (is_m,s) =
     match s with
       | 'm'::tl -> true,tl

@@ -280,7 +280,10 @@ let generate_png world song =  __SONG__try "generate_png" (
 	let () = Std.output_file ~filename:digest_filename ~text:lilypond_hex in
 	  status
       ) else (
-	l.D.Lilypond.status
+	match l.D.Lilypond.status with
+	  | D.Lilypond.Ok _ 
+	  | D.Lilypond.Unknown -> D.Lilypond.Ok png_filename
+	  | D.Lilypond.Error e -> D.Lilypond.Error e
       )
     in
       { l with D.Lilypond.status = status }::acc

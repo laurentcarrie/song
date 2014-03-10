@@ -114,6 +114,15 @@ module Song = struct
 
 end
 
+
+module Set_list = struct
+  type t = {
+    path : string ;
+    title : string ;
+    paths : string list ;
+  }
+end
+
 module View = struct
   type t = {
     filename : string
@@ -131,6 +140,7 @@ module World = struct
   type t = {
     songs : Song.t list ;
     errors : string list ;
+    set_lists : Set_list.t list ;
     root : string ;        (* la racine du chemin de recherche des chansons, sur le disque *)
     output_root : string ; (* la ou sont generes les fichiers *)
     doc_root : string ;    (* le doc_root du server web *)
@@ -167,6 +177,17 @@ let update_song world song =
       s::acc
   ) [] world.World.songs in
   let world =  { world with World.songs = songs } in
+  let () = update_world world in
+    world
+      
+	
+let update_setlist world sl = 
+  let sls = List.fold_left ( fun acc s ->
+    let s = 
+      if s.Set_list.path = sl.Set_list.path then sl else s in
+      s::acc
+  ) [] world.World.set_lists in
+  let world =  { world with World.set_lists = sls } in
   let () = update_world world in
     world
       

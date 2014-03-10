@@ -21,7 +21,7 @@ open Read
 
 let log = Fcgi.log
 
-let from_file filename = __SONG__try ("from file " ^ filename) (
+let song_of_file filename = __SONG__try ("from file " ^ filename) (
   let split filename =
     let fin = open_in_bin filename in
     let rec split acc status = 
@@ -66,6 +66,7 @@ let from_file filename = __SONG__try ("from file " ^ filename) (
     tempo = 80 ;
     path = filename 
   } in
+
   let find (z:Read.t) = 
     let acc = List.fold_left ( fun acc (t,data) -> 
       if t = z then 
@@ -174,7 +175,7 @@ let all_songs_from_root root =  __SONG__try "all_songs_from_root" (
   let paths = find_all_songs root in
     List.fold_left ( fun (songs,errors) path ->
       try
-	(from_file path)::songs,errors
+	(song_of_file path)::songs,errors
       with
 	| e -> 
 	    let msg = Song_exn.string_of_stack e in
@@ -182,4 +183,66 @@ let all_songs_from_root root =  __SONG__try "all_songs_from_root" (
 	    let () = log "ERROR : %s" msg in
 	      songs,path::errors
     ) ([],[]) paths
+)
+
+let find_all_sls root = __SONG__try "find all sl" (
+  let rec find acc root =
+    let dirs = __SONG__try "readdir" (Sys.readdir root) in
+    let dirs = __SONG__try "to list" ( Array.to_list dirs) in
+      List.fold_left ( fun acc d ->
+	let d = root//d in
+	let () = log "Reading directory %s" d in
+	let acc = (
+	  try
+	    if  __SONG__try "is_directory" (Sys.is_directory d) then (
+	      find acc d
+	    ) else (
+	      if __SONG__try "check_suffix" (Filename.check_suffix d ".setlist") then  d :: acc  else acc
+	    )
+	  with
+	    | Sys_error e -> log "error : %s" e ; acc
+	) in
+	  acc
+      ) acc dirs 
+  in
+    find [] root
+)
+
+let all_sls_from_root root =  __SONG__try "all_sl_from_root" (
+  let paths = find_all_sls root in
+    let (sls,_) = List.fold_left ( fun (sls,errors) path ->
+      try
+	let s = { D.Set_list.title="";paths=[];path=path } in
+	let s = Set_list.read_file s path in
+	  s::sls,errors
+      with
+	| e -> 
+	    let msg = Song_exn.string_of_stack e in
+	    let ()  = Song_exn.clear_stack () in
+	    let () = log "ERROR : %s" msg in
+	      sls,path::errors
+    ) ([],[]) paths in
+      sls
+)
+
+
+let write_setlist sl = __SONG__try "write" (
+  let () = if Filename.is_relative sl.D.Set_list.path then
+    __SONG__failwith ("cannot write to relative path : " ^ sl.D.Set_list.path)
+  else ()
+  in
+  let () = 
+    let d = Filename.dirname sl.D.Set_list.path in
+      mkdir d
+  in
+  log "writing sl to %s" sl.D.Set_list.path ;
+  let fout = open_out_bin sl.D.Set_list.path in
+  let print s = fprintf fout "%s" s in
+  (* let pf fs = ksprintf print fs in *)
+  let pfnl fs = ksprintf ( fun s -> print s ; print "\n") fs in
+    pfnl "%s" sl.D.Set_list.title ;
+    List.iter ( fun p ->
+      pfnl "%s" p
+    ) sl.D.Set_list.paths ;
+    close_out fout
 )

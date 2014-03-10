@@ -51,6 +51,8 @@ src[]=
 	package
 	css
 	rw
+	set_list
+
 
 OCAML_CLIBS+= song_stub
 #OCAMLFLAGS+= -cclib -lfcgi
@@ -66,7 +68,6 @@ build : $(stub) $(stub_d)
 
 build: $(OCamlProgram song-web,$(src) web )
 
-#build: $(OCamlProgram web-update,$(src) web_update )
 
 #build: $(OCamlProgram do_nothing,song_exn util url_encode fcgi do_nothing utf8 )
 

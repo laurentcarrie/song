@@ -13,176 +13,116 @@ module PMap = struct
       | Not_found -> __SONG__failwith("key '" ^ name ^ "' not found in map")
 end
 
-(*
-let print_css fout dirname width = __SONG__try ("print_css " ^ dirname) (
-(*  let fout = open_out_bin (dirname //  "song.css") in *)
-    fprintf fout "
-#chords
-{
-font-family:\"Trebuchet MS\", Arial, Helvetica, sans-serif;
-#width:100%%;
-border-collapse:collapse;
-}
-
-#chords td, #chords th 
-{ 
-font-size:1em;
-border:1px solid #98bf21;
-padding:2px 2px 2px 2px;
-text-align:center;
-height:50px ;
-width:2cm ;
-}
-
-td.half-chords
-{
-width:1cm ;
-}
-
-
-#chords th 
-{
-font-size:1.1em;
-text-align:left;
-padding-top:5px;
-padding-bottom:4px;
-background-color:#A7C942;
-color:#ffffff;
-}
-#chords tr.alt td 
-{
-color:#000000;
-background-color:#EAF2D3;
-}
-
-div.title
-{
-padding:10px;
-text-align:center ;
-font-size:2em ;
-}
-
-div.auteur
-{
-padding:10px;
-text-align:center ;
-font-size:1.1em ;
-}
-
-
-#measure 
-{
-color:red
-}
-
-div#error-msg {
-border:5px solid gray;
-background-color:#FFEEEE ; 
-}
-
-
-div.sections
-{
-padding:10px;
-margin:0px;
-}
-
-div#main-0 
-{
-padding:10px;
-width:%dcm ;
-/* border:1px solid #98bf21; */
-}
-
-div#frame-title
-{
-padding:10px;
- background-color:#EEFFEE ; 
-border:1px solid #98bf21;
-}
-
-div#main
-{
-/* border:5px solid pink ;*/
-}
-
-div#col_1
-{
-padding:10px;
-float:left ;
-/* border:5px solid #98bf21; */
-/*background-color:#FFEEEE ; */
-}
-
-div#col_2
-{
-padding:10px;
-float:right ;
-/* top:2cm ; */
-/* border:5px solid gray ;*/
-/* background-color:#EEFFEE ; */
-
-}
-
-.lyrics-list {
-padding : 10px ;
-}
-
-div.lyrics
-{
-padding:10px;
-/* border:5px solid gray; */
-margin:0px;
-}
-
-.lyrics-beat {
-/* color:#ff0000 ; */
-text-decoration:underline ;
-font-weight:bold ;
-}
-
-div.structure
-{
-padding:10px;
-border:5px solid gray;
-margin:0px;
-}
-
-span.lyrics-section{
-background-color:#eeaaee ;
-}
-
-span.note {
-background-color:red
-word-spacing:1px
-}
-
-" width 
-)
-*)
-
 let log = Fcgi.log
 
 
-let render_output world print song output onoff = __SONG__try "render_html" (
+let render_output world head print song output onoff sl = __SONG__try "render_html" (
     
   let pf fs = ksprintf print fs in
     
+(*
+    pf "
+<script>
+function left() {
+console.log('left click') ;
+} ;
+function right() {
+console.log('right click') ;
+} ;
+$(document).ready(function() {
+  $('#left-click').click(left) ;
+  $('#right-click').click(right) ;
+}) ;
+</script>
+" ;
 
-  let filename = strip_root world song.D.Song.path in
+*)
+
+    pf "
+<script>
+$(document).ready( function() {
+  $('#reload').click(function() {
+    console.log('reload') ;
+    $.ajax({
+       url:'/reload.songx',
+       type : 'POST' ,
+       success: function() { location.reload(); },
+       error: function(data) { $('#error').text(data) ; }
+    }) ;
+  }) ;
+}) ;
+
+</script>
+ "
+;
+    head() ;
+
+    let filename = strip_root world song.D.Song.path in
+
+    let () = match sl with
+      | None -> log "sl is NONE" 
+      | Some s -> log "sl is %s" s.D.Set_list.path
+    in
+
+    let () = match sl with
+      | None -> log "sl is NONE" 
+      | Some s -> log "sl is %s\nhas %d songs" s.D.Set_list.path (List.length s.D.Set_list.paths)
+    in
+
+
+    let search l rev =  match l with
+      | None -> None
+      | Some l -> (
+	  let rec r l =
+	    match l with
+	      | [] -> None
+	      | hd::tl -> (
+		  log "compare %s and %s" hd song.D.Song.path ;
+		  if hd = strip_root world song.D.Song.path then (
+		    match tl with
+		      | [] -> None
+		      | hd::_ -> Some hd
+		  ) else r tl
+		)
+	  in
+	  let paths = if rev then List.rev l.D.Set_list.paths else l.D.Set_list.paths in
+	    r paths
+	)
+    in
+
+    let before = search sl true in
+    let after  = search sl false in
+      
+    let () = match before with
+      | None -> log "before is NONE" 
+      | Some s -> log "sl is %s" s
+    in
+
+    let () = match after with
+      | None -> log "after is NONE" 
+      | Some s -> log "after is %s" s 
+    in
+
+
+      log "root = %s" world.D.World.root ;
+
       
   let () = match onoff with
       | On_line -> (
 	  pf "<a href=\"/index.songx#song-%s\">index</a>" filename ;
-	  pf "<a href=\"/reload.songx\">reload</a>"  ;
+	  pf "<a id='reload'>reload</a>"  ;
 	  pf "<a href=\"/edit.songx?path=%s\">edit</a>" song.D.Song.path ;
 	  List.iter ( fun o ->
 	    pf "<a href=\"%s.html\">(%s)</a>" o.D.Output.filename o.D.Output.filename
 	  ) song.D.Song.outputs ;
+	  pf "<a href=\"/setlists.songx\">index</a>" ;
+(*
 	  pf "<a href=\"%s.midi\"><span class=\"index-title\">(midi)</span></a>" filename ;
 	  pf "<a href=\"%s.wav\"><span class=\"index-title\">(wav)</span></a>" filename ;
 	  pf "<a href=\"%s.mp3\"><span class=\"index-title\">(mp3)</span></a>" filename ;
 	  pf "<a href=\"%s.pdf\"><span class=\"index-title\">(pdf)</span></a>" filename ;
+*)
+	  pf "<div id='error'></div>" ;
 	  pf "<br/>" ;
 	)
       | Off_line -> (
@@ -197,12 +137,58 @@ let render_output world print song output onoff = __SONG__try "render_html" (
 	    pf "<br/>" ;
 	)
   in
+
+    (match sl with
+      | None -> ()
+      | Some sl -> pf "setlist : %s<br/>" sl.D.Set_list.title ;) ;
     
+    pf "<a name='%s'/>" (strip_root world song.D.Song.path) ;
+
     pf " <div id=\"main-0\">
 
 <div id=\"frame-title\">
 
-<div class=\"title\">%s</div>\n" song.D.Song.title ;
+
+<table class='title'>
+<tr> " ;
+    pf "<td class='left-click %s'>
+<div id='left-click'> "
+      ( match before with | None -> "inactive" | Some path -> "active" ) ; 
+    ( match onoff with
+      | On_line -> pf "<a href='/view.songx?path=%s&output=all&setlist=%s'>"
+	  ( match before with | None -> "none" | Some path -> path ) 
+	    ( match sl with | None -> "" | Some sl -> strip_root world sl.D.Set_list.path )
+      | Off_line -> pf "<a href='#%s'>"
+	  ( match before with | None -> "none" | Some path -> path ) 
+    ) ;
+    pf "
+<img src='img/20140310105841100_easyicon_net_72.png'>
+</a>
+</img></div></td>" 
+;
+    pf "
+<td>
+<div class=\"title\" id='title'>
+%s</div></td>\n" song.D.Song.title ;
+    pf "<td class='right-click %s'>
+<div id='right-click'> "
+      ( match after with | None -> "inactive" | Some path -> "active" )  ;
+    ( match onoff with
+      | On_line -> pf "<a href='/view.songx?path=%s&output=all&setlist=%s'>"
+	  ( match after with | None -> "none" | Some path -> path ) 
+	    ( match sl with | None -> "" | Some sl -> strip_root world sl.D.Set_list.path )
+      | Off_line ->  pf "<a href='#%s'>"
+	  ( match after with | None -> "none" | Some path -> path ) 
+    ) ;
+    pf "
+<img src='img/20140310105205472_easyicon_net_72.png'>
+</a>
+</img></div></td>" 
+    ;
+    pf "
+</tr>
+</table>
+" ;
       pf "\
 <div class=\"auteur\">%s</div>\n" song.D.Song.auteur ;
 

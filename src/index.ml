@@ -78,6 +78,7 @@ let write_index print world onoff = __SONG__try "index" (
 	  pf "<a href='/download.songx'>Télécharger sous forme d'un fichier zip</a><br/>"  ;
 	  pf "<a href='/reload.songx'>Recharger à partir du disque</a><br/>"  ;
 	  pf "<a href='/new.songx'>Créer un nouveau morceau</a><br/>"  ;
+	  pf "<a href='/setlists.songx'>Set lists</a><br/>"  ;
 	  if List.length world.D.World.errors > 0 then (
 	    pf "<a href='/errors.songx'>%d errors</a>"  (List.length world.D.World.errors) ;
 	  ) else ()
@@ -86,7 +87,8 @@ let write_index print world onoff = __SONG__try "index" (
 	  let tm = Unix.localtime(Unix.time ()) in
 	    pf "Généré le  %02d/%02d/%04d à  %02d:%02d:%02d</br>" 
 	      tm.Unix.tm_mday (tm.Unix.tm_mon+1) (tm.Unix.tm_year+1900)
-	      tm.Unix.tm_hour tm.Unix.tm_min tm.Unix.tm_sec
+	      tm.Unix.tm_hour tm.Unix.tm_min tm.Unix.tm_sec ;
+	    pf "<a href='setlists.html'>Set lists</a><br/>"  ;
 	) 
     in
 

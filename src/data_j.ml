@@ -118,6 +118,26 @@ module Lyrics = struct
   )
 end
 
+module Set_list = struct
+  include Data.Set_list
+  let of_json j = __SONG__try "of_json" (
+    let j = Br.objekt j in
+    let table = Br.make_table j in
+      {
+	title = string_field table "title" ;
+	path = string_field table "path" ;
+	paths = Br.list Br.string (Br.field table "paths") 
+      }
+  )
+  let to_json t = __SONG__try "to_json" (
+    Bu.objekt [
+      "title",Bu.string t.title ;
+      "path",Bu.string t.path ;
+      "paths",Bu.list Bu.string t.paths ;
+    ]
+  )
+end
+
 module Output = struct
   include Data.Output
   let col_of_json j = __SONG__try "of_json" (
@@ -242,8 +262,37 @@ module Song = struct
       "path",Bu.string t.path ;
     ]
   )
-
-
 end
 
   
+module World = struct
+  include Data.World
+  let of_json j = __SONG__try "song_of_json" (
+    let j = Br.objekt j in
+    let table = Br.make_table j in
+    let string_field = string_field table in
+      {
+	songs = Br.list Song.of_json (Br.field table "songs") ;
+	errors = Br.list Br.string (Br.field table "errors") ;
+	set_lists = Br.list Set_list.of_json (Br.field table "set_lists") ;
+	root = string_field "root" ;
+	output_root = string_field "output_root" ;
+	doc_root = string_field "doc_root" ;
+	url_root = string_field "url_root" ;
+	root_path = string_field "root_path" ;
+      }
+  )
+
+  let to_json t = __SONG__try "to_json" (
+    Bu.objekt [
+      "songs",Bu.list Song.to_json t.songs ;
+      "errors",Bu.list Bu.string t.errors ;
+      "set_lists",Bu.list Set_list.to_json t.set_lists ;
+      "root",Bu.string t.root ;
+      "output_root",Bu.string t.output_root ;
+      "doc_root",Bu.string t.doc_root ;
+      "url_root",Bu.string t.url_root ;
+      "root_path",Bu.string t.root_path ;
+    ]
+  )
+end

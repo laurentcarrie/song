@@ -71,7 +71,7 @@ let errors world    = __SONG__try "errors" (
 " ;
 
     List.iter (fun path ->
-      Edit_type.print ~loadurl:"data-error.songx" p "/internal-edit-error.songx" path "edit-error" "data" Edit_type.Textarea
+      Edit_type.print ~loadurl:"/data-error.songx" p "/internal-edit-error.songx" path "edit-error" "data" Edit_type.Textarea
     ) world.D.World.errors ;
 
     end_head () ;
@@ -82,7 +82,7 @@ let errors world    = __SONG__try "errors" (
       pf "%s" (Std.input_file path) ;
       pf "</div>" ;
       let msg = try
-	  let (_:D.Song.t) = Rw.from_file path in ""
+	  let (_:D.Song.t) = Rw.song_of_file path in ""
 	with
 	  | e ->
 	      let msg = Song_exn.string_of_stack e in

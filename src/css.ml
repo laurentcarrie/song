@@ -6,6 +6,17 @@ let (//) = Filename.concat
 let print_css print =
   let pf fs = ksprintf print fs in
     pf "
+
+#reload {
+    color: red;
+    margin: 5px;
+    cursor: pointer;
+  }
+#reload:hover {
+    background: yellow;
+  }
+
+
 .edit {
 background:#eeeeee ;
 }
@@ -131,20 +142,39 @@ margin:0px;
 div#main-0 
 {
 padding:10px;
-width:100%% ;
+width:600px ;
 /* border:1px solid #98bf21; */
+}
+
+.inactive {
+visibility:hidden ;
+}
+
+.active {
+visibility:visible ;
 }
 
 div#frame-title
 {
 padding:10px;
- background-color:#EEFFEE ; 
+background-color:#EEFFEE ; 
 border:1px solid #98bf21;
 }
 
 div#main
 {
 /* border:5px solid pink ;*/
+}
+table.title {
+width:100%% ;
+}
+td.left-click {
+width:80px ;
+// border:1px solid ;
+}
+td.right-click {
+// border:1px solid ;
+width:80px ;
 }
 
 div#col_1
@@ -158,10 +188,17 @@ float:left ;
 div#col_2
 {
 padding:10px;
-float:right ;
+// float:right ;
 /* top:2cm ; */
 /* border:5px solid gray ;*/
 /* background-color:#EEFFEE ; */
+}
+
+div#right-click {
+width:80px ;
+}
+div#left-click {
+width:80px ;
 }
 
 .lyrics-list {

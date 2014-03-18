@@ -61,9 +61,10 @@ OCAML_CLIBS+= /usr/lib/libfcgi
 #build: $(OCamlProgram song,$(src) main)
 
 stub =   $(StaticCXXLibrary song_stub,fcgi_interface)
-stub_d = $(DynamicCXXLibrary song_stub,fcgi_interface)
+#stub_d = $(DynamicCXXLibrary song_stub,fcgi_interface)
 
-build : $(stub) $(stub_d)
+build : $(stub) 
+#build : $(stub_d)
 
 
 build: $(OCamlProgram song-web,$(src) web )

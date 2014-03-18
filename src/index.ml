@@ -30,6 +30,11 @@ let compare song1 song2 =
 
 let write_index print world onoff = __SONG__try "index" (
   log "write index"; 
+  let () = 
+    let env = Unix.environment () in
+      Array.iter ( fun e -> log "env : %s" e
+		) env
+  in
   let songs = world.D.World.songs in
   let pf fs = ksprintf ( fun s -> print s ; print "\n" ) fs in
   let songs_assoc = List.fold_left ( fun acc s ->

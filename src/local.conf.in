@@ -1,0 +1,68 @@
+	## FastCGI programs have the same functionality as CGI programs,
+## but are considerably faster through lower interpreter startup
+## time and socketed communication
+##
+## Documentation: /usr/share/doc/lighttpd-doc/fastcgi.txt.gz
+##                http://www.lighttpd.net/documentation/fastcgi.html
+
+server.modules   = ( 
+    "mod_fastcgi",
+    "mod_setenv",
+    "mod_access",
+    "mod_accesslog",
+    "mod_rewrite",
+    "mod_redirect",
+    "mod_cgi",
+    "mod_alias"
+
+ )
+
+server.document-root = "@PREFIX@/www-data"
+
+index-file.names = (
+    "index.html"
+)
+
+mimetype.assign = (
+  ".html" => "text/html", 
+  ".txt" => "text/plain",
+  ".jpg" => "image/jpeg",
+  ".png" => "image/png" 
+)
+
+server.port = @PORT@
+
+server.errorlog = "@ROOT@/tmp/errorlog.txt"
+server.breakagelog = "@ROOT@/tmp/breakagelog.txt"
+accesslog.filename         = "@ROOT@/tmp/access.log"
+
+## virtual directory listings
+dir-listing.encoding        = "utf-8"
+server.dir-listing          = "enable"
+
+setenv.add-environment = ( 
+      "LILYPOND" => "/usr/bin/lilypond",
+      "TIMIDITY" => "/usr/bin/timidity",
+      "PACPL" => "/usr/bin/pacpl"
+    )
+
+fastcgi.debug = 1
+server.pid-file            = "@ROOT@/tmp/lighttpd.pid"
+
+
+fastcgi.server    = ( ".songx" => 
+	((
+		"bin-path" => "@PREFIX@/bin/song-web @PREFIX@/www-data/bookshelf @PREFIX@/song @PREFIX@/www-data " ,
+		"socket" => "/tmp/aubergine",
+		"max-procs" => 1,
+		"idle-timeout" => 20,
+	        "bin-environment" => (
+			"LILYPOND" => "/usr/bin/lilypond"
+		),
+		"bin-copy-environment" => (
+			"PATH", "SHELL", "USER", "LILYPOND"
+		),
+		"broken-scriptfilename" => "enable",
+                "check-local" => "disable"
+	))
+)

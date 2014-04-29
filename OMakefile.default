@@ -9,5 +9,20 @@ OCAMLFLAGS += -g -warn-error A
 
 OCAMLPACKS= extlib
 
-.SUBDIRS: src bookshelf
+.SUBDIRS: src bookshelf js
+
+
+LIB_FCGI_A=XXXXX
+if $(file-exists /usr/lib/libfcgi.a)
+	LIB_FCGI_A=/usr/lib/libfcgi.a
+	export LIB_FCGI_A
+elseif $(file-exists /usr/local/lib/libfcgi.a)
+	LIB_FCGI_A=/usr/local/lib/libfcgi.a
+	export LIB_FCGI_A
+else
+	ConfMsgError("libfcgi.a not found")	
+
+
+
+
 

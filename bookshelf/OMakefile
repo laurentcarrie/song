@@ -4,3 +4,28 @@
 
 
 songs[]=
+	brule.tout
+	hey-brother-avicii
+	lou-reed/perfect-day
+
+dirs[]=
+	lou-reed
+
+mkdir -p $(prefix)/www-data/bookshelf
+
+foreach(d,$(dirs))
+	mkdir -p $(prefix)/www-data/bookshelf/$d
+
+
+foreach(f,$(songs))
+	source = $f.song
+	target = $(prefix)/www-data/bookshelf/$f.song
+
+	build : $(target)
+
+	$(target) : $(source)
+		cp $< $@
+
+	export .RULE
+
+

@@ -11,9 +11,22 @@ DefineCommandVars()
 #
 # Include the OMakefile in this directory.
 #
-public.srcdir   = $(dir $(srcdir))
+public.srcdir = $(dir $(srcdir))
+
 CREATE_SUBDIRS=true
 vmount(-c, $(srcdir), .)
 
+LIB_FCGI_A=XXXXX
+if $(file-exists /usr/lib/libfcgi.a)
+	LIB_FCGI_A=/usr/lib/libfcgi
+	export LIB_FCGI_A
+elseif $(file-exists /usr/local/lib/libfcgi.a)
+	LIB_FCGI_A=/usr/local/lib/libfcgi
+	export LIB_FCGI_A
+else
+	ConfMsgError("libfcgi.a not found")	
+
+
+mkdir -p $(prefix)
 
 .SUBDIRS: .

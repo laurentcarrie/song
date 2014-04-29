@@ -1,7 +1,24 @@
+open configure/Configure
+
 srcdir = $(absname $(dirname $(nth 0, $(argv))))
 
+
+ConfMsgChecking($"whether variable 'port' was specified on the command-line")
+public.port =
+	try
+		ConfMsgResult($(port))
+		value $(port)
+	default
+		ConfMsgResult(no)
+		value 80
+
+
 echo "srcdir = $(srcdir)" > OMakeroot
+echo "prefix = $(absname $(CWD)/install)" >> OMakeroot
+echo "port = $(port)" >> OMakeroot
 cat $(srcdir)/OMakeroot.default >> OMakeroot
 
-cat $(srcdir)/OMakefile.default > OMakefile
 
+
+
+cat $(srcdir)/OMakefile.default > OMakefile

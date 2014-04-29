@@ -1,0 +1,22 @@
+.PHONY: build
+
+.DEFAULT: build
+
+
+destdir = $(prefix)/www-data/js
+mkdir -p $(destdir)
+
+src[]=
+	jquery-1.9.1.js
+	jquery.jeditable.js
+	jquery-ui-1.10.1.custom.js
+
+foreach(f,$(src))
+	build : $(destdir)/$f
+
+	$(destdir)/$f : $f
+		cp $< $@
+
+	export .RULE
+
+

@@ -52,11 +52,12 @@ src[]=
 	css
 	rw
 	set_list
+	android
 
 
 OCAML_CLIBS+= song_stub
 OCAMLFLAGS+= -cclib -lfcgi
-OCAML_CLIBS+= /usr/lib/libfcgi
+OCAML_CLIBS+= $(LIB_FCGI_A)
 
 #build: $(OCamlProgram song,$(src) main)
 
@@ -85,3 +86,58 @@ build: $(OCamlProgram song-web,$(src) web )
 
 
 #build : $(OCamlProgram test_utf8,test_utf8)
+
+
+local.conf : local.conf.in
+	section
+		stdout = $(fopen $@,wb)
+		fsubst($<)
+		case @PREFIX@ g
+			value $(prefix)
+		case @ROOT@ g
+			value $(absname $(ROOT))
+		case @PORT@
+			value $(port)
+		close($(stdout))
+
+
+paths.h : paths.h.in
+	section
+		stdout = $(fopen $@,wb)
+		fsubst($<)
+		case @PREFIX@ g
+			value $(prefix)
+		case @ROOT@ g
+			value $(absname $(ROOT))
+		close($(stdout))
+
+LocalCGeneratedFiles(paths.h)
+
+
+build : $(prefix)/local.conf
+
+install_files[]=
+	local.conf
+
+foreach(f,$(install_files))
+	$(prefix)/$f : $f
+		cat $< > $@
+
+
+mkdir -p $(prefix)/www-data
+
+build : $(prefix)/www-data/index.html
+
+$(prefix)/www-data/index.html : index.html
+	cat $< > $@
+
+
+mkdir -p $(prefix)/bin
+mkdir -p $(prefix)/www-data/bookshelf
+mkdir -p $(prefix)/www-data/tmp
+
+build : $(prefix)/bin/song-web
+
+$(prefix)/bin/song-web : song-web
+	cp $< $@
+

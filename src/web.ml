@@ -9,10 +9,6 @@ let (//) = Filename.concat
 
 type args = ( string * string ) list
 
-let log = Fcgi.log
-
-
-
 
 let log = Fcgi.log
 
@@ -53,7 +49,31 @@ let main_loop  () = __SONG__try "main loop" (
       in
 	log "script name : %s" script_name ;
 	match script_name with 
-	      
+
+	  | "/put-android.songx" -> (
+	      let params = Fcgi.get_post_params ()  in
+	      let key = List.assoc "key" params in
+	      let value = List.assoc "value" params in
+		Android.put key value
+	    )
+	  | "/add-android.songx" -> (
+	      let params = Fcgi.get_post_params ()  in
+	      let key = List.assoc "key" params in
+	      let value = List.assoc "value" params in
+		Android.add key value
+	    )
+	  | "/show-android.songx" -> (
+	      let data = Android.data() in
+	      let (p,h,e) = start_html_page() in
+	      let pf fs = ksprintf p fs in
+		h() ;
+		PMap.iter ( fun k l ->
+		  pf "%s ; " k  ;
+		  List.iter ( fun v -> pf "%s " v) l ;
+		  pf "<br/>" ;
+		) data ;
+		e()
+	    )
 	  | "/css.songx" -> (
 	      try 
 		let (p,e) = start_page 200 "text/css"  in
@@ -175,12 +195,12 @@ let main_loop  () = __SONG__try "main loop" (
 		in
 		let path = normalize_path (world.D.World.root // path) in
 		let song = try List.find ( fun s -> s.D.Song.path = path ) world.D.World.songs
-		  with | Not_found -> __SONG__failwith ("pas de chanson trouvée pour : "^ path) in
+		  with | Not_found -> __SONG__failwith ("pas de chanson trouvÃ©e pour : "^ path) in
 		let song = Lilypond.generate_png world song in
 		let world = D.update_song world song in
 		let output = __SONG__try "output" ( List.assoc "output" params) in
 		let output = try List.find ( fun o -> o.D.Output.filename = output ) song.D.Song.outputs 
-		  with | Not_found -> __SONG__failwith ("pas de sortie trouvée pour : " ^ output) in
+		  with | Not_found -> __SONG__failwith ("pas de sortie trouvÃ©e pour : " ^ output) in
 		let (print,h,e) = start_html_page () in
 		  Html.render_output world h print song output On_line sl ;
 		  e ()
@@ -451,7 +471,7 @@ let main_loop  () = __SONG__try "main loop" (
 		    let (_:D.Song.t) = List.find ( fun s -> 
 		      log "compare\n'%s' and\n'%s'" s.D.Song.path whole_path ;
 		      s.D.Song.path = whole_path ) world.D.World.songs in
-		      __SONG__failwith ("il y a dejÃ  un morceau pour ce chemin : " ^ path )
+		      __SONG__failwith ("il y a dejÃÂ  un morceau pour ce chemin : " ^ path )
 		  with
 		    | Not_found -> ()
 		in

@@ -15,6 +15,8 @@
 #define MAX_LENGTH_HEADER 1000000
 
 
+#include "paths.h"
+
 FILE * flog = 0 ;
 
 int pid = 0;
@@ -69,7 +71,7 @@ value fcgi_init() {
   // snprintf(path,9999,"%s/tmp/CIF_fcgi.log",getenv("PWD"))  ;
   // snprintf(path,9999,"/var/log/lighttpd/SONG_fcgi.log")  ;
   // flog = fopen("/usr/p119208/u1/work/work-song/build/tmp/SONG_fcgi.log","w") ;
-  flog = fopen("/var/log/lighttpd/SONG_fcgi.log","w") ;
+  flog = fopen(logfile,"w") ;
   //  flog = fopen(path,"a") ;
   // assert(0) ;
   assert(flog) ;

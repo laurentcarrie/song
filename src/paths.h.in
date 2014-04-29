@@ -1,0 +1,6 @@
+#ifndef __SONGWEB_PATHS__
+#define __SONGWEB_PATHS__ 1
+
+const char* logfile = "@PREFIX@/www-data/tmp/SONG_fcgi.log" ;
+
+#endif

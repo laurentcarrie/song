@@ -13,6 +13,12 @@ exception Http_404
 
 open ExtString
 
+let pf fs = ksprintf c_fcgi_log_string  fs
+
+let log fs = 
+  pf fs 
+
+
 let parse_query_string  () = __SONG__try "parse_query_string" (
   let s = Unix.getenv "QUERY_STRING" in
   let args = String.nsplit s "&"  in
@@ -28,6 +34,7 @@ let parse_query_string  () = __SONG__try "parse_query_string" (
 let get_post_params () = __SONG__try "get_post_params" (
   let length = __SONG__try "int_of_string" (int_of_string (__SONG__try "content_length" (Unix.getenv "HTTP_CONTENT_LENGTH"))) in 
   let header = fcgi_input length in
+log "header : %s" header ;
   let header = String.nsplit header "&" in
     List.map ( fun pair -> 
       match String.nsplit pair "=" with
@@ -36,9 +43,4 @@ let get_post_params () = __SONG__try "get_post_params" (
 	| _ -> __SONG__failwith("could not split " ^ pair)
     ) header
 )
-
-let pf fs = ksprintf c_fcgi_log_string  fs
-
-let log fs = 
-  pf fs 
 
